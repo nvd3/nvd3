@@ -1,5 +1,7 @@
 ## NVD3 - A reusable D3 charting library
 
+### This project is for D3v4.  For a D3v3 compatible version of nvd3, see the [novus/nvd3](http://github.com/novus/nvd3/) repository.  If you want to help out with this, please send us pull requests!!
+
 Inspired by the work of Mike Bostock's [Towards Reusable Charts](http://bost.ocks.org/mike/chart/), and supported by a combined effort of [Novus](http://www.novus.com) and the NVD3 community.
 
 [View Examples](http://nvd3-community.github.io/nvd3/) | [NEW Documentation!](http://nvd3-community.github.io/nvd3/examples/documentation.html) | Development build status: [![Build Status](https://travis-ci.org/novus/nvd3.svg?branch=master)](https://travis-ci.org/novus/nvd3)
@@ -18,11 +20,8 @@ Simply add the `nv.d3` assets to your project and include them in your HTML.
 
 ### Dependencies
 
-NVD3 is recommended to go with [d3.js](http://d3js.org/) version 3.5.3 and later, but NOT d3 4.x yet. [version 3.5.17](https://github.com/d3/d3/releases/tag/v3.5.17) is the most recent d3 v3 release. 
+NVD3 is recommended to go with [d3.js](http://d3js.org/) version 3.5.3 and later
 
-**Minimum D3 version required: 3.4.4**
-
-For a D3v4 Version, see the work in progress at the [nvd3 organization](http://github.com/nvd3/nvd3)
 
 Along with `pieChart` options `padAngle` and `cornerRadius`, the interactive guideline tooltip now requires these later versions of D3 (3.4.4+, specifically, to get interactive tooltips). The interactive guide lines rely on the more recent `d3.bisector()` method which treats accessors taking two parameters (the second being the element index) as comparators (see [d3.bisector()](https://github.com/mbostock/d3/wiki/Arrays#d3_bisector)).
 
