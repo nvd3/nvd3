@@ -4,7 +4,7 @@
 
 Inspired by the work of Mike Bostock's [Towards Reusable Charts](http://bost.ocks.org/mike/chart/), and supported by a combined effort of [Novus](http://www.novus.com) and the NVD3 community.
 
-[View Examples](http://nvd3-community.github.io/nvd3/) | [NEW Documentation!](http://nvd3-community.github.io/nvd3/examples/documentation.html) | Development build status: [![Build Status](https://travis-ci.org/novus/nvd3.svg?branch=master)](https://travis-ci.org/novus/nvd3)
+[View Examples](http://nvd3.github.io/nvd3/) | [NEW Documentation!](http://nvd3.github.io/nvd3/examples/documentation.html) | Development build status: [![Build Status](https://travis-ci.org/nvd3/nvd3.svg?branch=master)](https://travis-ci.org/nvd3/nvd3)
 
 
 ## Usage
@@ -114,7 +114,7 @@ from the issues/pulls from the original project.
 
 # Bugs
 
-Found a bug?  Check out the latest from the `master` branch and make sure it's not already fixed first! If you don't see a related fix, please [open an issue](https://github.com/novus/nvd3/issues).
+Found a bug?  Check out the latest from the `master` branch and make sure it's not already fixed first! If you don't see a related fix, please [open an issue](https://github.com/nvd3/nvd3/issues).
 
 ---
 
@@ -126,7 +126,7 @@ Including [Fastdom](https://github.com/wilsonpage/fastdom) in your project can g
 
 # Contributing
 
-If one of [the existing models](https://github.com/novus/nvd3/tree/master/src/models)
+If one of [the existing models](https://github.com/nvd3/nvd3/tree/master/src/models)
 doesn't meet your needs, fork the project, implement the model and an example using it,
 send us a pull request, for consideration for inclusion in the project.
 
@@ -151,7 +151,7 @@ only include the source files you changed!
 * Run `bower install` to get bower dependencies.
 * Run `grunt` to start the unit tests.
 * Also visually inspect the HTML pages in the **examples/ and test/ folders**.  Make sure there are no glaring errors.
-* Novus now uses Travis CI for continuous integration. Visit [our travis build page](https://travis-ci.org/novus/nvd3/) to see the latest status.
+* Novus now uses Travis CI for continuous integration. Visit [our travis build page](https://travis-ci.org/nvd3/nvd3/) to see the latest status.
 
 #### Meteor Tinytests
 * Any Meteor-specific features can be tested from the command line using `tinytest` and [Spacejam](https://www.npmjs.com/package/spacejam)
