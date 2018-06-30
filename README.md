@@ -20,7 +20,7 @@ Simply add the `nv.d3` assets to your project and include them in your HTML.
 
 ### Dependencies
 
-NVD3 is recommended to go with [d3.js](http://d3js.org/) version 3.5.3 and later
+NVD3 is recommended to go with [d3.js](http://d3js.org/) version 4.x and later
 
 
 Along with `pieChart` options `padAngle` and `cornerRadius`, the interactive guideline tooltip now requires these later versions of D3 (3.4.4+, specifically, to get interactive tooltips). The interactive guide lines rely on the more recent `d3.bisector()` method which treats accessors taking two parameters (the second being the element index) as comparators (see [d3.bisector()](https://github.com/mbostock/d3/wiki/Arrays#d3_bisector)).
@@ -37,7 +37,7 @@ NVD3 runs best on WebKit based browsers.
 
 ## Do we support D3 v4.x?
 
-No, we do not...  we are very interested in taking this on but could use some help.  Please let us know if you'd like to help make this a reality!  :)
+That's what this project is for!  Send us pull requests to help out!
 
 ## Changelog
 
