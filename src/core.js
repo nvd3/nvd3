@@ -16,7 +16,20 @@ if (typeof(module) !== 'undefined' && typeof(exports) !== 'undefined' && typeof(
     d3 = require('d3');
 }
 
-nv.dispatch = d3.dispatch('render_start', 'render_end');
+nv.dispatch = d3.dispatch('start', 'end');
+
+d3.functor = function functor(v) {
+    return typeof v === "function" ? v : function() {
+        return v;
+    };
+};
+    
+d3.rebind = function rebind(target, source, method) {
+    return function() {
+        var value = method.apply(source, arguments);
+        return value === source ? target : value;
+    };
+}
 
 // Function bind polyfill
 // Needed ONLY for phantomJS as it's missing until version 2.0 which is unreleased as of this comment
@@ -48,11 +61,11 @@ if (!Function.prototype.bind) {
 
 //  Development render timers - disabled if dev = false
 if (nv.dev) {
-    nv.dispatch.on('render_start', function(e) {
+    nv.dispatch.on('start', function(e) {
         nv.logs.startTime = +new Date();
     });
 
-    nv.dispatch.on('render_end', function(e) {
+    nv.dispatch.on('end', function(e) {
         nv.logs.endTime = +new Date();
         nv.logs.totalTime = nv.logs.endTime - nv.logs.startTime;
         nv.log('total', nv.logs.totalTime); // used for development, to keep track of graph generation times
@@ -82,13 +95,13 @@ nv.deprecated = function(name, info) {
 
 // The nv.render function is used to queue up chart rendering
 // in non-blocking async functions.
-// When all queued charts are done rendering, nv.dispatch.render_end is invoked.
+// When all queued charts are done rendering, nv.dispatch.end is invoked.
 nv.render = function render(step) {
     // number of graphs to generate in each timeout loop
     step = step || 1;
 
     nv.render.active = true;
-    nv.dispatch.render_start();
+    nv.dispatch.call("start");
 
     var renderLoop = function() {
         var chart, graph;
@@ -104,7 +117,7 @@ nv.render = function render(step) {
             setTimeout(renderLoop);
         }
         else {
-            nv.dispatch.render_end();
+            nv.dispatch.call("end");
             nv.render.active = false;
         }
     };

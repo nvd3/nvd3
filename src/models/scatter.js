@@ -13,9 +13,9 @@ nv.models.scatter = function() {
         , pointBorderColor = null
         , id           = Math.floor(Math.random() * 100000) //Create semi-unique ID incase user doesn't select one
         , container    = null
-        , x            = d3.scale.linear()
-        , y            = d3.scale.linear()
-        , z            = d3.scale.linear() //linear because d3.svg.shape.size is treated as area
+        , x            = d3.scaleLinear()
+        , y            = d3.scaleLinear()
+        , z            = d3.scaleLinear() //linear because d3.svg.shape.size is treated as area
         , getX         = function(d) { return d.x } // accessor to get the x value
         , getY         = function(d) { return d.y } // accessor to get the y value
         , getSize      = function(d) { return d.size || 1} // accessor to get the point size
@@ -210,28 +210,24 @@ nv.models.scatter = function() {
 
             // Setup containers and skeleton of chart
             var wrap = container.selectAll('g.nv-wrap.nv-scatter').data([data]);
-            var wrapEnter = wrap.enter().append('g').attr('class', 'nvd3 nv-wrap nv-scatter nv-chart-' + id);
+            var wrapEnter = wrap.enter().append('g').attr('class', 'nvd3 nv-wrap nv-scatter nv-chart-' + id)
+                .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');;
             var defsEnter = wrapEnter.append('defs');
             var gEnter = wrapEnter.append('g');
-            var g = wrap.select('g');
 
             wrap.classed('nv-single-point', singlePoint);
-            gEnter.append('g').attr('class', 'nv-groups');
-            gEnter.append('g').attr('class', 'nv-point-paths');
-            wrapEnter.append('g').attr('class', 'nv-point-clips');
-
-            wrap.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+            var nvGroups = gEnter.append('g').attr('class', 'nv-groups');
+            var nvPointPaths = gEnter.append('g').attr('class', 'nv-point-paths');
+            var nvPointClips = wrapEnter.append('g').attr('class', 'nv-point-clips');
 
             defsEnter.append('clipPath')
                 .attr('id', 'nv-edge-clip-' + id)
                 .append('rect')
-                .attr('transform', 'translate( -10, -10)');
-
-            wrap.select('#nv-edge-clip-' + id + ' rect')
+                .attr('transform', 'translate( -10, -10)')
                 .attr('width', availableWidth + 20)
                 .attr('height', (availableHeight > 0) ? availableHeight + 20 : 0);
 
-            g.attr('clip-path', clipEdge ? 'url(#nv-edge-clip-' + id + ')' : '');
+            gEnter.attr('clip-path', clipEdge ? 'url(#nv-edge-clip-' + id + ')' : '');
 
             function updateInteractiveLayer() {
                 // Always clear needs-update flag regardless of whether or not
@@ -242,7 +238,7 @@ nv.models.scatter = function() {
                 container.selectAll(".nv-point.hover").classed("hover", false);
 
                 // nuke all voronoi paths
-                wrap.select('.nv-point-paths').selectAll('path').remove();
+                nvPointPaths.selectAll('path').remove();
 
                 // inject series and point index for reference into voronoi
                 if (useVoronoi === true) {
@@ -277,12 +273,12 @@ nv.models.scatter = function() {
 
                     // keep voronoi sections from going more than 10 outside of graph
                     // to avoid overlap with other things like legend etc
-                    var bounds = d3.geom.polygon([
+                    var bounds = [
                         [-10,-10],
                         [-10,height + 10],
                         [width + 10,height + 10],
                         [width + 10,-10]
-                    ]);
+                    ];
 
                     // delete duplicates from vertices - essential assumption for d3.geom.voronoi
                     var epsilon = 1e-4; // Uses 1e-4 to determine equivalence.
@@ -296,19 +292,15 @@ nv.models.scatter = function() {
                         }
                     }
 
-                    var voronoi = d3.geom.voronoi(vertices).map(function(d, i) {
-                        if (d.length === 0) {
-                            return null;
-                        }
-
+                    var voronoi = d3.voronoi().extent([bounds[0], bounds[2]]).polygons(vertices).map(function(d, i) {
                         return {
-                            'data': bounds.clip(d),
+                            'data': d,
                             'series': vertices[i][2],
                             'point': vertices[i][3]
                         }
                     });
 
-                    var pointPaths = wrap.select('.nv-point-paths').selectAll('path').data(voronoi);
+                    var pointPaths = nvPointPaths.selectAll('path').data(voronoi);
                     var vPointPaths = pointPaths
                         .enter().append("svg:path")
                         .attr("d", function(d) {
@@ -333,8 +325,8 @@ nv.models.scatter = function() {
                     if (clipVoronoi) {
                         // voronoi sections are already set to clip,
                         // just create the circles with the IDs they expect
-                        wrap.select('.nv-point-clips').selectAll('*').remove(); // must do * since it has sub-dom
-                        var pointClips = wrap.select('.nv-point-clips').selectAll('clipPath').data(vertices);
+                        nvPointClips.selectAll('*').remove(); // must do * since it has sub-dom
+                        var pointClips = nvPointClips.selectAll('clipPath').data(vertices);
                         var vPointClips = pointClips
                             .enter().append("svg:clipPath")
                             .attr("id", function(d, i) { return "nv-clip-"+id+"-"+i;})
@@ -365,7 +357,7 @@ nv.models.scatter = function() {
                             top: y(getY(point, d.point)) + box.top + scrollTop + margin.top + 10
                         };
 
-                        mDispatch({
+                        dispatch.call(mDispatch, this, {
                             point: point,
                             series: series,
                             pos: pos,
@@ -377,23 +369,23 @@ nv.models.scatter = function() {
                         });
                     };
 
-                    pointPaths
+                    vPointPaths
                         .on('click', function(d) {
-                            mouseEventCallback(this, d, dispatch.elementClick);
+                            mouseEventCallback(this, d, 'elementClick');
                         })
                         .on('dblclick', function(d) {
-                            mouseEventCallback(this, d, dispatch.elementDblClick);
+                            mouseEventCallback(this, d, 'elementDblClick');
                         })
                         .on('mouseover', function(d) {
-                            mouseEventCallback(this, d, dispatch.elementMouseover);
+                            mouseEventCallback(this, d, 'elementMouseover');
                         })
                         .on('mouseout', function(d, i) {
-                            mouseEventCallback(this, d, dispatch.elementMouseout);
+                            mouseEventCallback(this, d, 'elementMouseout');
                         });
 
                 } else {
                     // add event handlers to points instead voronoi paths
-                    wrap.select('.nv-groups').selectAll('.nv-group')
+                    nvGroups.selectAll('.nv-group')
                         .selectAll('.nv-point')
                         //.data(dataWithPoints)
                         //.style('pointer-events', 'auto') // recativate events, disabled by css
@@ -462,27 +454,27 @@ nv.models.scatter = function() {
             }
 
             needsUpdate = true;
-            var groups = wrap.select('.nv-groups').selectAll('.nv-group')
+            var groups = nvGroups.selectAll('.nv-group')
                 .data(function(d) { return d }, function(d) { return d.key });
-            groups.enter().append('g')
+            var gGroups = groups.enter().append('g')
                 .style('stroke-opacity', 1e-6)
                 .style('fill-opacity', 1e-6);
             groups.exit()
                 .remove();
-            groups
+            gGroups
                 .attr('class', function(d,i) {
                     return (d.classed || '') + ' nv-group nv-series-' + i;
                 })
                 .classed('nv-noninteractive', !interactive)
                 .classed('hover', function(d) { return d.hover });
-            groups.watchTransition(renderWatch, 'scatter: groups')
+            gGroups.watchTransition(renderWatch, 'scatter: groups')
                 .style('fill', function(d,i) { return color(d, i) })
                 .style('stroke', function(d,i) { return d.pointBorderColor || pointBorderColor || color(d, i) })
                 .style('stroke-opacity', 1)
                 .style('fill-opacity', .5);
 
             // create the points, maintaining their IDs from the original data set
-            var points = groups.selectAll('path.nv-point')
+            var points = gGroups.selectAll('path.nv-point')
                 .data(function(d) {
                     return d.values.map(
                         function (point, pointIndex) {
