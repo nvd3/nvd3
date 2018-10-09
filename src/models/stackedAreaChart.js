@@ -211,7 +211,7 @@ nv.models.stackedAreaChart = function() {
                         key: controlLabels.stream_center || 'Stream Center',
                         metaKey: 'Stream_Center',
                         disabled: stacked.style() != 'stream_center',
-                        style: 'stream-center'
+                        style: 'stream_center'
                     },
                     {
                         key: controlLabels.expanded || 'Expanded',
