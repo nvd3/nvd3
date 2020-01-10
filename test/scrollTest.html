@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <link href="../build/nv.d3.css" rel="stylesheet" type="text/css">
-    <script src="../bower_components/d3/d3.min.js" charset="utf-8"></script>
+    <script src="../node_modules/d3/dist/d3.min.js" charset="utf-8"></script>
     <script src="../build/nv.d3.js"></script>
     <style>
         body {
@@ -47,6 +47,9 @@
         </div>
     </div>
     <script>
+    var t = d3.transition()
+        .duration(500)
+        .ease(d3.easeLinear);
     createChart('#chart1');
     createChart('#chart2');
     createChart('#chart3');
@@ -58,7 +61,7 @@
 
             d3.select(id + ' svg')
                 .datum(data())
-                .transition().duration(500)
+                .transition(t)
                 .call(chart);
 
             nv.utils.windowResize(chart.update);

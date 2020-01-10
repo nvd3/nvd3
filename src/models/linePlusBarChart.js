@@ -9,14 +9,14 @@ nv.models.linePlusBarChart = function() {
         , lines2 = nv.models.line()
         , bars = nv.models.historicalBar()
         , bars2 = nv.models.historicalBar()
-        , xAxis = nv.models.axis()
-        , x2Axis = nv.models.axis()
-        , y1Axis = nv.models.axis()
-        , y2Axis = nv.models.axis()
-        , y3Axis = nv.models.axis()
-        , y4Axis = nv.models.axis()
+        , xAxis = nv.models.axis(d3.axisBottom(d3.scaleLinear()), 'bottom')
+        , x2Axis = nv.models.axis(d3.axisTop(d3.scaleLinear()), 'top')
+        , y1Axis = nv.models.axis(d3.axisLeft(d3.scaleLinear()), 'left')
+        , y2Axis = nv.models.axis(d3.axisLeft(d3.scaleLinear()), 'left')
+        , y3Axis = nv.models.axis(d3.axisLeft(d3.scaleLinear()), 'left')
+        , y4Axis = nv.models.axis(d3.axisLeft(d3.scaleLinear()), 'left')
         , legend = nv.models.legend()
-        , brush = d3.svg.brush()
+        , brush = d3.brush()
         , tooltip = nv.models.tooltip()
         ;
 
@@ -44,6 +44,9 @@ nv.models.linePlusBarChart = function() {
         , noData = null
         , dispatch = d3.dispatch('brush', 'stateChange', 'changeState')
         , transitionDuration = 0
+        , t = d3.transition()
+              .duration(transitionDuration)
+              .ease(d3.easeLinear)
         , state = nv.utils.state()
         , defaultState = null
         , legendLeftAxisHint = ' (left axis)'
@@ -55,12 +58,12 @@ nv.models.linePlusBarChart = function() {
     lines2.interactive(false);
     // We don't want any points emitted for the focus chart's scatter graph.
     lines2.pointActive(function(d) { return false });
-    xAxis.orient('bottom').tickPadding(5);
-    y1Axis.orient('left');
-    y2Axis.orient('right');
-    x2Axis.orient('bottom').tickPadding(5);
-    y3Axis.orient('left');
-    y4Axis.orient('right');
+    xAxis.tickPadding(5);
+    //y1Axis.orient('left');
+    //y2Axis.orient('right');
+    x2Axis.tickPadding(5);
+    //y3Axis.orient('left');
+    //y4Axis.orient('right');
 
     tooltip.headerEnabled(true).headerFormatter(function(d, i) {
         return xAxis.tickFormat()(d, i);
@@ -115,7 +118,7 @@ nv.models.linePlusBarChart = function() {
                     - (focusEnable ? focusHeight : 0),
                 availableHeight2 = focusHeight - margin2.top - margin2.bottom;
 
-            chart.update = function() { container.transition().duration(transitionDuration).call(chart); };
+            chart.update = function() { container.transition(t).call(chart); };
             chart.container = this;
 
             state
@@ -290,7 +293,8 @@ nv.models.linePlusBarChart = function() {
             if (focusShowAxisX) {
                 x2Axis
                     ._ticks( nv.utils.calcTicksX(availableWidth / 100, data))
-                    .tickSize(-availableHeight2, 0);
+                x2Axis
+                    .tickSizeInner(-availableHeight2);
                 g.select('.nv-context .nv-x.nv-axis')
                     .attr('transform', 'translate(0,' + y3.range()[0] + ')');
                 g.select('.nv-context .nv-x.nv-axis').transition()
@@ -301,11 +305,13 @@ nv.models.linePlusBarChart = function() {
                 y3Axis
                     .scale(y3)
                     ._ticks( availableHeight2 / 36 )
-                    .tickSize( -availableWidth, 0);
+                y3Axis
+                    .tickSizeInner( -availableWidth);
                 y4Axis
                     .scale(y4)
                     ._ticks( availableHeight2 / 36 )
-                    .tickSize(dataBars.length ? 0 : -availableWidth, 0); // Show the y2 rules only if y1 has none
+                y4Axis
+                    .tickSizeInner(dataBars.length ? 0 : -availableWidth); // Show the y2 rules only if y1 has none
 
                 g.select('.nv-context .nv-y3.nv-axis')
                     .style('opacity', dataBars.length ? 1 : 0)
@@ -321,7 +327,7 @@ nv.models.linePlusBarChart = function() {
             }
 
             // Setup Brush
-            brush.x(x2).on('brush', onBrush);
+            brush.on('brush', onBrush);
 
             if (brushExtent) brush.extent(brushExtent);
 
@@ -357,7 +363,7 @@ nv.models.linePlusBarChart = function() {
             legend.dispatch.on('stateChange', function(newState) {
                 for (var key in newState)
                     state[key] = newState[key];
-                dispatch.stateChange(state);
+                dispatch.call('stateChange', this, state);
                 chart.update();
             });
 
@@ -394,9 +400,9 @@ nv.models.linePlusBarChart = function() {
 
 
             function updateBrushBG() {
-                if (!brush.empty()) brush.extent(brushExtent);
+                if (!(d3.event == null || d3.event.selection === null)) brush.extent(brushExtent);
                 brushBG
-                    .data([brush.empty() ? x2.domain() : brushExtent])
+                    .data([d3.event == null || d3.event.selection === null ? x2.domain() : brushExtent])
                     .each(function(d,i) {
                         var leftWidth = x2(d[0]) - x2.range()[0],
                             rightWidth = x2.range()[1] - x2(d[1]);
@@ -410,9 +416,9 @@ nv.models.linePlusBarChart = function() {
             }
 
             function onBrush() {
-                brushExtent = brush.empty() ? null : brush.extent();
-                extent = brush.empty() ? x2.domain() : brush.extent();
-                dispatch.brush({extent: extent, brush: brush});
+                brushExtent = d3.event==null || d3.event.selection === null ? null : brush.extent();
+                extent = d3.event==null || d3.event.selection === null ? x2.domain() : brush.extent();
+                dispatch.call('brush', this, {extent: extent, brush: brush});
                 updateBrushBG();
 
                 // Prepare Main (Focus) Bars and Lines
@@ -470,16 +476,16 @@ nv.models.linePlusBarChart = function() {
                 xAxis
                     .scale(x)
                     ._ticks( nv.utils.calcTicksX(availableWidth/100, data) )
-                    .tickSize(-availableHeight1, 0);
+                xAxis
+                    .tickSizeInner(-availableHeight1);
 
                 xAxis.domain([Math.ceil(extent[0]), Math.floor(extent[1])]);
 
-                g.select('.nv-x.nv-axis').transition().duration(transitionDuration)
-                    .call(xAxis);
+                g.select('.nv-x.nv-axis').transition(t).call(xAxis);
 
                 // Update Main (Focus) Bars and Lines
-                focusBarsWrap.transition().duration(transitionDuration).call(bars);
-                focusLinesWrap.transition().duration(transitionDuration).call(lines);
+                focusBarsWrap.transition(t).call(bars);
+                focusLinesWrap.transition(t).call(lines);
 
                 // Setup and Update Main (Focus) Y Axes
                 g.select('.nv-focus .nv-x.nv-axis')
@@ -488,16 +494,17 @@ nv.models.linePlusBarChart = function() {
                 y1Axis
                     .scale(y1)
                     ._ticks( nv.utils.calcTicksY(availableHeight1/36, data) )
-                    .tickSize(-availableWidth, 0);
+                y1Axis
+                    .tickSizeInner(-availableWidth);
                 y2Axis
                     .scale(y2)
                     ._ticks( nv.utils.calcTicksY(availableHeight1/36, data) );
 
                 // Show the y2 rules only if y1 has none
                 if(!switchYAxisOrder) {
-                    y2Axis.tickSize(dataBars.length ? 0 : -availableWidth, 0);
+                    y2Axis.tickSizeInner(dataBars.length ? 0 : -availableWidth);
                 } else {
-                    y2Axis.tickSize(dataLines.length ? 0 : -availableWidth, 0);
+                    y2Axis.tickSizeInner(dataLines.length ? 0 : -availableWidth, 0);
                 }
 
                 // Calculate opacity of the axis
@@ -513,9 +520,9 @@ nv.models.linePlusBarChart = function() {
                     .style('opacity', y2Opacity)
                     .attr('transform', 'translate(' + x.range()[1] + ',0)');
 
-                g.select('.nv-focus .nv-y1.nv-axis').transition().duration(transitionDuration)
+                g.select('.nv-focus .nv-y1.nv-axis').transition(t)
                     .call(y1Axis);
-                g.select('.nv-focus .nv-y2.nv-axis').transition().duration(transitionDuration)
+                g.select('.nv-focus .nv-y2.nv-axis').transition(t)
                     .call(y2Axis);
             }
 
@@ -655,10 +662,10 @@ nv.models.linePlusBarChart = function() {
             }
             switchYAxisOrder=_;
 
-            y1Axis.orient('left');
-            y2Axis.orient('right');
-            y3Axis.orient('left');
-            y4Axis.orient('right');
+//@todo            y1Axis.orient('left');
+//            y2Axis.orient('right');
+//            y3Axis.orient('left');
+//            y4Axis.orient('right');
         }}
     });
 

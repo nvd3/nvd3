@@ -40,7 +40,7 @@ text {
     <svg></svg>
   </div>
 
-<script src="../bower_components/d3/d3.js"></script>
+<script src="../node_modules/d3/dist/d3.js"></script>
 <script src="../build/nv.d3.js"></script>
 <script src="../src/utils.js"></script>
 <script src="../src/tooltip.js"></script>
@@ -361,7 +361,7 @@ nv.addGraph(function() {
       .margin({top: 30, right: 20, bottom: 50, left: 175})
       //.showValues(true)
       //.tooltips(false)
-      .barColor(d3.scale.category20().range())
+      .barColor(d3.scaleOrdinal(d3.schemeAccent).range())
       .stacked(true)
       //.showControls(false);
 

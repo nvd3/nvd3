@@ -2,7 +2,7 @@
 <meta charset="utf-8">
 
 <link href="../build/nv.d3.css" rel="stylesheet" type="text/css">
-<script src="../bower_components/d3/d3.js"></script>
+<script src="../node_modules/d3/dist/d3.js"></script>
 <script src="../build/nv.d3.js"></script>
 
 <link href="teststyle.css" rel="stylesheet" type='text/css'>
@@ -245,13 +245,16 @@ function nPoints() {
 //an example of harmonizing colors between visualizations
 //observe that Consumer Discretionary and Consumer Staples have
 //been flipped in the second chart
-var colors = d3.scale.category20();
+var colors = d3.scaleOrdinal(d3.schemeAccent);
 var keyColor = function(d, i) {return colors(d.key)};
 
 function defaultChartConfig(container, data, useGuideline) {
   if (useGuideline === undefined) useGuideline = true;
   nv.addGraph(function() {
     var chart;
+    var t = d3.transition()
+        .duration(500)
+        .ease(d3.easeLinear);
     chart = nv.models.stackedAreaChart()
                   .useInteractiveGuideline(useGuideline)
                   .x(function(d) { return d[0] })
@@ -267,7 +270,7 @@ function defaultChartConfig(container, data, useGuideline) {
 
     d3.select('#' + container + ' svg')
           .datum(data)
-        .transition().duration(500).call(chart);
+        .transition(t).call(chart);
 
     nv.utils.windowResize(chart.update);
 

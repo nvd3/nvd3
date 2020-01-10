@@ -44,12 +44,12 @@ svg.nvd3-svg {
 *  Brush
 */
 
-.nv-brush .extent {
+.nv-brush .selection {
     fill-opacity: .125;
     shape-rendering: crispEdges;
 }
 
-.nv-brush .resize path {
+.nv-brush .handle path {
     fill: #eee;
     stroke: #666;
 }
@@ -68,7 +68,7 @@ svg.nvd3-svg {
 }
 
 /* focus */
-.nvd3 .nv-brush .extent {
+.nvd3 .nv-brush .selection {
     fill-opacity: 0 !important;
 }
 

@@ -21,7 +21,9 @@ nv.models.legend = function() {
         , expanded = false
         , dispatch = d3.dispatch('legendClick', 'legendDblclick', 'legendMouseover', 'legendMouseout', 'stateChange')
         , vers = 'classic' //Options are "classic" and "furious"
-        ;
+        , t = d3.transition()
+              .duration(300)
+              .ease(d3.easeLinear);
 
     function chart(selection) {
         selection.each(function(data) {
@@ -98,13 +100,13 @@ nv.models.legend = function() {
 
             series
                 .on('mouseover', function(d,i) {
-                    dispatch.legendMouseover(d,i);  //TODO: Make consistent with other event objects
+                    dispatch.call('legendMouseover', d,i);  //TODO: Make consistent with other event objects
                 })
                 .on('mouseout', function(d,i) {
-                    dispatch.legendMouseout(d,i);
+                    dispatch.call('legendMouseout', d,i);
                 })
                 .on('click', function(d,i) {
-                    dispatch.legendClick(d,i);
+                    dispatch.call('legendClick', d,i);
                     // make sure we re-get data in case it was modified
                     var data = series.data();
                     if (updateState) {
@@ -141,7 +143,7 @@ nv.models.legend = function() {
                                 }
                             }
                         }
-                        dispatch.stateChange({
+                        dispatch.call('stateChange', this, {
                             disabled: data.map(function(d) { return !!d.disabled }),
                             disengaged: data.map(function(d) { return !!d.disengaged })
                         });
@@ -151,7 +153,7 @@ nv.models.legend = function() {
                 .on('dblclick', function(d,i) {
                     if (enableDoubleClick) {
                         if (vers == 'furious' && expanded) return;
-                        dispatch.legendDblclick(d, i);
+                        dispatch.call('legendDblclick', d, i);
                         if (updateState) {
                             // make sure we re-get data in case it was modified
                             var data = series.data();
@@ -163,7 +165,7 @@ nv.models.legend = function() {
                             });
                             d.disabled = false;
                             if (vers == 'furious') d.userDisabled = d.disabled;
-                            dispatch.stateChange({
+                            dispatch.call('stateChange', this, {
                                 disabled: data.map(function (d) {
                                     return !!d.disabled
                                 })
@@ -303,7 +305,7 @@ nv.models.legend = function() {
                 var seriesBG = g.select('.nv-legend-bg');
 
                 seriesBG
-                .transition().duration(300)
+                .transition(t)
                     .attr('x', -versPadding )
                     .attr('width', legendWidth + versPadding - 12)
                     .attr('height', height + 10)

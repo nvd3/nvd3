@@ -155,6 +155,7 @@ nv.models.pieChart = function() {
 
             // Main Chart Component(s)
             pie.width(availableWidth).height(availableHeight);
+            console.log(data);
             var pieWrap = g.select('.nv-pieWrap').datum([data]);
             d3.transition(pieWrap).call(pie);
 
@@ -166,7 +167,7 @@ nv.models.pieChart = function() {
                 for (var key in newState) {
                     state[key] = newState[key];
                 }
-                dispatch.stateChange(state);
+                dispatch.call('stateChange', this, state);
                 chart.update();
             });
 

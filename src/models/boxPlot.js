@@ -9,8 +9,8 @@ nv.models.boxPlot = function() {
         width = 960,
         height = 500,
         id = Math.floor(Math.random() * 10000), // Create semi-unique ID in case user doesn't select one
-        xScale = d3.scale.ordinal(),
-        yScale = d3.scale.linear(),
+        xScale = d3.scaleBand(),
+        yScale = d3.scaleLinear(),
         getX  = function(d) { return d.label }, // Default data model selectors.
         getQ1 = function(d) { return d.values.Q1 },
         getQ2 = function(d) { return d.values.Q2 },
@@ -48,7 +48,7 @@ nv.models.boxPlot = function() {
 
             // Setup Scales
             xScale.domain(xDomain || data.map(function(d,i) { return getX(d,i); }))
-                .rangeBands(xRange || [0, availableWidth], 0.1);
+                .range(xRange || [0, availableWidth], 0.1);
 
             // if we know yDomain, no need to calculate
             var yData = []
@@ -89,7 +89,7 @@ nv.models.boxPlot = function() {
             var boxEnter = boxplots.enter().append('g').style('stroke-opacity', 1e-6).style('fill-opacity', 1e-6);
             boxplots
                 .attr('class', 'nv-boxplot')
-                .attr('transform', function(d,i,j) { return 'translate(' + (xScale(getX(d,i)) + xScale.rangeBand() * 0.05) + ', 0)'; })
+                .attr('transform', function(d,i,j) { return 'translate(' + (xScale(getX(d,i)) + xScale.bandwidth() * 0.05) + ', 0)'; })
                 .classed('hover', function(d) { return d.hover });
             boxplots
                 .watchTransition(renderWatch, 'nv-boxplot: boxplots')
@@ -97,7 +97,7 @@ nv.models.boxPlot = function() {
                 .style('fill-opacity', 0.75)
                 .delay(function(d,i) { return i * duration / data.length })
                 .attr('transform', function(d,i) {
-                    return 'translate(' + (xScale(getX(d,i)) + xScale.rangeBand() * 0.05) + ', 0)';
+                    return 'translate(' + (xScale(getX(d,i)) + xScale.bandwidth() * 0.05) + ', 0)';
                 });
             boxplots.exit().remove();
 
@@ -119,9 +119,9 @@ nv.models.boxPlot = function() {
                 });
             });
 
-            var box_width = function() { return (maxBoxWidth === null ? xScale.rangeBand() * 0.9 : Math.min(75, xScale.rangeBand() * 0.9)); };
-            var box_left  = function() { return xScale.rangeBand() * 0.45 - box_width()/2; };
-            var box_right = function() { return xScale.rangeBand() * 0.45 + box_width()/2; };
+            var box_width = function() { return (maxBoxWidth === null ? xScale.bandwidth() * 0.9 : Math.min(75, xScale.bandwidth() * 0.9)); };
+            var box_left  = function() { return xScale.bandwidth() * 0.45 - box_width()/2; };
+            var box_right = function() { return xScale.bandwidth() * 0.45 + box_width()/2; };
 
             // update whisker lines and ticks
             [getWl, getWh].forEach(function (f) {
@@ -129,9 +129,9 @@ nv.models.boxPlot = function() {
                 var endpoint = (f === getWl) ? getQ1 : getQ3;
                 boxplots.select('line.nv-boxplot-whisker.nv-boxplot-' + key)
                   .watchTransition(renderWatch, 'nv-boxplot: boxplots')
-                    .attr('x1', xScale.rangeBand() * 0.45 )
+                    .attr('x1', xScale.bandwidth() * 0.45 )
                     .attr('y1', function(d,i) { return yScale(f(d)); })
-                    .attr('x2', xScale.rangeBand() * 0.45 )
+                    .attr('x2', xScale.bandwidth() * 0.45 )
                     .attr('y2', function(d,i) { return yScale(endpoint(d)); });
                 boxplots.select('line.nv-boxplot-tick.nv-boxplot-' + key)
                   .watchTransition(renderWatch, 'nv-boxplot: boxplots')
@@ -146,20 +146,20 @@ nv.models.boxPlot = function() {
                 boxEnter.selectAll('.nv-boxplot-' + key)
                   .on('mouseover', function(d,i,j) {
                       d3.select(this).classed('hover', true);
-                      dispatch.elementMouseover({
+                      dispatch.call('elementMouseover', this, {
                           series: { key: f(d), color: getColor(d) || color(d,j) },
                           e: d3.event
                       });
                   })
                   .on('mouseout', function(d,i,j) {
                       d3.select(this).classed('hover', false);
-                      dispatch.elementMouseout({
+                      dispatch.call('elementMouseout', this, {
                           series: { key: f(d), color: getColor(d) || color(d,j) },
                           e: d3.event
                       });
                   })
                   .on('mousemove', function(d,i) {
-                      dispatch.elementMousemove({e: d3.event});
+                      dispatch.call('elementMousemove', this, {e: d3.event});
                   });
             });
 
@@ -169,7 +169,7 @@ nv.models.boxPlot = function() {
                 // tooltip events
                 .on('mouseover', function(d,i) {
                     d3.select(this).classed('hover', true);
-                    dispatch.elementMouseover({
+                    dispatch.call('elementMouseover', this, {
                         key: getX(d),
                         value: getX(d),
                         series: [
@@ -184,7 +184,7 @@ nv.models.boxPlot = function() {
                 })
                 .on('mouseout', function(d,i) {
                     d3.select(this).classed('hover', false);
-                    dispatch.elementMouseout({
+                    dispatch.call('elementMouseout', this, {
                         key: getX(d),
                         value: getX(d),
                         series: [
@@ -198,7 +198,7 @@ nv.models.boxPlot = function() {
                     });
                 })
                 .on('mousemove', function(d,i) {
-                    dispatch.elementMousemove({e: d3.event});
+                    dispatch.call('elementMousemove', this, {e: d3.event});
                 });
 
             // box transitions
@@ -231,25 +231,25 @@ nv.models.boxPlot = function() {
                 .style('z-index', 9000)
                 .on('mouseover', function(d,i,j) {
                     d3.select(this).classed('hover', true);
-                    dispatch.elementMouseover({
+                    dispatch.call('elementMouseover', this, {
                         series: { key: getOlLabel(d,i,j), color: getOlColor(d,i,j) || color(d,j) },
                         e: d3.event
                     });
                 })
                 .on('mouseout', function(d,i,j) {
                     d3.select(this).classed('hover', false);
-                    dispatch.elementMouseout({
+                    dispatch.call('elementMouseout', this, {
                         series: { key: getOlLabel(d,i,j), color: getOlColor(d,i,j) || color(d,j) },
                         e: d3.event
                     });
                 })
                 .on('mousemove', function(d,i) {
-                    dispatch.elementMousemove({e: d3.event});
+                    dispatch.call('elementMousemove', this, {e: d3.event});
                 });
             outliers.attr('class', 'nv-boxplot-outlier');
             outliers
               .watchTransition(renderWatch, 'nv-boxplot: nv-boxplot-outlier')
-                .attr('cx', xScale.rangeBand() * 0.45)
+                .attr('cx', xScale.bandwidth() * 0.45)
                 .attr('cy', function(d,i,j) { return yScale(getOlValue(d,i,j)); })
                 .attr('r', '3');
             outliers.exit().remove();

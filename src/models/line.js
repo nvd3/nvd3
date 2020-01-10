@@ -20,7 +20,7 @@ nv.models.line = function() {
         , clipEdge = false // if true, masks lines within x and y scale
         , x //can be accessed via chart.xScale()
         , y //can be accessed via chart.yScale()
-        , interpolate = "linear" // controls the line interpolation
+        , interpolate = d3.curveLinear // controls the line interpolation
         , curve = d3.curveBasis
         , duration = 250
         , dispatch = d3.dispatch('elementClick', 'elementMouseover', 'elementMouseout', 'renderEnd')
@@ -74,8 +74,9 @@ nv.models.line = function() {
             scatter
                 .width(availableWidth)
                 .height(availableHeight);
-
+console.log("call scatter");
             scatterWrap.call(scatter);
+console.log("called scatter");
 
             defsEnter.merge(defsEnter).append('clipPath')
                 .attr('id', 'nv-edge-clip-' + scatter.id())
@@ -113,7 +114,7 @@ nv.models.line = function() {
                 .attr('class', 'nv-area')
                 .attr('d', function(d) {
                     return d3.area()
-                        .interpolate(interpolate)
+                        .curve(interpolate)
                         .defined(defined)
                         .x(function(d,i) { return nv.utils.NaNtoZero(x0(getX(d,i))) })
                         .y0(function(d,i) { return nv.utils.NaNtoZero(y0(getY(d,i))) })
@@ -127,7 +128,7 @@ nv.models.line = function() {
             areaPaths.watchTransition(renderWatch, 'line: areaPaths')
                 .attr('d', function(d) {
                     return d3.area()
-                        .interpolate(interpolate)
+                        .curve(interpolate)
                         .defined(defined)
                         .x(function(d,i) { return nv.utils.NaNtoZero(x(getX(d,i))) })
                         .y0(function(d,i) { return nv.utils.NaNtoZero(y(getY(d,i))) })
@@ -201,7 +202,7 @@ nv.models.line = function() {
             scatter.duration(duration);
         }},
         isArea: {get: function(){return isArea;}, set: function(_){
-            isArea = d3.functor(_);
+            isArea = typeof _ === "function" ? _ : function(){return _;};
         }},
         x: {get: function(){return getX;}, set: function(_){
             getX = _;

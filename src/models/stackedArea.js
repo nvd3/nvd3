@@ -16,9 +16,9 @@ nv.models.stackedArea = function() {
         , getY = function(d) { return d.y } // accessor to get the y value from a data point
         , defined = function(d,i) { return !isNaN(getY(d,i)) && getY(d,i) !== null } // allows a line to be not continuous when it is not defined
         , style = 'stack'
-        , offset = 'zero'
-        , order = 'default'
-        , interpolate = 'linear'  // controls the line interpolation
+        , offset = d3.stackOffsetNone
+        , order = d3.stackOrderNone
+        , interpolate = d3.curveLinear  // controls the line interpolation
         , clipEdge = false // if true, masks lines within x and y scale
         , x //can be accessed via chart.xScale()
         , y //can be accessed via chart.yScale()
@@ -63,7 +63,7 @@ nv.models.stackedArea = function() {
             y = scatter.yScale();
 
             var dataRaw = data;
-            // Injecting point index into each point because d3.layout.stack().out does not give index
+            // Injecting point index into each point because d3.stack().out does not give index
             data.forEach(function(aseries, i) {
                 aseries.seriesIndex = i;
                 aseries.values = aseries.values.map(function(d, j) {
@@ -77,13 +77,13 @@ nv.models.stackedArea = function() {
                 return !series.disabled;
             });
 
-            data = d3.layout.stack()
+            data = d3.stack()
                 .order(order)
                 .offset(offset)
-                .values(function(d) { return d.values })  //TODO: make values customizeable in EVERY model in this fashion
-                .x(getX)
-                .y(getY)
-                .out(transformData)
+                .value(function(d) { return d.values })  //TODO: make values customizeable in EVERY model in this fashion
+                //@todo .x(getX)
+                //.y(getY)
+                //.out(transformData)
             (dataFiltered);
 
             // Setup containers and skeleton of chart
@@ -131,16 +131,16 @@ nv.models.stackedArea = function() {
 
             g.attr('clip-path', clipEdge ? 'url(#nv-edge-clip-' + id + ')' : '');
 
-            var area = d3.svg.area()
+            var area = d3.area()
                 .defined(defined)
                 .x(function(d,i)  { return x(getX(d,i)) })
                 .y0(function(d) {
                     return y(d.display.y0)
                 })
                 .y1(areaY1)
-                .interpolate(interpolate);
+                .curve(interpolate);
 
-            var zeroArea = d3.svg.area()
+            var zeroArea = d3.area()
                 .defined(defined)
                 .x(function(d,i)  { return x(getX(d,i)) })
                 .y0(function(d) { return y(d.display.y0) })
@@ -155,7 +155,7 @@ nv.models.stackedArea = function() {
                 })
                 .on('mouseover', function(d,i) {
                     d3.select(this).classed('hover', true);
-                    dispatch.areaMouseover({
+                    dispatch.call('areaMouseover', this, {
                         point: d,
                         series: d.key,
                         pos: [d3.event.pageX, d3.event.pageY],
@@ -164,7 +164,7 @@ nv.models.stackedArea = function() {
                 })
                 .on('mouseout', function(d,i) {
                     d3.select(this).classed('hover', false);
-                    dispatch.areaMouseout({
+                    dispatch.call('areaMouseout', this, {
                         point: d,
                         series: d.key,
                         pos: [d3.event.pageX, d3.event.pageY],
@@ -173,7 +173,7 @@ nv.models.stackedArea = function() {
                 })
                 .on('click', function(d,i) {
                     d3.select(this).classed('hover', false);
-                    dispatch.areaClick({
+                    dispatch.call('areaClick', this, {
                         point: d,
                         series: d.key,
                         pos: [d3.event.pageX, d3.event.pageY],
@@ -241,9 +241,9 @@ nv.models.stackedArea = function() {
     chart.dispatch = dispatch;
     chart.scatter = scatter;
 
-    scatter.dispatch.on('elementClick', function(){ dispatch.elementClick.apply(this, arguments); });
-    scatter.dispatch.on('elementMouseover', function(){ dispatch.elementMouseover.apply(this, arguments); });
-    scatter.dispatch.on('elementMouseout', function(){ dispatch.elementMouseout.apply(this, arguments); });
+    scatter.dispatch.on('elementClick', function(){ dispatch.apply('elementClick', this, arguments); });
+    scatter.dispatch.on('elementMouseover', function(){ dispatch.apply('elementMouseover', this, arguments); });
+    scatter.dispatch.on('elementMouseout', function(){ dispatch.apply('elementMouseout', this, arguments); });
 
     chart.interpolate = function(_) {
         if (!arguments.length) return interpolate;
@@ -274,11 +274,11 @@ nv.models.stackedArea = function() {
         interpolate:    {get: function(){return interpolate;}, set: function(_){interpolate=_;}},
 
         // simple functor options
-        x:     {get: function(){return getX;}, set: function(_){getX = d3.functor(_);}},
-        y:     {get: function(){return getY;}, set: function(_){getY = d3.functor(_);}},
+        x:     {get: function(){return getX;}, set: function(_){getX = typeof _ === "function" ? _ : function(){return _;};}},
+        y:     {get: function(){return getY;}, set: function(_){getY = typeof _ === "function" ? _ : function(){return _;};}},
 
-        areaY1:     {get: function(){return areaY1;}, set: function(_){ areaY1 = d3.functor(_);}},
-        transformData:     {get: function(){return transformData;}, set: function(_){ transformData = d3.functor(_);}},
+        areaY1:     {get: function(){return areaY1;}, set: function(_){ areaY1 = typeof _ === "function" ? _ : function(){return _;};}},
+        transformData:     {get: function(){return transformData;}, set: function(_){ transformData = typeof _ === "function" ? _ : function(){return _;};}},
 
         // options that require extra logic in the setter
         margin: {get: function(){return margin;}, set: function(_){

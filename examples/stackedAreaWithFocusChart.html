@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <link href="../build/nv.d3.css" rel="stylesheet" type="text/css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.17/d3.min.js" charset="utf-8"></script>
+    <script src="../node_modules/d3/dist/d3.min.js" charset="utf-8"></script>
     <script src="../build/nv.d3.js"></script>
 
     <style>
@@ -77,8 +77,11 @@
         }
     ];
 
-    var colors = d3.scale.category20();
+    var colors = d3.scaleOrdinal(d3.schemeCategory20);
     var chart;
+    var t = d3.transition()
+              .duration(1000)
+              .ease(d3.easeLinear);
 
     nv.addGraph(function() {
         chart = nv.models.stackedAreaWithFocusChart()
@@ -89,8 +92,8 @@
             .duration(300);
         chart.brushExtent([1225425600000, 1285819200000]);
 
-        chart.xAxis.tickFormat(function(d) { return d3.time.format('%x')(new Date(d)) });
-        chart.x2Axis.tickFormat(function(d) { return d3.time.format('%x')(new Date(d)) });
+        chart.xAxis.tickFormat(function(d) { return d3.timeFormat('%x')(new Date(d)) });
+        chart.x2Axis.tickFormat(function(d) { return d3.timeFormat('%x')(new Date(d)) });
         chart.yAxis.tickFormat(d3.format(',.4f'));
         chart.y2Axis.tickFormat(d3.format(',.4f'));
 
@@ -98,7 +101,7 @@
 
         d3.select('#chart1')
             .datum(histcatexplong)
-            .transition().duration(1000)
+            .transition(t)
             .call(chart)
             .each('start', function() {
                 setTimeout(function() {

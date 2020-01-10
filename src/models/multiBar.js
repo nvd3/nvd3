@@ -9,8 +9,8 @@ nv.models.multiBar = function() {
     var margin = {top: 0, right: 0, bottom: 0, left: 0}
         , width = 960
         , height = 500
-        , x = d3.scale.ordinal()
-        , y = d3.scale.linear()
+        , x = d3.scaleBand()
+        , y = d3.scaleLinear()
         , id = Math.floor(Math.random() * 10000) //Create semi-unique ID in case user doesn't select one
         , container = null
         , getX = function(d) { return d.x }
@@ -70,7 +70,7 @@ nv.models.multiBar = function() {
                 )}];
 
             if (stacked) {
-                var parsed = d3.layout.stack()
+                var parsed = d3.stack()
                     .offset(stackOffset)
                     .values(function(d){ return d.values })
                     .y(getY)
@@ -132,7 +132,7 @@ nv.models.multiBar = function() {
                 });
 
             x.domain(xDomain || d3.merge(seriesData).map(function(d) { return d.x }))
-                .rangeBands(xRange || [0, availableWidth], groupSpacing);
+                .range(xRange || [0, availableWidth], groupSpacing);
 
             y.domain(yDomain || d3.extent(d3.merge(seriesData).map(function(d) {
                 var domain = d.y;
@@ -221,11 +221,11 @@ nv.models.multiBar = function() {
             var barsEnter = bars.enter().append('rect')
                     .attr('class', function(d,i) { return getY(d,i) < 0 ? 'nv-bar negative' : 'nv-bar positive'})
                     .attr('x', function(d,i,j) {
-                        return stacked && !data[j].nonStackable ? 0 : (j * x.rangeBand() / data.length )
+                        return stacked && !data[j].nonStackable ? 0 : (j * x.bandwidth() / data.length )
                     })
                     .attr('y', function(d,i,j) { return y0(stacked && !data[j].nonStackable ? d.y0 : 0) || 0 })
                     .attr('height', 0)
-                    .attr('width', function(d,i,j) { return x.rangeBand() / (stacked && !data[j].nonStackable ? 1 : data.length) })
+                    .attr('width', function(d,i,j) { return x.bandwidth() / (stacked && !data[j].nonStackable ? 1 : data.length) })
                     .attr('transform', function(d,i) { return 'translate(' + x(getX(d,i)) + ',0)'; })
                 ;
             bars
@@ -233,7 +233,7 @@ nv.models.multiBar = function() {
                 .style('stroke', function(d,i,j){ return color(d, j, i); })
                 .on('mouseover', function(d,i,j) {
                     d3.select(this).classed('hover', true);
-                    dispatch.elementMouseover({
+                    dispatch.call('elementMouseover', this, {
                         data: d,
                         index: i,
                         series: data[j],
@@ -242,7 +242,7 @@ nv.models.multiBar = function() {
                 })
                 .on('mouseout', function(d,i,j) {
                     d3.select(this).classed('hover', false);
-                    dispatch.elementMouseout({
+                    dispatch.call('elementMouseout', this, {
                         data: d,
                         index: i,
                         series: data[j],
@@ -250,7 +250,7 @@ nv.models.multiBar = function() {
                     });
                 })
                 .on('mousemove', function(d,i,j) {
-                    dispatch.elementMousemove({
+                    dispatch.call('elementMousemove', this, {
                         data: d,
                         index: i,
                         series: data[j],
@@ -259,7 +259,7 @@ nv.models.multiBar = function() {
                 })
                 .on('click', function(d,i,j) {
                     var element = this;
-                    dispatch.elementClick({
+                    dispatch.call('elementClick', this, {
                         data: d,
                         index: i,
                         series: data[j],
@@ -270,7 +270,7 @@ nv.models.multiBar = function() {
                     d3.event.stopPropagation();
                 })
                 .on('dblclick', function(d,i,j) {
-                    dispatch.elementDblClick({
+                    dispatch.call('elementDblClick', this, {
                         data: d,
                         index: i,
                         series: data[j],
@@ -324,23 +324,23 @@ nv.models.multiBar = function() {
                     .attr('x', function(d,i,j) {
                         var width = 0;
                         if (data[j].nonStackable) {
-                            width = d.series * x.rangeBand() / data.length;
+                            width = d.series * x.bandwidth() / data.length;
                             if (data.length !== nonStackableCount){
-                                width = data[j].nonStackableSeries * x.rangeBand()/(nonStackableCount*2);
+                                width = data[j].nonStackableSeries * x.bandwidth()/(nonStackableCount*2);
                             }
                         }
                         return width;
                     })
                     .attr('width', function(d,i,j){
                         if (!data[j].nonStackable) {
-                            return x.rangeBand();
+                            return x.bandwidth();
                         } else {
                             // if all series are nonStacable, take the full width
-                            var width = (x.rangeBand() / nonStackableCount);
+                            var width = (x.bandwidth() / nonStackableCount);
                             // otherwise, nonStackable graph will be only taking the half-width
-                            // of the x rangeBand
+                            // of the x bandwidth
                             if (data.length !== nonStackableCount) {
-                                width = x.rangeBand()/(nonStackableCount*2);
+                                width = x.bandwidth()/(nonStackableCount*2);
                             }
                             return width;
                         }
@@ -349,9 +349,9 @@ nv.models.multiBar = function() {
             else {
                 barSelection
                     .attr('x', function(d,i) {
-                        return d.series * x.rangeBand() / data.length;
+                        return d.series * x.bandwidth() / data.length;
                     })
-                    .attr('width', x.rangeBand() / data.length)
+                    .attr('width', x.bandwidth() / data.length)
                     .attr('y', function(d,i) {
                         return getY(d,i) < 0 ?
                             y(0) :

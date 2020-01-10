@@ -395,7 +395,7 @@ nv.models.scatter = function() {
                             var series = data[d[0].series],
                                 point  = series.values[i];
                             var element = this;
-                            dispatch.elementClick({
+                            dispatch.call('elementClick', this, {
                                 point: point,
                                 series: series,
                                 pos: [x(getX(point, i)) + margin.left, y(getY(point, i)) + margin.top], //TODO: make this pos base on the page
@@ -411,7 +411,7 @@ nv.models.scatter = function() {
                             var series = data[d[0].series],
                                 point  = series.values[i];
 
-                            dispatch.elementDblClick({
+                            dispatch.call('elementDblClick', this, {
                                 point: point,
                                 series: series,
                                 pos: [x(getX(point, i)) + margin.left, y(getY(point, i)) + margin.top],//TODO: make this pos base on the page
@@ -425,7 +425,7 @@ nv.models.scatter = function() {
                             var series = data[d[0].series],
                                 point  = series.values[i];
 
-                            dispatch.elementMouseover({
+                            dispatch.call('elementMouseover', this, {
                                 point: point,
                                 series: series,
                                 pos: [x(getX(point, i)) + margin.left, y(getY(point, i)) + margin.top],//TODO: make this pos base on the page
@@ -440,7 +440,7 @@ nv.models.scatter = function() {
                             var series = data[d[0].series],
                                 point  = series.values[i];
 
-                            dispatch.elementMouseout({
+                            dispatch.call('elementMouseout', this, {
                                 point: point,
                                 series: series,
                                 pos: [x(getX(point, i)) + margin.left, y(getY(point, i)) + margin.top],//TODO: make this pos base on the page
@@ -685,10 +685,10 @@ nv.models.scatter = function() {
         pointBorderColor: {get: function(){return pointBorderColor;}, set: function(_){pointBorderColor=_;}},
 
         // simple functor options
-        x:     {get: function(){return getX;}, set: function(_){getX = d3.functor(_);}},
-        y:     {get: function(){return getY;}, set: function(_){getY = d3.functor(_);}},
-        pointSize: {get: function(){return getSize;}, set: function(_){getSize = d3.functor(_);}},
-        pointShape: {get: function(){return getShape;}, set: function(_){getShape = d3.functor(_);}},
+        x:     {get: function(){return getX;}, set: function(_){getX = typeof _ === "function" ? _ : function(){return _;};}},
+        y:     {get: function(){return getY;}, set: function(_){getY = typeof _ === "function" ? _ : function(){return _;};}},
+        pointSize: {get: function(){return getSize;}, set: function(_){getSize = typeof _ === "function" ? _ : function(){return _;};}},
+        pointShape: {get: function(){return getShape;}, set: function(_){getShape = typeof _ === "function" ? _ : function(){return _;};}},
 
         // options that require extra logic in the setter
         margin: {get: function(){return margin;}, set: function(_){

@@ -24,8 +24,8 @@ nv.models.forceDirectedGraph = function() {
         // These functions allow to add extra attributes to ndes and links
         ,nodeExtras = function(nodes) { /* Do nothing */ }
         ,linkExtras = function(links) { /* Do nothing */ }
-        , getX=d3.functor(0.0)
-        , getY=d3.functor(0.0)
+        , getX=function() {return 0.0;}
+        , getY=function() {return 0.0;}
         ;
 
 
@@ -67,7 +67,7 @@ nv.models.forceDirectedGraph = function() {
             });
           });
 
-          var force = d3.layout.force()
+          var force = d3.forceSimulation()
                 .nodes(data.nodes)
                 .links(data.links)
                 .size([availableWidth, availableHeight])
@@ -162,8 +162,8 @@ nv.models.forceDirectedGraph = function() {
         radius:      {get: function(){return radius;}, set: function(_){radius=_;}},
 
         //functor options
-        x: {get: function(){return getX;}, set: function(_){getX=d3.functor(_);}},
-        y: {get: function(){return getY;}, set: function(_){getY=d3.functor(_);}},
+        x: {get: function(){return getX;}, set: function(_){getX= typeof _ === "function" ? _ : function(){return _;};}},
+        y: {get: function(){return getY;}, set: function(_){getY=typeof _ === "function" ? _ : function(){return _;};}},
 
         // options that require extra logic in the setter
         margin: {get: function(){return margin;}, set: function(_){

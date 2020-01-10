@@ -11,8 +11,8 @@ nv.models.candlestickBar = function() {
         , height = null
         , id = Math.floor(Math.random() * 10000) //Create semi-unique ID in case user doesn't select one
         , container
-        , x = d3.scale.linear()
-        , y = d3.scale.linear()
+        , x = d3.scaleLinear()
+        , y = d3.scaleLinear()
         , getX = function(d) { return d.x }
         , getY = function(d) { return d.y }
         , getOpen = function(d) { return d.open }
@@ -85,7 +85,7 @@ nv.models.candlestickBar = function() {
 
             container
                 .on('click', function(d,i) {
-                    dispatch.chartClick({
+                    dispatch.call('chartClick', this, {
                         data: d,
                         index: i,
                         pos: d3.event,
@@ -158,6 +158,7 @@ nv.models.candlestickBar = function() {
                     var close = getClose(d, i);
                     return open > close ? y(close) - y(open) : y(open) - y(close);
                 });
+                ticks.merge(ticks);
         });
 
         return chart;

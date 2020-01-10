@@ -3,7 +3,7 @@
 
 <link href="../build/nv.d3.css" rel="stylesheet" type="text/css">
 <link href="teststyle.css" rel="stylesheet" type='text/css'>
-<script src="../bower_components/d3/d3.js"></script>
+<script src="../node_modules/d3/dist/d3.js"></script>
 <script src="../build/nv.d3.js"></script>
 
 <body>
@@ -145,6 +145,10 @@ defaultChartTest("test15",[
 
 defaultChartTest("test16",tinyPoints());
 
+var t = d3.transition()
+        .duration(500)
+        .ease(d3.easeLinear);
+
 function defaultChartTest(container, data, margin) {
   nv.addGraph(function() {
     var chart;
@@ -159,7 +163,7 @@ function defaultChartTest(container, data, margin) {
     chart.tooltipContent(function(key) {
         return "<h3>" + key + "</h3>";
     });
-    d3.select('#' + container + ' svg').datum(data).transition().duration(500).call(chart);
+    d3.select('#' + container + ' svg').datum(data).transition(t).call(chart);
 
     nv.utils.windowResize(chart.update);
 
@@ -179,7 +183,7 @@ function scatterPlusLineTest(container, data) {
     chart.tooltipContent(function(key) {
         return "<h3>" + key + "</h3>";
     });
-    d3.select('#' + container + ' svg').datum(data).transition().duration(500).call(chart);
+    d3.select('#' + container + ' svg').datum(data).transition(t).call(chart);
     nv.utils.windowResize(chart.update);
     return chart;
   });

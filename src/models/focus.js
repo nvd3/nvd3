@@ -6,9 +6,9 @@ nv.models.focus = function(content) {
     //------------------------------------------------------------
 
     var content = content || nv.models.line()
-        , xAxis = nv.models.axis()
-        , yAxis = nv.models.axis()
-        , brush = d3.svg.brush()
+        , xAxis = nv.models.axis(d3.axisBottom(d3.scaleLinear()), 'bottom')
+        , yAxis = nv.models.axis(d3.axisLeft(d3.scaleLinear()), 'left')
+        , brush = d3.brush()
         ;
 
     var margin = {top: 10, right: 0, bottom: 30, left: 0}
@@ -23,6 +23,9 @@ nv.models.focus = function(content) {
         , y
         , brushExtent = null
         , duration = 250
+        , t = d3.transition()
+              .duration(duration)
+              .ease(d3.easeLinear)
         , dispatch = d3.dispatch('brush', 'onBrush', 'renderEnd')
         , syncBrushing = true
         ;
@@ -52,7 +55,7 @@ nv.models.focus = function(content) {
                 if( duration === 0 ) {
                     container.call( chart );
                 } else {
-                    container.transition().duration(duration).call(chart);
+                    container.transition(t).call(chart);
                 }
             };
             chart.container = this;
@@ -98,14 +101,14 @@ nv.models.focus = function(content) {
             
             // Setup Brush
             brush
-                .x(x)
+                //@todo .x(x)
                 .on('brush', function() {
                     onBrush(syncBrushing);
                 });
 
-            brush.on('brushend', function () {
+            brush.on('end', function () {
                 if (!syncBrushing) {
-                    dispatch.onBrush(brush.empty() ? x.domain() : brush.extent());
+                    dispatch.call('brush', d3.event.selection === null ? x.domain() : brush.extent());
                 }
             });
 
@@ -144,7 +147,8 @@ nv.models.focus = function(content) {
             if (showXAxis) {
                 xAxis.scale(x)
                     ._ticks( nv.utils.calcTicksX(availableWidth/100, data) )
-                    .tickSize(-availableHeight, 0);
+                xAxis
+                    .tickSizeInner(-availableHeight);
   
                 g.select('.nv-x.nv-axis')
                     .attr('transform', 'translate(0,' + y.range()[0] + ')');
@@ -156,7 +160,8 @@ nv.models.focus = function(content) {
                 yAxis
                     .scale(y)
                     ._ticks( nv.utils.calcTicksY(availableHeight/36, data) )
-                    .tickSize( -availableWidth, 0);
+                yAxis
+                    .tickSizeInner( -availableWidth);
 
                 d3.transition(g.select('.nv-y.nv-axis'))
                     .call(yAxis);
@@ -191,9 +196,9 @@ nv.models.focus = function(content) {
     
     
             function updateBrushBG() {
-                if (!brush.empty()) brush.extent(brushExtent);
+                if (brushExtent != null) brush.extent(brushExtent);
                 brushBG
-                    .data([brush.empty() ? x.domain() : brushExtent])
+                    .data([brushExtent === null ? x.domain() : brushExtent])
                     .each(function(d,i) {
                         var leftWidth = x(d[0]) - x.range()[0],
                             rightWidth = availableWidth - x(d[1]);
@@ -208,12 +213,12 @@ nv.models.focus = function(content) {
 
 
             function onBrush(shouldDispatch) {
-                brushExtent = brush.empty() ? null : brush.extent();
-                var extent = brush.empty() ? x.domain() : brush.extent();
-                dispatch.brush({extent: extent, brush: brush});
+                brushExtent = d3.event === null || d3.event.selection === null ? null : brush.extent();
+                var extent = d3.event === null || d3.event.selection === null ? x.domain() : brush.extent();
+                dispatch.call('brush', this, {extent: extent, brush: brush});
                 updateBrushBG();
                 if (shouldDispatch) {
-                    dispatch.onBrush(extent);
+                    dispatch.call('brush', this, extent);
                 }
             }
         });
@@ -258,6 +263,9 @@ nv.models.focus = function(content) {
         duration: {get: function(){return duration;}, set: function(_){
             duration = _;
             renderWatch.reset(duration);
+            t = d3.transition()
+                  .duration(duration)
+                  .ease(d3.easeLinear);
             content.duration(duration);
             xAxis.duration(duration);
             yAxis.duration(duration);

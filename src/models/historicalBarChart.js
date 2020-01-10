@@ -7,8 +7,8 @@ nv.models.historicalBarChart = function(bar_model) {
     //------------------------------------------------------------
 
     var bars = bar_model || nv.models.historicalBar()
-        , xAxis = nv.models.axis()
-        , yAxis = nv.models.axis()
+        , xAxis = nv.models.axis(d3.axisBottom(d3.scaleLinear()), 'bottom')
+        , yAxis = nv.models.axis(d3.axisLeft(d3.scaleLinear()), 'left')
         , legend = nv.models.legend()
         , interactiveLayer = nv.interactiveGuideline()
         , tooltip = nv.models.tooltip()
@@ -32,10 +32,12 @@ nv.models.historicalBarChart = function(bar_model) {
         , noData = null
         , dispatch = d3.dispatch('tooltipHide', 'stateChange', 'changeState', 'renderEnd')
         , transitionDuration = 250
-        ;
+        , t = d3.transition()
+              .duration(transitionDuration)
+              .ease(d3.easeLinear);
 
-    xAxis.orient('bottom').tickPadding(7);
-    yAxis.orient( (rightAlignYAxis) ? 'right' : 'left');
+    xAxis.tickPadding(7);
+    //yAxis.orient( (rightAlignYAxis) ? 'right' : 'left');
     tooltip
         .duration(0)
         .headerEnabled(false)
@@ -66,7 +68,7 @@ nv.models.historicalBarChart = function(bar_model) {
             var availableWidth = nv.utils.availableWidth(width, container, margin),
                 availableHeight = nv.utils.availableHeight(height, container, margin);
 
-            chart.update = function() { container.transition().duration(transitionDuration).call(chart) };
+            chart.update = function() { container.transition(t).call(chart) };
             chart.container = this;
 
             //set state.disabled
@@ -157,7 +159,8 @@ nv.models.historicalBarChart = function(bar_model) {
                 xAxis
                     .scale(x)
                     ._ticks( nv.utils.calcTicksX(availableWidth/100, data) )
-                    .tickSize(-availableHeight, 0);
+                xAxis
+                    .tickSizeInner(-availableHeight);
 
                 g.select('.nv-x.nv-axis')
                     .attr('transform', 'translate(0,' + y.range()[0] + ')');
@@ -170,7 +173,8 @@ nv.models.historicalBarChart = function(bar_model) {
                 yAxis
                     .scale(y)
                     ._ticks( nv.utils.calcTicksY(availableHeight/36, data) )
-                    .tickSize( -availableWidth, 0);
+                yAxis
+                    .tickSizeInner( -availableWidth);
 
                 g.select('.nv-y.nv-axis')
                     .transition()
@@ -221,7 +225,7 @@ nv.models.historicalBarChart = function(bar_model) {
             });
 
             interactiveLayer.dispatch.on("elementMouseout",function(e) {
-                dispatch.tooltipHide();
+                dispatch.call('tooltipHide', this);
                 bars.clearHighlights();
             });
 
@@ -237,7 +241,7 @@ nv.models.historicalBarChart = function(bar_model) {
                 }
 
                 state.disabled = data.map(function(d) { return !!d.disabled });
-                dispatch.stateChange(state);
+                dispatch.call('stateChange', this, state);
 
                 selection.transition().call(chart);
             });
@@ -250,7 +254,7 @@ nv.models.historicalBarChart = function(bar_model) {
                 d.disabled = false;
 
                 state.disabled = data.map(function(d) { return !!d.disabled });
-                dispatch.stateChange(state);
+                dispatch.call('stateChange', this, state);
                 chart.update();
             });
 
@@ -335,12 +339,15 @@ nv.models.historicalBarChart = function(bar_model) {
         duration:    {get: function(){return transitionDuration;}, set: function(_){
             transitionDuration=_;
             renderWatch.reset(transitionDuration);
+            t = d3.transition()
+                  .duration(transitionDuration)
+                  .ease(d3.easeLinear);
             yAxis.duration(transitionDuration);
             xAxis.duration(transitionDuration);
         }},
         rightAlignYAxis: {get: function(){return rightAlignYAxis;}, set: function(_){
             rightAlignYAxis = _;
-            yAxis.orient( (_) ? 'right' : 'left');
+            //@todo yAxis.orient( (_) ? 'right' : 'left');
         }},
         useInteractiveGuideline: {get: function(){return useInteractiveGuideline;}, set: function(_){
             useInteractiveGuideline = _;

@@ -3,10 +3,10 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width" />
-    <link href="../build/nv.d3.css" rel="stylesheet" type="text/css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.2/d3.min.js" charset="utf-8"></script>
+    <link href="js/nv.d3.css" rel="stylesheet" type="text/css">
+    <script src="js/d3.min.js" charset="utf-8"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.19.2/moment.js"></script>
-    <script src="../build/nv.d3.js?dsf"></script>
+    <script src="js/nv.d3.js"></script>
 
     <style>
         text {
@@ -92,7 +92,7 @@
   }
 
   function main() {
-    var colors = d3.scale.category20();
+    var colors = d3.scaleOrdinal(d3.schemeCategory20);
     var lang = d3.locale({
       "dateTime": '%H:%M %A %e %B, %Y',
       "date": '%Y-%m-%d',

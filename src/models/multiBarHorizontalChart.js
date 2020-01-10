@@ -7,8 +7,8 @@ nv.models.multiBarHorizontalChart = function() {
     //------------------------------------------------------------
 
     var multibar = nv.models.multiBarHorizontal()
-        , xAxis = nv.models.axis()
-        , yAxis = nv.models.axis()
+        , xAxis = nv.models.axis(d3.axisBottom(d3.scaleLinear()), 'bottom')
+        , yAxis = nv.models.axis(d3.axisLeft(d3.scaleLinear()), 'left')
         , legend = nv.models.legend().height(30)
         , controls = nv.models.legend().height(30)
         , tooltip = nv.models.tooltip()
@@ -41,15 +41,12 @@ nv.models.multiBarHorizontalChart = function() {
 
     multibar.stacked(stacked);
 
+    xAxis.tickPadding(5)
     xAxis
-        .orient('left')
-        .tickPadding(5)
         .showMaxMin(false)
         .tickFormat(function(d) { return d })
     ;
-    yAxis
-        .orient('bottom')
-        .tickFormat(d3.format(',.1f'))
+    yAxis.tickFormat(d3.format(',.1f'))
     ;
 
     tooltip
@@ -102,7 +99,7 @@ nv.models.multiBarHorizontalChart = function() {
             var availableWidth = nv.utils.availableWidth(width, container, margin),
                 availableHeight = nv.utils.availableHeight(height, container, margin);
 
-            chart.update = function() { container.transition().duration(duration).call(chart) };
+            chart.update = function() { container.transition(t).call(chart) };
             chart.container = this;
 
             stacked = multibar.stacked();
@@ -225,7 +222,8 @@ nv.models.multiBarHorizontalChart = function() {
                 xAxis
                     .scale(x)
                     ._ticks( nv.utils.calcTicksY(availableHeight/24, data) )
-                    .tickSize(-availableWidth, 0);
+                xAxis
+                    .tickSizeInner(-availableWidth);
 
                 g.select('.nv-x.nv-axis').call(xAxis);
 
@@ -239,7 +237,8 @@ nv.models.multiBarHorizontalChart = function() {
                 yAxis
                     .scale(y)
                     ._ticks( nv.utils.calcTicksX(availableWidth/100, data) )
-                    .tickSize( -availableHeight, 0);
+                yAxis
+                    .tickSizeInner( -availableHeight);
 
                 g.select('.nv-y.nv-axis')
                     .attr('transform', 'translate(0,' + availableHeight + ')');
@@ -380,6 +379,9 @@ nv.models.multiBarHorizontalChart = function() {
         duration: {get: function(){return duration;}, set: function(_){
             duration = _;
             renderWatch.reset(duration);
+            t = d3.transition()
+                  .duration(duration)
+                  .ease(d3.easeLinear);
             multibar.duration(duration);
             xAxis.duration(duration);
             yAxis.duration(duration);

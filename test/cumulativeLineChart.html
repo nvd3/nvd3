@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <meta charset="utf-8">
 
-<link href="../src/nv.d3.css" rel="stylesheet" type="text/css">
+<link href="../build/nv.d3.css" rel="stylesheet" type="text/css">
 
 <style>
 
@@ -63,7 +63,7 @@ nv.addGraph(function() {
               .useInteractiveGuideline(true)
               .x(function(d) { return d[0] })
               .y(function(d) { return d[1]/100 })
-              .color(d3.scale.category10().range())
+              .color(d3.scaleOrdinal(d3.schemeCategory10).range())
               .average(function(d) { return d.mean/100; })
               .duration(300)
               .clipVoronoi(false);
@@ -98,7 +98,7 @@ nv.addGraph(function() {
              .margin({right:90})
              .x(function(d) { return d[0] })
              .y(function(d) { return d[1]/100 })
-             .color(d3.scale.category10().range())
+             .color(d3.scaleOrdinal(d3.schemeCategory10).range())
              .average(function(d) { return d.mean/100; })
              .duration(300)
              .clipVoronoi(false);

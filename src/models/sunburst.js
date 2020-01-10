@@ -27,21 +27,24 @@ nv.models.sunburst = function() {
         }
         , groupColorByParent = true
         , duration = 500
+        , t = d3.transition()
+              .duration(duration)
+              .ease(d3.easeLinear)
         , dispatch = d3.dispatch('chartClick', 'elementClick', 'elementDblClick', 'elementMousemove', 'elementMouseover', 'elementMouseout', 'renderEnd');
 
     //============================================================
     // aux functions and setup
     //------------------------------------------------------------
 
-    var x = d3.scale.linear().range([0, 2 * Math.PI]);
-    var y = d3.scale.sqrt();
+    var x = d3.scaleLinear().range([0, 2 * Math.PI]);
+    var y = d3.scaleSqrt();
 
-    var partition = d3.layout.partition().sort(sort);
+    var partition = d3.partition();//@todo .sort(sort);
 
     var node, availableWidth, availableHeight, radius;
     var prevPositions = {};
 
-    var arc = d3.svg.arc()
+    var arc = d3.arc()
         .startAngle(function(d) {return Math.max(0, Math.min(2 * Math.PI, x(d.x))) })
         .endAngle(function(d) {return Math.max(0, Math.min(2 * Math.PI, x(d.x + d.dx))) })
         .innerRadius(function(d) {return Math.max(0, y(d.y)) })
@@ -152,8 +155,7 @@ nv.models.sunburst = function() {
         // to allow reference to the new center node
         node = d;
 
-        path.transition()
-            .duration(duration)
+        path.transition(t)
             .attrTween("d", arcTweenZoom)
             .each('end', function(e) {
                 // partially taken from here: http://bl.ocks.org/metmajer/5480307
@@ -165,7 +167,7 @@ nv.models.sunburst = function() {
                         var arcText = parentNode.select('text');
 
                         // fade in the text element and recalculate positions
-                        arcText.transition().duration(duration)
+                        arcText.transition(t)
                         .text( function(e){return labelFormat(e) })
                         .attr("opacity", function(d){
                             if(labelThresholdMatched(d)) {
@@ -225,7 +227,7 @@ nv.models.sunburst = function() {
             }
 
             container.on('click', function (d, i) {
-                dispatch.chartClick({
+                dispatch.call('chartClick', this, {
                     data: d,
                     index: i,
                     pos: d3.event,
@@ -263,14 +265,14 @@ nv.models.sunburst = function() {
                 .style("stroke", "#FFF")
                 .on("click", function(d,i){
                     zoomClick(d);
-                    dispatch.elementClick({
+                    dispatch.call('elementClick', this, {
                         data: d,
                         index: i
                     })
                 })
                 .on('mouseover', function(d,i){
                     d3.select(this).classed('hover', true).style('opacity', 0.8);
-                    dispatch.elementMouseover({
+                    dispatch.call('elementMouseover', this, {
                         data: d,
                         color: d3.select(this).style("fill"),
                         percent: computeNodePercentage(d)
@@ -278,12 +280,12 @@ nv.models.sunburst = function() {
                 })
                 .on('mouseout', function(d,i){
                     d3.select(this).classed('hover', false).style('opacity', 1);
-                    dispatch.elementMouseout({
+                    dispatch.call('elementMouseout', this, {
                         data: d
                     });
                 })
                 .on('mousemove', function(d,i){
-                    dispatch.elementMousemove({
+                    dispatch.call('elementMousemove', this, {
                         data: d
                     });
                 });
@@ -293,8 +295,7 @@ nv.models.sunburst = function() {
             ///Without iteration the data (in the element) didn't update.
             cG.each(function(d){
                 d3.select(this).select('path')
-                    .transition()
-                    .duration(duration)
+                    .transition(t)
                     .attrTween('d', arcTweenUpdate);
             });
 
@@ -305,8 +306,7 @@ nv.models.sunburst = function() {
                 //this way labels are on top of newly added arcs
                 cG.append('text')
                     .text( function(e){ return labelFormat(e)})
-                    .transition()
-                    .duration(duration)
+                    .transition(t)
                     .attr("opacity", function(d){
                         if(labelThresholdMatched(d)) {
                             return 1;
@@ -339,8 +339,7 @@ nv.models.sunburst = function() {
 
             //remove unmatched elements ...
             cG.exit()
-                .transition()
-                .duration(duration)
+                .transition(t)
                 .attr('opacity',0)
                 .each('end',function(d){
                     var k = key(d);
@@ -367,7 +366,11 @@ nv.models.sunburst = function() {
         height:     {get: function(){return height;}, set: function(_){height=_;}},
         mode:       {get: function(){return mode;}, set: function(_){mode=_;}},
         id:         {get: function(){return id;}, set: function(_){id=_;}},
-        duration:   {get: function(){return duration;}, set: function(_){duration=_;}},
+        duration:   {get: function(){return duration;}, set: function(_){duration=_;
+            t = d3.transition()
+              .duration(duration)
+              .ease(d3.easeLinear);
+          }},
         groupColorByParent: {get: function(){return groupColorByParent;}, set: function(_){groupColorByParent=!!_;}},
         showLabels: {get: function(){return showLabels;}, set: function(_){showLabels=!!_}},
         labelFormat: {get: function(){return labelFormat;}, set: function(_){labelFormat=_}},

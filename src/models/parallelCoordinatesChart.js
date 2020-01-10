@@ -21,7 +21,7 @@ nv.models.parallelCoordinatesChart = function () {
         , defaultState = null
         , noData = null
         , nanValue = "undefined"
-        , dispatch = d3.dispatch('dimensionsOrder', 'brushEnd', 'stateChange', 'changeState', 'renderEnd')
+        , dispatch = d3.dispatch('dimensionsOrder', 'end', 'stateChange', 'changeState', 'renderEnd')
         , controlWidth = function () { return showControls ? 180 : 0 }
         ;
 
@@ -169,10 +169,10 @@ nv.models.parallelCoordinatesChart = function () {
                 // Event Handling/Dispatching (in chart's scope)
                 //------------------------------------------------------------
                 //Display reset brush button
-		        parallelCoordinates.dispatch.on('brushEnd', function (active, hasActiveBrush) {
+		        parallelCoordinates.dispatch.on('end', function (active, hasActiveBrush) {
 		            if (hasActiveBrush) {
 		                displayBrush = true;
-		                dispatch.brushEnd(active);
+		                dispatch.call('end', this, active);
 		            } else {
 
 		                displayBrush = false;
@@ -183,7 +183,7 @@ nv.models.parallelCoordinatesChart = function () {
 		            for(var key in newState) {
 		                state[key] = newState[key];
 		            }
-		            dispatch.stateChange(state);
+		            dispatch.call('stateChange', that, state);
 		            chart.update();
 		        });
 
@@ -196,7 +196,7 @@ nv.models.parallelCoordinatesChart = function () {
 		                if (d.currentPosition !== d.originalPosition)
 		                    isSorted = true;
 		            });
-		            dispatch.dimensionsOrder(dimensionData, isSorted);
+		            dispatch.call('dimensionsOrder', dimensionData, isSorted);
 		        });
 
 				// Update chart from a state object passed to event handler

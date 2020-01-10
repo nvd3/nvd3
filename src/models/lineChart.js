@@ -6,8 +6,8 @@ nv.models.lineChart = function() {
     //------------------------------------------------------------
 
     var lines = nv.models.line()
-        , xAxis = nv.models.axis()
-        , yAxis = nv.models.axis()
+        , xAxis = nv.models.axis(d3.axisBottom(d3.scaleLinear()), 'bottom')
+        , yAxis = nv.models.axis(d3.axisLeft(d3.scaleLinear()), 'left')
         , legend = nv.models.legend()
         , interactiveLayer = nv.interactiveGuideline()
         , tooltip = nv.models.tooltip()
@@ -33,11 +33,14 @@ nv.models.lineChart = function() {
         , noData = null
         , dispatch = d3.dispatch('stateChange', 'changeState', 'renderEnd')
         , duration = 250
+        , t = d3.transition()
+              .duration(duration)
+              .ease(d3.easeLinear)
         ;
 
     // set options on sub-objects for this chart
-    xAxis.orient('bottom').tickPadding(7);
-    yAxis.orient(rightAlignYAxis ? 'right' : 'left');
+    xAxis.tickPadding(7);
+    //yAxis.orient(rightAlignYAxis ? 'right' : 'left');
 
     lines.clipEdge(true).duration(0);
 
@@ -92,7 +95,7 @@ nv.models.lineChart = function() {
                 if( duration === 0 ) {
                     container.call( chart );
                 } else {
-                    container.transition().duration(duration).call(chart);
+                    container.transition(t).call(chart);
                 }
             };
             chart.container = this;
@@ -125,7 +128,7 @@ nv.models.lineChart = function() {
             }
 
             /* Update `main' graph on brush update. */
-            focus.dispatch.on("onBrush", function(extent) {
+            focus.dispatch.on("brush", function(extent) {
                 onBrush(extent);
             });
 
@@ -213,14 +216,16 @@ nv.models.lineChart = function() {
                 xAxis
                     .scale(x)
                     ._ticks(nv.utils.calcTicksX(availableWidth/100, data) )
-                    .tickSize(-availableHeight, 0);
+                xAxis
+                    .tickSizeInner(-availableHeight);
             }
 
             if (showYAxis) {
                 yAxis
                     .scale(y)
                     ._ticks( nv.utils.calcTicksY(availableHeight/36, data) )
-                    .tickSize( -availableWidth, 0);
+                yAxis
+                    .tickSizeInner( -availableWidth);
             }
 
             //============================================================
@@ -229,8 +234,7 @@ nv.models.lineChart = function() {
             function updateXAxis() {
               if(showXAxis) {
                 g.select('.nv-focus .nv-x.nv-axis')
-                  .transition()
-                  .duration(duration)
+                  .transition(t)
                   .call(xAxis)
                 ;
               }
@@ -239,8 +243,7 @@ nv.models.lineChart = function() {
             function updateYAxis() {
               if(showYAxis) {
                 g.select('.nv-focus .nv-y.nv-axis')
-                  .transition()
-                  .duration(duration)
+                  .transition(t)
                   .call(yAxis)
                 ;
               }
@@ -262,7 +265,7 @@ nv.models.lineChart = function() {
                     .style('display', focusEnable ? 'initial' : 'none')
                     .attr('transform', 'translate(0,' + ( availableHeight + margin.bottom + focus.margin().top) + ')')
                     .call(focus);
-                var extent = focus.brush.empty() ? focus.xDomain() : focus.brush.extent();
+                var extent = focus.brush.extent()=== null ? focus.xDomain() : focus.brush.extent();
                 if (extent !== null) {
                     onBrush(extent);
                 }
@@ -274,7 +277,7 @@ nv.models.lineChart = function() {
             legend.dispatch.on('stateChange', function(newState) {
                 for (var key in newState)
                     state[key] = newState[key];
-                dispatch.stateChange(state);
+                dispatch.call('stateChange', this, state);
                 chart.update();
             });
 
@@ -287,7 +290,7 @@ nv.models.lineChart = function() {
                         return !series.disabled && !series.disableTooltip;
                     })
                     .forEach(function(series,i) {
-                        var extent = focus.brush.extent() !== null ? (focus.brush.empty() ? focus.xScale().domain() : focus.brush.extent()) : x.domain();
+                        var extent = focus.brush.extent() !== null ? (focus.brush.extent() === null ? focus.xScale().domain() : focus.brush.extent()) : x.domain();
                         var currentValues = series.values.filter(function(d,i) {
                             // Checks if the x point is between the extents, handling case where extent[0] is greater than extent[1]
                             // (e.g. x domain is manually set to reverse the x-axis)
@@ -364,7 +367,7 @@ nv.models.lineChart = function() {
                     });
                 });
 
-                lines.dispatch.elementClick(allData);
+                lines.dispatch.call('elementClick', this, allData);
             });
 
             interactiveLayer.dispatch.on("elementMouseout",function(e) {
@@ -419,7 +422,7 @@ nv.models.lineChart = function() {
                             };
                         })
                 );
-                focusLinesWrap.transition().duration(duration).call(lines);
+                focusLinesWrap.transition(t).call(lines);
 
                 // Update Main (Focus) Axes
                 updateXAxis();
@@ -501,6 +504,9 @@ nv.models.lineChart = function() {
         duration: {get: function(){return duration;}, set: function(_){
             duration = _;
             renderWatch.reset(duration);
+            t = d3.transition()
+                  .duration(duration)
+                  .ease(d3.easeLinear);
             lines.duration(duration);
             focus.duration(duration);
             xAxis.duration(duration);
@@ -534,7 +540,7 @@ nv.models.lineChart = function() {
         }},
         rightAlignYAxis: {get: function(){return rightAlignYAxis;}, set: function(_){
             rightAlignYAxis = _;
-            yAxis.orient( rightAlignYAxis ? 'right' : 'left');
+            //yAxis.orient( rightAlignYAxis ? 'right' : 'left');
         }},
         useInteractiveGuideline: {get: function(){return useInteractiveGuideline;}, set: function(_){
             useInteractiveGuideline = _;

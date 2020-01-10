@@ -1,6 +1,9 @@
 window.d3 = require('d3');
 var nv = require('../../build/nv.d3');
 var invariant = require('invariant');
+var t = d3.transition()
+        .duration(1000)
+        .ease(d3.easeLinear);
 
 window.addEventListener("load", function load(event) {
   window.removeEventListener("load", load, false);
@@ -9,7 +12,7 @@ window.addEventListener("load", function load(event) {
     var chart = nv.models.bulletChart();
     d3.select('#chart svg')
         .datum(exampleData())
-        .transition().duration(1000)
+        .transition(t)
         .call(chart);
     return chart;
   });

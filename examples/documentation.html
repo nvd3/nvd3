@@ -7,8 +7,8 @@
     <link rel="stylesheet" href="stylesheets/styles.css">
     <link rel="stylesheet" href="stylesheets/pygment_trac.css">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.17/d3.min.js" charset="utf-8"></script>
-    <script src="../build/nv.d3.js"></script>
+    <script src="js/d3.min.js" charset="utf-8"></script>
+    <script src="js/nv.d3.js"></script>
 
     <link rel="stylesheet" href="https://cdn.rawgit.com/isagalaev/highlight.js/8.4/src/styles/tomorrow.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.4/highlight.min.js"></script>
@@ -361,7 +361,7 @@ as well as used to print out examples using those example inputs.
             examples: [
                 ['#FF0000', '#00FF00', '#0000FF'],
                 function (d, i) {
-                    var colors = d3.scale.category20().range().slice(10);
+                    var colors = d3.scaleOrdinal(d3.schemeCategory20).range().slice(10);
                     return colors[i % colors.length-1];
                 }
             ]
@@ -393,7 +393,7 @@ as well as used to print out examples using those example inputs.
             examples: [1000]
         },
         defaultState: {
-            desc: "No longer used.  Use chart.dispatch.changeState(...) instead."
+            desc: "No longer used.  Use chart.dispatch.call('changeState'...) instead."
         },
         showLabels: {
             desc: "Show pie/donut chart labels for each slice",
@@ -587,17 +587,17 @@ as well as used to print out examples using those example inputs.
         xScale: {
             desc: "Override the default scale type for the X axis",
             refs: ["https://github.com/mbostock/d3/wiki/Quantitative-Scales#linear"],
-            default: "d3.scale.linear()"
+            default: "d3.scaleLinear()"
         },
         yScale: {
             desc: "Override the default scale type for the Y axis",
             refs: ["https://github.com/mbostock/d3/wiki/Quantitative-Scales#linear"],
-            default: "d3.scale.linear()"
+            default: "d3.scaleLinear()"
         },
         pointScale: {
             desc: "Override the default scale type for the shapes used in the scatter plot. Scatter is also used to make the hover points on lines.",
             refs: ["https://github.com/mbostock/d3/wiki/Quantitative-Scales#linear"],
-            default: "d3.scale.linear()"
+            default: "d3.scaleLinear()"
         },
         pointSize: {
             desc: "Specifies the size of the points in a scatter.  Scatter is also used to make the hover points on lines.",
@@ -762,7 +762,7 @@ as well as used to print out examples using those example inputs.
             examples: [
                 ['#FF0000', '#00FF00', '#0000FF'],
                 function (d, i) {
-                    var colors = d3.scale.category20().range().slice(10);
+                    var colors = d3.scaleOrdinal(d3.schemeCategory20).range().slice(10);
                     return colors[i % colors.length-1];
                 }
             ]
@@ -1110,7 +1110,7 @@ as well as used to print out examples using those example inputs.
             desc: "Set the color domain for cells; will otherwise be set automatically as either the cell value extend [if the cell values are numeric] or all cell values [if the cell values are categorical]",
         },
         colorScale: {
-            desc: "Override the default scale type for cell colors; will otherwise be set automatically as either d3.scale.quantize() [if cell values are numeric] or d3.scale.ordinal() [if cell values are categorical]",
+            desc: "Override the default scale type for cell colors; will otherwise be set automatically as either d3.scaleQuantize() [if cell values are numeric] or d3.scaleOrdinal() [if cell values are categorical]",
         },
         highContrastText: {
             desc: "Automatically set the cell label color in such a way to maximize contrast against the background color.",

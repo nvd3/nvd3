@@ -86,13 +86,13 @@ nv.models.furiousLegend = function() {
 
             series
                 .on('mouseover', function(d,i) {
-                    dispatch.legendMouseover(d,i);  //TODO: Make consistent with other event objects
+                    dispatch.call('legendMouseover', d,i);  //TODO: Make consistent with other event objects
                 })
                 .on('mouseout', function(d,i) {
-                    dispatch.legendMouseout(d,i);
+                    dispatch.call('legendMouseout', d,i);
                 })
                 .on('click', function(d,i) {
-                    dispatch.legendClick(d,i);
+                    dispatch.call('legendClick', d,i);
                     // make sure we re-get data in case it was modified
                     var data = series.data();
                     if (updateState) {
@@ -129,7 +129,7 @@ nv.models.furiousLegend = function() {
                                 }
                             }
                         }
-                        dispatch.stateChange({
+                        dispatch.call('stateChange', this, {
                             disabled: data.map(function(d) { return !!d.disabled }),
                             disengaged: data.map(function(d) { return !!d.disengaged })
                         });
@@ -138,7 +138,7 @@ nv.models.furiousLegend = function() {
                 })
                 .on('dblclick', function(d,i) {
                     if(vers == 'furious' && expanded) return;
-                    dispatch.legendDblclick(d,i);
+                    dispatch.call('legendDblclick', this, d,i);
                     if (updateState) {
                         // make sure we re-get data in case it was modified
                         var data = series.data();
@@ -150,7 +150,7 @@ nv.models.furiousLegend = function() {
                         });
                         d.disabled = false;
                         if(vers == 'furious') d.userDisabled = d.disabled;
-                        dispatch.stateChange({
+                        dispatch.call('stateChange', this, {
                             disabled: data.map(function(d) { return !!d.disabled })
                         });
                     }

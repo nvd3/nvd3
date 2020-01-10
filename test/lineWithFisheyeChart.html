@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <meta charset="utf-8">
 
-<link href="../src/nv.d3.css" rel="stylesheet" type="text/css">
+<link href="../build/nv.d3.css" rel="stylesheet" type="text/css">
 
 <style>
 
@@ -48,6 +48,9 @@ svg {
 <script src="../src/models/lineWithFisheyeChart.js"></script>
 <script>
 
+var t = d3.transition()
+        .duration(500)
+        .ease(d3.easeLinear);
 
 // Wrapping in nv.addGraph allows for '0 timeout render', stors rendered charts in nv.graphs, and may do more in the future... it's NOT required
 nv.addGraph(function() {  
@@ -62,7 +65,7 @@ nv.addGraph(function() {
 
   d3.select('#chart1 svg')
       .datum(sinAndCos())
-    .transition().duration(500)
+    .transition(t)
       .call(chart);
 
   //TODO: Figure out a good way to do this automatically

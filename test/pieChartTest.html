@@ -2,7 +2,7 @@
 <meta charset="utf-8">
 <link href="../build/nv.d3.css" rel="stylesheet" type="text/css">
 <link href="teststyle.css" rel="stylesheet" type='text/css'>
-<script src="../bower_components/d3/d3.js"></script>
+<script src="../node_modules/d3/dist/d3.js"></script>
 <script src="../build/nv.d3.js"></script>
 <style>
 
@@ -109,6 +109,10 @@ function thirtySeries() {
   return data;
 }
 
+var t = d3.transition()
+        .duration(1200)
+        .ease(d3.easeLinear);
+
 function defaultChart(containerId, data, labelType) {
   nv.addGraph(function() {
       var width = 500,
@@ -117,7 +121,7 @@ function defaultChart(containerId, data, labelType) {
       var chart = nv.models.pieChart()
           .x(function(d) { return d.key })
           .y(function(d) { return d.y })
-          .color(d3.scale.category10().range())
+          .color(d3.scaleOrdinal(d3.schemeCategory10).range())
           .width(width)
           .height(height)
           .labelType(labelType)
@@ -125,7 +129,7 @@ function defaultChart(containerId, data, labelType) {
 
         d3.select("#" + containerId + " svg")
             .datum(data)
-          .transition().duration(1200)
+          .transition(t)
             .attr('width', width)
             .attr('height', height)
             .call(chart);
@@ -148,7 +152,7 @@ function defaultDonutChart(containerId, data, options) {
                 .x(function (d) {
                     return d.key
                 })
-                .color(d3.scale.category10().range())
+                .color(d3.scaleOrdinal(d3.schemeCategory10).range())
                 .width(width)
                 .height(height)
                 .donut(true);
@@ -169,7 +173,7 @@ function defaultDonutChart(containerId, data, options) {
 
         d3.select("#" + containerId + " svg")
                 .datum(data)
-                .transition().duration(1200)
+                .transition(t)
                 .attr('width', width)
                 .attr('height', height)
                 .call(chart);

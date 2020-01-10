@@ -17,8 +17,8 @@ nv.models.heatMap = function() {
         , height = 500
         , id = Math.floor(Math.random() * 10000) //Create semi-unique ID in case user doesn't select one
         , container
-        , xScale = d3.scale.ordinal()
-        , yScale = d3.scale.ordinal()
+        , xScale = d3.scaleBand()
+        , yScale = d3.scaleBand()
         , colorScale = false
         , getX = function(d) { return d.x }
         , getY = function(d) { return d.y }
@@ -415,10 +415,10 @@ nv.models.heatMap = function() {
   
             // Setup Scales
             xScale.domain(xDomain || sortObjByVals(uniqueX))
-                  .rangeBands(xRange || [0, availableWidth-cellBorderWidth/2]);
+                  .range(xRange || [0, availableWidth-cellBorderWidth/2]);
             yScale.domain(yDomain || sortObjByVals(uniqueY))
-                  .rangeBands(yRange || [0, availableHeight-cellBorderWidth/2]);
-            colorScale = cellsAreNumeric() ? d3.scale.quantize() : d3.scale.ordinal();
+                  .range(yRange || [0, availableHeight-cellBorderWidth/2]);
+            colorScale = cellsAreNumeric() ? d3.scaleQuantize() : d3.scaleOrdinal();
             colorScale.domain(colorDomain || getColorDomain())
                   .range(colorRange || RdYlBu);
 
@@ -653,7 +653,7 @@ nv.models.heatMap = function() {
                         }
                     });
                     
-                    dispatch.elementMouseover({
+                    dispatch.call('elementMouseover', this, {
                         value: getKeyByValue(uniqueX, ix) + ' & ' + getKeyByValue(uniqueY, iy), 
                         series: {
                                 value: cellValueLabel(d), 
@@ -680,12 +680,12 @@ nv.models.heatMap = function() {
                         // remove all hover classes
                         removeAllHoverClasses();
 
-                        dispatch.elementMouseout({e: d3.event});
+                        dispatch.call('elementMouseout', this, {e: d3.event});
                     }
                 })
                 .on('mousemove', function(d,i) {
 
-                    dispatch.elementMousemove({e: d3.event});
+                    dispatch.call('elementMousemove', this, {e: d3.event});
                 })
 
             allMetaRect
@@ -721,7 +721,7 @@ nv.models.heatMap = function() {
                     d3.select(this).classed('cell-hover', true);
                     d3.select(this).classed('no-hover', false);
 
-                    dispatch.elementMouseover({
+                    dispatch.call('elementMouseover', this, {
                         value: isColMeta ? 'Column meta' : 'Row meta',
                         series: { value: d, color: d3.select(this).style('fill'), }
                     });
@@ -747,11 +747,11 @@ nv.models.heatMap = function() {
                         // remove all hover classes
                         removeAllHoverClasses();
 
-                        dispatch.elementMouseout({e: d3.event});
+                        dispatch.call('elementMouseout', this, {e: d3.event});
                     }
                 })
                 .on('mousemove', function(d,i) {
-                    dispatch.elementMousemove({e: d3.event});
+                    dispatch.call('elementMousemove', this, {e: d3.event});
                 })
 
         });

@@ -1,12 +1,11 @@
-nv.models.axis = function() {
+nv.models.axis = function(axis, orientation) {
     "use strict";
 
     //============================================================
     // Public Variables with Default Settings
     //------------------------------------------------------------
 
-    var axis = d3.svg.axis();
-    var scale = d3.scale.linear();
+    var scale = d3.scaleBand();
 
     var margin = {top: 0, right: 0, bottom: 0, left: 0}
         , width = 75 //only used for tickLabel currently
@@ -25,9 +24,7 @@ nv.models.axis = function() {
         , tickFormatMaxMin
         ;
     axis
-        .scale(scale)
-        .orient('bottom')
-        .tickFormat(function(d) { return d })
+        .tickFormat((d) => { return d })
     ;
 
     //============================================================
@@ -48,10 +45,9 @@ nv.models.axis = function() {
             var wrapEnter = wrap.enter().append('g').attr('class', 'nvd3 nv-wrap nv-axis');
             var gEnter = wrapEnter.append('g');
             var g = wrap.select('g');
-
             if (ticks !== null)
                 axis.ticks(ticks);
-            else if (axis.orient() == 'top' || axis.orient() == 'bottom')
+            else if (orientation === 'top' || orientation === 'bottom')
                 axis.ticks(Math.abs(scale.range()[1] - scale.range()[0]) / 100);
 
             //TODO: consider calculating width/height based on whether or not label is added, for reference in charts using this component
@@ -76,15 +72,15 @@ nv.models.axis = function() {
             var xLabelMargin;
             var axisMaxMin;
             var w;
-            switch (axis.orient()) {
+            switch (orientation) {
                 case 'top':
                     xLabelMargin = axisLabelDistance + 36;
                     axisLabel.enter().append('text').attr('class', 'nv-axislabel');
                   w = 0;
                   if (scale.range().length === 1) {
-                    w = isOrdinal ? scale.range()[0] * 2 + scale.rangeBand() : 0;
+                    w = isOrdinal ? scale.range()[0] * 2 + scale.bandwidth() : 0;
                   } else if (scale.range().length === 2) {
-                    w = isOrdinal ? scale.range()[0] + scale.range()[1] + scale.rangeBand() : scale.range()[1];
+                    w = isOrdinal ? scale.range()[0] + scale.range()[1] + scale.bandwidth() : scale.range()[1];
                   } else if ( scale.range().length > 2){
                     w = scale.range()[scale.range().length-1]+(scale.range()[1]-scale.range()[0]);
                   };
@@ -155,9 +151,9 @@ nv.models.axis = function() {
                     axisLabel.enter().append('text').attr('class', 'nv-axislabel');
                     w = 0;
                     if (scale.range().length === 1) {
-                        w = isOrdinal ? scale.range()[0] * 2 + scale.rangeBand() : 0;
+                        w = isOrdinal ? scale.range()[0] * 2 + scale.bandwidth() : 0;
                     } else if (scale.range().length === 2) {
-                        w = isOrdinal ? scale.range()[0] + scale.range()[1] + scale.rangeBand() : scale.range()[1];
+                        w = isOrdinal ? scale.range()[0] + scale.range()[1] + scale.bandwidth() : scale.range()[1];
                     } else if ( scale.range().length > 2){
                         w = scale.range()[scale.range().length-1]+(scale.range()[1]-scale.range()[0]);
                     };
@@ -176,7 +172,7 @@ nv.models.axis = function() {
                         axisMaxMin.exit().remove();
                         axisMaxMin
                             .attr('transform', function(d,i) {
-                                return 'translate(' + nv.utils.NaNtoZero((scale(d) + (isOrdinal ? scale.rangeBand() / 2 : 0))) + ',0)'
+                                return 'translate(' + nv.utils.NaNtoZero((scale(d) + (isOrdinal ? scale.bandwidth() / 2 : 0))) + ',0)'
                             })
                             .select('text')
                             .attr('dy', '.71em')
@@ -190,7 +186,7 @@ nv.models.axis = function() {
                             });
                         axisMaxMin.watchTransition(renderWatch, 'min-max bottom')
                             .attr('transform', function(d,i) {
-                                return 'translate(' + nv.utils.NaNtoZero((scale(d) + (isOrdinal ? scale.rangeBand() / 2 : 0))) + ',0)'
+                                return 'translate(' + nv.utils.NaNtoZero((scale(d) + (isOrdinal ? scale.bandwidth() / 2 : 0))) + ',0)'
                             });
                     }
 
@@ -280,7 +276,7 @@ nv.models.axis = function() {
             }
             axisLabel.text(function(d) { return d });
 
-            if (showMaxMin && (axis.orient() === 'left' || axis.orient() === 'right')) {
+            if (showMaxMin && (orientation === 'left' || orientation === 'right')) {
                 //check if max and min overlap other values, if so, hide the values that overlap
                 g.selectAll('g') // the g's wrapping each tick
                     .each(function(d,i) {
@@ -301,7 +297,7 @@ nv.models.axis = function() {
                 }
             }
 
-            if (showMaxMin && (axis.orient() === 'top' || axis.orient() === 'bottom')) {
+            if (showMaxMin && (orientation === 'top' || orientation === 'bottom')) {
                 var maxMinRange = [];
                 wrap.selectAll('g.nv-axisMaxMin')
                     .each(function(d,i) {
@@ -387,13 +383,13 @@ nv.models.axis = function() {
             scale = _;
             axis.scale(scale);
             isOrdinal = typeof scale.rangeBands === 'function';
-            nv.utils.inheritOptionsD3(chart, scale, ['domain', 'range', 'rangeBand', 'rangeBands']);
+            nv.utils.inheritOptionsD3(chart, scale, ['domain', 'range']);
         }}
     });
 
     nv.utils.initOptions(chart);
-    nv.utils.inheritOptionsD3(chart, axis, ['orient', 'tickValues', 'tickSubdivide', 'tickSize', 'tickPadding', 'tickFormat']);
-    nv.utils.inheritOptionsD3(chart, scale, ['domain', 'range', 'rangeBand', 'rangeBands']);
+    nv.utils.inheritOptionsD3(chart, axis, ['tickValues', 'tickSubdivide', 'tickSizeInner', 'tickSizeOuter', 'tickPadding', 'tickFormat']);
+    nv.utils.inheritOptionsD3(chart, scale, ['domain', 'range']);
 
     return chart;
 };

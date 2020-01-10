@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <link href="../build/nv.d3.css" rel="stylesheet" type="text/css">
 <link href="teststyle.css" rel="stylesheet" type="text/css">
-<script src="../bower_components/d3/d3.js" charset="utf-8"></script>
+<script src="../node_modules/d3/dist/d3.js" charset="utf-8"></script>
 <script src="../build/nv.d3.js"></script>
 <style>
 #chart13, #chart14 {
@@ -144,6 +144,10 @@ d3.select("body").on("keydown",function() {
      alert("keydowned");
   }
 });
+var t = d3.transition()
+        .duration(500)
+        .ease(d3.easeLinear);
+
 //------------ CHART 1
 defaultChartConfig("chart1", dummyStocks(),true, true, {forceY:false});
 
@@ -168,7 +172,7 @@ nv.addGraph(function() {
   d3.select('#chart2 svg')
       //.datum([]) //for testing noData
       .datum(dummyStocks(50))
-      .transition().duration(500)
+      .transition(t)
       .call(chart);
 
   nv.utils.windowResize(chart.update);
@@ -242,7 +246,7 @@ function defaultChartConfig(containerid, data, guideline, useDates, auxOptions) 
 
     d3.select('#' + containerid + ' svg')
         .datum(data)
-      .transition().duration(500)
+      .transition(t)
         .call(chart);
 
     nv.utils.windowResize(chart.update);

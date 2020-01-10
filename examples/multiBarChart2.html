@@ -2,9 +2,9 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <link href="../build/nv.d3.css" rel="stylesheet" type="text/css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.17/d3.min.js" charset="utf-8"></script>
-    <script src="../build/nv.d3.js"></script>
+    <link href="js/nv.d3.css" rel="stylesheet" type="text/css">
+    <script src="js/d3.min.js" charset="utf-8"></script>
+    <script src="js/nv.d3.js"></script>
     <script src="lib/stream_layers.js"></script>
 
     <style>
@@ -38,6 +38,10 @@
             values: data
         };
     });
+    var t = d3.transition()
+              .duration(0)
+              .ease(d3.easeLinear);
+      
     nv.addGraph({
         generate: function() {
             var width = nv.utils.windowSize().width,
@@ -55,7 +59,7 @@
 
             var svg = d3.select('#test1 svg').datum(test_data);
             console.log('calling chart');
-            svg.transition().duration(0).call(chart);
+            svg.transition(t).call(chart);
 
             return chart;
         },
@@ -68,7 +72,7 @@
                 d3.select('#test1 svg')
                     .attr('width', width)
                     .attr('height', height)
-                    .transition().duration(0)
+                    .transition(t)
                     .call(graph);
 
             });

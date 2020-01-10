@@ -23,7 +23,7 @@ describe 'NVD3', ->
           should.exist eval obj
 
     describe 'has nv.dispatch with default', ->
-      dispatchDefaults = ['render_start', 'render_end']
+      dispatchDefaults = ['start', 'end']
       for event in dispatchDefaults
         do (event) ->
-          it "#{event} event", -> assert.isFunction nv.dispatch[event]
+          it "#{event} event", -> assert.isFunction nv.dispatch.call

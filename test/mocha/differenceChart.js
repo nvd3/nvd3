@@ -93,7 +93,7 @@
       }
 
       before(function (done) {
-        sandbox = _sinon.sandbox.create();
+        sandbox = _sinon.createSandbox();
         setupBenv(done);
       });
 
@@ -217,35 +217,6 @@
       describe('Processing Data', function () {
         it('should does not process data if series toggled off', function () {
           builder.model.showPredictedLine(false);
-<<<<<<< HEAD
-          var expectedData = [{
-            key: 'Predicted Data minus Actual Data (Predicted > Actual)',
-            type: 'area',
-            values: [{ x: 123, y0: 10, y1: 15 }, { x: 124, y0: 20, y1: 25 }],
-            yAxis: 1,
-            color: 'rgba(44,160,44,.9)',
-            processed: true,
-            noHighlightSeries: true
-          },
-          {
-            key: 'Predicted Data minus Actual Data (Predicted < Actual)',
-            type: 'area',
-            values: [{ x: 123, y0: 10, y1: 10 }, { x: 124, y0: 20, y1: 20 }],
-            yAxis: 1,
-            color: 'rgba(234,39,40,.9)',
-            processed: true,
-            noHighlightSeries: true
-          },
-          {
-            key: 'Actual Data',
-            type: 'line',
-            values: [{ x: 123, y: 10 }, { x: 124, y: 20 }],
-            yAxis: 1,
-            color: '#666666',
-            processed: true,
-            strokeWidth: 1
-          }];
-=======
           var expectedData = [
             {
               key: 'Predicted Data minus Actual Data (Predicted > Actual)',
@@ -732,7 +703,7 @@
 
       describe('areaY1', function () {
         it('should use the scatter yScale to calculate the value using d.display.y', function () {
-          var fakeYScale = sandbox.spy(d3.scale.linear());
+          var fakeYScale = sandbox.spy(d3.scaleLinear());
           builder.model.multiChart.stack1.scatter.yScale(fakeYScale);
           builder.model.update();
 
@@ -869,7 +840,7 @@
 
       it('after the user brushes, the x axis domain should be equal to the brush extent', function () {
         var expectedDomain = [new Date('2016-01-01T01:00:00+1100'), new Date('2016-01-01T03:30:00+1100')];
-        builder.model.focus.dispatch.onBrush(expectedDomain);
+        builder.model.focus.dispatch.on('brush', expectedDomain);
         var newDomain = builder.model.multiChart.xAxis.domain();
         newDomain.should.be.deep.equal(expectedDomain);
       });
@@ -879,7 +850,7 @@
         builder.updateData(sampleDataWithDates);
         var newBrushExtent = [new Date('2016-01-01T02:15:00+1100'), new Date('2016-01-01T02:45:00+1100')];
 
-        builder.model.focus.dispatch.onBrush(newBrushExtent);
+        builder.model.focus.dispatch.on('brush', newBrushExtent);
 
         var dataFromChart = d3.select(builder.model.container).datum();
         dataFromChart[0].values.forEach(function (value) {

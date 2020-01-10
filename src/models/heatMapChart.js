@@ -31,8 +31,8 @@ nv.models.heatMapChart = function() {
         , legendRowMeta = nv.models.legend()
         , legendColumnMeta = nv.models.legend()
         , tooltip = nv.models.tooltip()
-        , xAxis = nv.models.axis()
-        , yAxis = nv.models.axis()
+        , xAxis = nv.models.axis(d3.axisBottom(d3.scaleLinear()), 'bottom')
+        , yAxis = nv.models.axis(d3.axisLeft(d3.scaleLinear()), 'left')
         ;
 
 
@@ -54,16 +54,14 @@ nv.models.heatMapChart = function() {
         , noData = null
         , dispatch = d3.dispatch('beforeUpdate','renderEnd')
         , duration = 250
-        ;
+        , t = d3.transition()
+              .duration(duration)
+              .ease(d3.easeLinear);
 
-    xAxis
-        .orient(alignXAxis)
-        .showMaxMin(false)
+    xAxis.showMaxMin(false)
         .tickFormat(function(d) { return d })
     ;
-    yAxis
-        .orient(alignYAxis)
-        .showMaxMin(false)
+    yAxis.showMaxMin(false)
         .tickFormat(function(d) { return d })
     ;
 
@@ -132,8 +130,8 @@ nv.models.heatMapChart = function() {
                 availableHeight = nv.utils.availableHeight(height, container, margin);
 
             chart.update = function() {
-                dispatch.beforeUpdate();
-                container.transition().duration(duration).call(chart);
+                dispatch.call('beforeUpdate', this);
+                container.transition(t).call(chart);
             };
             chart.container = this;
 
@@ -185,7 +183,8 @@ nv.models.heatMapChart = function() {
             xAxis
                 .scale(x)
                 ._ticks( nv.utils.calcTicksX(availableWidth/100, data) )
-                .tickSize(-availableHeight, 0);
+        xAxis
+                .tickSizeInner(-availableHeight);
 
             var axisX = g.select('.nv-x.nv-axis')
 
@@ -233,7 +232,8 @@ nv.models.heatMapChart = function() {
             yAxis
                 .scale(y)
                 ._ticks( nv.utils.calcTicksY(availableHeight/36, data) )
-                .tickSize( -availableWidth, 0);
+            yAxis
+                .tickSizeInner( -availableWidth);
 
             var axisY = g.select('.nv-y.nv-axis')
 
@@ -360,11 +360,11 @@ nv.models.heatMapChart = function() {
         }},
         alignYAxis: {get: function(){return alignYAxis;}, set: function(_){
             alignYAxis = _;
-            yAxis.orient(_);
+            //@todo yAxis.orient(_);
         }},
         alignXAxis: {get: function(){return alignXAxis;}, set: function(_){
             alignXAxis = _;
-            xAxis.orient(_);
+            //@todo xAxis.orient(_);
         }},
     });
 

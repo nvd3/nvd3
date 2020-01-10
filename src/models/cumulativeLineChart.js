@@ -7,8 +7,8 @@ nv.models.cumulativeLineChart = function() {
     //------------------------------------------------------------
 
     var lines = nv.models.line()
-        , xAxis = nv.models.axis()
-        , yAxis = nv.models.axis()
+        , xAxis = nv.models.axis(d3.axisBottom(d3.scaleLinear()), 'bottom')
+        , yAxis = nv.models.axis(d3.axisLeft(d3.scaleLinear()), 'left')
         , legend = nv.models.legend()
         , controls = nv.models.legend()
         , interactiveLayer = nv.interactiveGuideline()
@@ -37,14 +37,17 @@ nv.models.cumulativeLineChart = function() {
         , dispatch = d3.dispatch('stateChange', 'changeState', 'renderEnd')
         , transitionDuration = 250
         , duration = 250
+        , t = d3.transition()
+              .duration(duration)
+              .ease(d3.easeLinear)
         , noErrorCheck = false  //if set to TRUE, will bypass an error check in the indexify function.
         ;
 
     state.index = 0;
     state.rescaleY = rescaleY;
 
-    xAxis.orient('bottom').tickPadding(7);
-    yAxis.orient((rightAlignYAxis) ? 'right' : 'left');
+    xAxis.tickPadding(7);
+    //yAxis.orient((rightAlignYAxis) ? 'right' : 'left');
 
     tooltip.valueFormatter(function(d, i) {
         return yAxis.tickFormat()(d, i);
@@ -58,7 +61,7 @@ nv.models.cumulativeLineChart = function() {
     // Private Variables
     //------------------------------------------------------------
 
-    var dx = d3.scale.linear()
+    var dx = d3.scaleLinear()
         , index = {i: 0, x: 0}
         , renderWatch = nv.utils.renderWatch(dispatch, duration)
         , currentYDomain
@@ -105,7 +108,7 @@ nv.models.cumulativeLineChart = function() {
                 if (duration === 0)
                     container.call(chart);
                 else
-                    container.transition().duration(duration).call(chart)
+                    container.transition(t).call(chart)
             };
             chart.container = this;
 
@@ -128,10 +131,10 @@ nv.models.cumulativeLineChart = function() {
                 }
             }
 
-            var indexDrag = d3.behavior.drag()
-                .on('dragstart', dragStart)
+            var indexDrag = d3.drag()
+                .on('start', dragStart)
                 .on('drag', dragMove)
-                .on('dragend', dragEnd);
+                .on('end', dragEnd);
 
 
             function dragStart(d,i) {
@@ -151,7 +154,7 @@ nv.models.cumulativeLineChart = function() {
 
                 // update state and send stateChange with new index
                 state.index = index.i;
-                dispatch.stateChange(state);
+                dispatch.call('stateChange', this, state);
             }
 
             // Display No Data message if there's nothing to show.
@@ -357,7 +360,8 @@ nv.models.cumulativeLineChart = function() {
                 xAxis
                     .scale(x)
                     ._ticks( nv.utils.calcTicksX(availableWidth/70, data) )
-                    .tickSize(-availableHeight, 0);
+                xAxis
+                    .tickSizeInner(-availableHeight);
 
                 g.select('.nv-x.nv-axis')
                     .attr('transform', 'translate(0,' + y.range()[0] + ')');
@@ -369,7 +373,8 @@ nv.models.cumulativeLineChart = function() {
                 yAxis
                     .scale(y)
                     ._ticks( nv.utils.calcTicksY(availableHeight/36, data) )
-                    .tickSize( -availableWidth, 0);
+                yAxis
+                    .tickSizeInner( -availableWidth);
 
                 g.select('.nv-y.nv-axis')
                     .call(yAxis);
@@ -398,7 +403,7 @@ nv.models.cumulativeLineChart = function() {
 
                     // update state and send stateChange with new index
                     state.index = index.i;
-                    dispatch.stateChange(state);
+                    dispatch.call('stateChange', this, state);
 
                     updateZero();
                 });
@@ -409,7 +414,7 @@ nv.models.cumulativeLineChart = function() {
 
                 // update state and send stateChange with new index
                 state.index = index.i;
-                dispatch.stateChange(state);
+                dispatch.call('stateChange', this, state);
 
                 updateZero();
             });
@@ -421,14 +426,14 @@ nv.models.cumulativeLineChart = function() {
                 if (!rescaleY) {
                     currentYDomain = getCurrentYDomain(data); // rescale is turned off, so set the currentYDomain
                 }
-                dispatch.stateChange(state);
+                dispatch.call('stateChange', this, state);
                 chart.update();
             });
 
             legend.dispatch.on('stateChange', function(newState) {
                 for (var key in newState)
                     state[key] = newState[key];
-                dispatch.stateChange(state);
+                dispatch.call('stateChange', this, state);
                 chart.update();
             });
 
@@ -641,7 +646,7 @@ nv.models.cumulativeLineChart = function() {
         }},
         rightAlignYAxis: {get: function(){return rightAlignYAxis;}, set: function(_){
             rightAlignYAxis = _;
-            yAxis.orient( (_) ? 'right' : 'left');
+            //@todo yAxis.orient( (_) ? 'right' : 'left');
         }},
         duration:    {get: function(){return duration;}, set: function(_){
             duration = _;
@@ -649,6 +654,9 @@ nv.models.cumulativeLineChart = function() {
             xAxis.duration(duration);
             yAxis.duration(duration);
             renderWatch.reset(duration);
+            t = d3.transition()
+                  .duration(duration)
+                  .ease(d3.easeLinear);
         }}
     });
 

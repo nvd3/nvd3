@@ -11,8 +11,8 @@ nv.models.historicalBar = function() {
         , height = null
         , id = Math.floor(Math.random() * 10000) //Create semi-unique ID in case user doesn't select one
         , container = null
-        , x = d3.scale.linear()
-        , y = d3.scale.linear()
+        , x = d3.scaleLinear()
+        , y = d3.scaleLinear()
         , getX = function(d) { return d.x }
         , getY = function(d) { return d.y }
         , forceX = []
@@ -74,7 +74,7 @@ nv.models.historicalBar = function() {
 
             container
                 .on('click', function(d,i) {
-                    dispatch.chartClick({
+                    dispatch.call('chartClick', this, {
                         data: d,
                         index: i,
                         pos: d3.event,
@@ -104,7 +104,7 @@ nv.models.historicalBar = function() {
                 .on('mouseover', function(d,i) {
                     if (!interactive) return;
                     d3.select(this).classed('hover', true);
-                    dispatch.elementMouseover({
+                    dispatch.call('elementMouseover', this, {
                         data: d,
                         index: i,
                         color: d3.select(this).style("fill")
@@ -114,7 +114,7 @@ nv.models.historicalBar = function() {
                 .on('mouseout', function(d,i) {
                     if (!interactive) return;
                     d3.select(this).classed('hover', false);
-                    dispatch.elementMouseout({
+                    dispatch.call('elementMouseout', this, {
                         data: d,
                         index: i,
                         color: d3.select(this).style("fill")
@@ -122,7 +122,7 @@ nv.models.historicalBar = function() {
                 })
                 .on('mousemove', function(d,i) {
                     if (!interactive) return;
-                    dispatch.elementMousemove({
+                    dispatch.call('elementMousemove', this, {
                         data: d,
                         index: i,
                         color: d3.select(this).style("fill")
@@ -131,7 +131,7 @@ nv.models.historicalBar = function() {
                 .on('click', function(d,i) {
                     if (!interactive) return;
                     var element = this;
-                    dispatch.elementClick({
+                    dispatch.call('elementClick', this, {
                         data: d,
                         index: i,
                         color: d3.select(this).style("fill"),
@@ -142,7 +142,7 @@ nv.models.historicalBar = function() {
                 })
                 .on('dblclick', function(d,i) {
                     if (!interactive) return;
-                    dispatch.elementDblClick({
+                    dispatch.call('elementDblClick', this, {
                         data: d,
                         index: i,
                         color: d3.select(this).style("fill")

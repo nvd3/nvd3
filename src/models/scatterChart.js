@@ -7,8 +7,8 @@ nv.models.scatterChart = function() {
     //------------------------------------------------------------
 
     var scatter      = nv.models.scatter()
-        , xAxis        = nv.models.axis()
-        , yAxis        = nv.models.axis()
+        , xAxis        = nv.models.axis(d3.axisBottom(d3.scaleLinear()), 'bottom')
+        , yAxis        = nv.models.axis(d3.axisLeft(d3.scaleLinear()), 'left')
         , legend       = nv.models.legend()
         , distX        = nv.models.distribution()
         , distY        = nv.models.distribution()
@@ -34,13 +34,16 @@ nv.models.scatterChart = function() {
         , dispatch = d3.dispatch('stateChange', 'changeState', 'renderEnd')
         , noData       = null
         , duration = 250
+        , t = d3.transition()
+              .duration(duration)
+              .ease(d3.easeLinear)
         , showLabels    = false
         ;
 
     scatter.xScale(x).yScale(y);
-    xAxis.orient('bottom').tickPadding(10);
+    xAxis.tickPadding(10);
     yAxis
-        .orient((rightAlignYAxis) ? 'right' : 'left')
+        //.orient((rightAlignYAxis) ? 'right' : 'left')
         .tickPadding(10)
     ;
     distX.axis('x');
@@ -98,7 +101,7 @@ nv.models.scatterChart = function() {
                 if (duration === 0)
                     container.call(chart);
                 else
-                    container.transition().duration(duration).call(chart);
+                    container.transition(t).call(chart);
             };
             chart.container = this;
 
@@ -236,7 +239,8 @@ nv.models.scatterChart = function() {
                 xAxis
                     .scale(x)
                     ._ticks( nv.utils.calcTicksX(availableWidth/100, data) )
-                    .tickSize( -availableHeight , 0);
+                xAxis
+                    .tickSizeInner( -availableHeight);
 
                 g.select('.nv-x.nv-axis')
                     .attr('transform', 'translate(0,' + y.range()[0] + ')')
@@ -247,7 +251,8 @@ nv.models.scatterChart = function() {
                 yAxis
                     .scale(y)
                     ._ticks( nv.utils.calcTicksY(availableHeight/36, data) )
-                    .tickSize( -availableWidth, 0);
+                yAxis
+                    .tickSizeInner( -availableWidth);
 
                 g.select('.nv-y.nv-axis')
                     .call(yAxis);
@@ -296,7 +301,7 @@ nv.models.scatterChart = function() {
             legend.dispatch.on('stateChange', function(newState) {
                 for (var key in newState)
                     state[key] = newState[key];
-                dispatch.stateChange(state);
+                dispatch.call('stateChange', that, state);
                 chart.update();
             });
 
@@ -365,7 +370,11 @@ nv.models.scatterChart = function() {
         showYAxis:  {get: function(){return showYAxis;}, set: function(_){showYAxis=_;}},
         defaultState:     {get: function(){return defaultState;}, set: function(_){defaultState=_;}},
         noData:     {get: function(){return noData;}, set: function(_){noData=_;}},
-        duration:   {get: function(){return duration;}, set: function(_){duration=_;}},
+        duration:   {get: function(){return duration;}, set: function(_){duration=_;
+            t = d3.transition()
+              .duration(duration)
+              .ease(d3.easeLinear);
+          }},
         showLabels: {get: function(){return showLabels;}, set: function(_){showLabels=_;}},
 
         // options that require extra logic in the setter
@@ -380,7 +389,7 @@ nv.models.scatterChart = function() {
         }},
         rightAlignYAxis: {get: function(){return rightAlignYAxis;}, set: function(_){
             rightAlignYAxis = _;
-            yAxis.orient( (_) ? 'right' : 'left');
+            //@todo yAxis.orient( (_) ? 'right' : 'left');
         }},
         color: {get: function(){return color;}, set: function(_){
             color = nv.utils.getColor(_);

@@ -82,9 +82,12 @@
         }
     }
 
-    var colors = d3.scale.category20();
+    var colors = d3.scaleOrdinal(d3.schemeAccent);
 
     var chart;
+    var t = d3.transition()
+        .duration(1000)
+        .ease(d3.easeLinear);
     nv.addGraph(function() {
         chart = nv.models.stackedAreaChart()
             .useInteractiveGuideline(true)
@@ -98,7 +101,7 @@
 
         d3.select('#chart1')
             .datum(data)
-            .transition().duration(1000)
+            .transition(t)
             .call(chart)
             .each('start', function() {
                 setTimeout(function() {

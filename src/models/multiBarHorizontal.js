@@ -11,8 +11,8 @@ nv.models.multiBarHorizontal = function() {
         , height = 500
         , id = Math.floor(Math.random() * 10000) //Create semi-unique ID in case user doesn't select one
         , container = null
-        , x = d3.scale.ordinal()
-        , y = d3.scale.linear()
+        , x = d3.scaleBand()
+        , y = d3.scaleLinear()
         , getX = function(d) { return d.x }
         , getY = function(d) { return d.y }
         , getYerr = function(d) { return d.yErr }
@@ -53,7 +53,7 @@ nv.models.multiBarHorizontal = function() {
             nv.utils.initSVG(container);
 
             if (stacked)
-                data = d3.layout.stack()
+                data = d3.stack()
                     .offset('zero')
                     .values(function(d){ return d.values })
                     .y(getY)
@@ -95,7 +95,7 @@ nv.models.multiBarHorizontal = function() {
                 });
 
             x.domain(xDomain || d3.merge(seriesData).map(function(d) { return d.x }))
-                .rangeBands(xRange || [0, availableHeight], groupSpacing);
+                .range(xRange || [0, availableHeight], groupSpacing);
 
             y.domain(yDomain || d3.extent(d3.merge(seriesData).map(function(d) { return stacked ? (d.y > 0 ? d.y1 + d.y : d.y1 ) : d.y }).concat(forceY)))
 
@@ -105,7 +105,7 @@ nv.models.multiBarHorizontal = function() {
                 y.range(yRange || [0, availableWidth]);
 
             x0 = x0 || x;
-            y0 = y0 || d3.scale.linear().domain(y.domain()).range([y(0),y(0)]);
+            y0 = y0 || d3.scaleLinear().domain(y.domain()).range([y(0),y(0)]);
 
             // Setup containers and skeleton of chart
             var wrap = d3.select(this).selectAll('g.nv-wrap.nv-multibarHorizontal').data([data]);
@@ -141,17 +141,17 @@ nv.models.multiBarHorizontal = function() {
 
             var barsEnter = bars.enter().append('g')
                 .attr('transform', function(d,i,j) {
-                    return 'translate(' + y0(stacked ? d.y0 : 0) + ',' + (stacked ? 0 : (j * x.rangeBand() / data.length ) + x(getX(d,i))) + ')'
+                    return 'translate(' + y0(stacked ? d.y0 : 0) + ',' + (stacked ? 0 : (j * x.bandwidth() / data.length ) + x(getX(d,i))) + ')'
                 });
 
             barsEnter.append('rect')
                 .attr('width', 0)
-                .attr('height', x.rangeBand() / (stacked ? 1 : data.length) )
+                .attr('height', x.bandwidth() / (stacked ? 1 : data.length) )
 
             bars
                 .on('mouseover', function(d,i) { //TODO: figure out why j works above, but not here
                     d3.select(this).classed('hover', true);
-                    dispatch.elementMouseover({
+                    dispatch.call('elementMouseover', this, {
                         data: d,
                         index: i,
                         color: d3.select(this).style("fill")
@@ -159,21 +159,21 @@ nv.models.multiBarHorizontal = function() {
                 })
                 .on('mouseout', function(d,i) {
                     d3.select(this).classed('hover', false);
-                    dispatch.elementMouseout({
+                    dispatch.call('elementMouseout', this, {
                         data: d,
                         index: i,
                         color: d3.select(this).style("fill")
                     });
                 })
                 .on('mouseout', function(d,i) {
-                    dispatch.elementMouseout({
+                    dispatch.call('elementMouseout', this, {
                         data: d,
                         index: i,
                         color: d3.select(this).style("fill")
                     });
                 })
                 .on('mousemove', function(d,i) {
-                    dispatch.elementMousemove({
+                    dispatch.call('elementMousemove', this, {
                         data: d,
                         index: i,
                         color: d3.select(this).style("fill")
@@ -181,7 +181,7 @@ nv.models.multiBarHorizontal = function() {
                 })
                 .on('click', function(d,i) {
                     var element = this;
-                    dispatch.elementClick({
+                    dispatch.call('elementClick', this, {
                         data: d,
                         index: i,
                         color: d3.select(this).style("fill"),
@@ -191,7 +191,7 @@ nv.models.multiBarHorizontal = function() {
                     d3.event.stopPropagation();
                 })
                 .on('dblclick', function(d,i) {
-                    dispatch.elementDblClick({
+                    dispatch.call('elementDblClick', this, {
                         data: d,
                         index: i,
                         color: d3.select(this).style("fill")
@@ -206,14 +206,14 @@ nv.models.multiBarHorizontal = function() {
                     .attr('fill', 'none')
                     .attr('points', function(d,i) {
                         var xerr = getYerr(d,i)
-                            , mid = 0.8 * x.rangeBand() / ((stacked ? 1 : data.length) * 2);
+                            , mid = 0.8 * x.bandwidth() / ((stacked ? 1 : data.length) * 2);
                         xerr = xerr.length ? xerr : [-Math.abs(xerr), Math.abs(xerr)];
                         xerr = xerr.map(function(e) { return y(e + ((getY(d,i) < 0) ? 0 : getY(d,i))) - y(0); });
                         var a = [[xerr[0],-mid], [xerr[0],mid], [xerr[0],0], [xerr[1],0], [xerr[1],-mid], [xerr[1],mid]];
                         return a.map(function (path) { return path.join(',') }).join(' ');
                     })
                     .attr('transform', function(d,i) {
-                        var mid = x.rangeBand() / ((stacked ? 1 : data.length) * 2);
+                        var mid = x.bandwidth() / ((stacked ? 1 : data.length) * 2);
                         return 'translate(0, ' + mid + ')';
                     });
             }
@@ -223,7 +223,7 @@ nv.models.multiBarHorizontal = function() {
             if (showValues && !stacked) {
                 bars.select('text')
                     .attr('text-anchor', function(d,i) { return getY(d,i) < 0 ? 'end' : 'start' })
-                    .attr('y', x.rangeBand() / (data.length * 2))
+                    .attr('y', x.bandwidth() / (data.length * 2))
                     .attr('dy', '.32em')
                     .text(function(d,i) {
                         var t = valueFormat(getY(d,i))
@@ -245,7 +245,7 @@ nv.models.multiBarHorizontal = function() {
                 barsEnter.append('text').classed('nv-bar-label',true);
                 bars.select('text.nv-bar-label')
                     .attr('text-anchor', function(d,i) { return getY(d,i) < 0 ? 'start' : 'end' })
-                    .attr('y', x.rangeBand() / (data.length * 2))
+                    .attr('y', x.bandwidth() / (data.length * 2))
                     .attr('dy', '.32em')
                     .text(function(d,i) { return getX(d,i) });
                 bars.watchTransition(renderWatch, 'multibarhorizontal: bars')
@@ -275,7 +275,7 @@ nv.models.multiBarHorizontal = function() {
                     .attr('width', function(d,i) {
                         return Math.abs(y(getY(d,i) + d.y0) - y(d.y0)) || 0
                     })
-                    .attr('height', x.rangeBand() );
+                    .attr('height', x.bandwidth() );
             else
                 bars.watchTransition(renderWatch, 'multibarhorizontal: bars')
                     .attr('transform', function(d,i) {
@@ -283,13 +283,13 @@ nv.models.multiBarHorizontal = function() {
                         return 'translate(' +
                             (getY(d,i) < 0 ? y(getY(d,i)) : y(0))
                             + ',' +
-                            (d.series * x.rangeBand() / data.length
+                            (d.series * x.bandwidth() / data.length
                                 +
                                 x(getX(d,i)) )
                             + ')'
                     })
                     .select('rect')
-                    .attr('height', x.rangeBand() / data.length )
+                    .attr('height', x.bandwidth() / data.length )
                     .attr('width', function(d,i) {
                         return Math.max(Math.abs(y(getY(d,i)) - y(0)),1) || 0
                     });

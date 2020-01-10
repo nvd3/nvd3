@@ -6,8 +6,8 @@ nv.models.distroPlotChart = function() {
     //------------------------------------------------------------
 
     var distroplot = nv.models.distroPlot(),
-        xAxis = nv.models.axis(),
-        yAxis = nv.models.axis()
+        xAxis = nv.models.axis(d3.axisBottom(d3.scaleLinear()), 'bottom'),
+        yAxis = nv.models.axis(d3.axisLeft(d3.scaleLinear()), 'left')
 
     var margin = {top: 25, right: 10, bottom: 40, left: 60},
         width = null,
@@ -23,15 +23,16 @@ nv.models.distroPlotChart = function() {
         x, y,
         noData = 'No Data Available.',
         dispatch = d3.dispatch('stateChange', 'beforeUpdate', 'renderEnd'),
-        duration = 500;
+        duration = 500,
+        t = d3.transition()
+              .duration(duration)
+              .ease(d3.easeLinear);
 
-    xAxis
-        .orient('bottom')
-        .showMaxMin(false)
+    xAxis.showMaxMin(false)
         .tickFormat(function(d) { return d })
     ;
     yAxis
-        .orient((rightAlignYAxis) ? 'right' : 'left')
+        //.orient((rightAlignYAxis) ? 'right' : 'left')
         .tickFormat(d3.format(',.1f'))
     ;
 
@@ -121,7 +122,7 @@ nv.models.distroPlotChart = function() {
             }
 
             chart.update = function() {
-                dispatch.beforeUpdate();
+                dispatch.call('beforeUpdate', that);
                 var opts = distroplot.options()
                 if (colorGroup0 !== opts.colorGroup() || // recalc data when any of the axis accessors are changed
                     x0 !== opts.x() ||
@@ -133,7 +134,7 @@ nv.models.distroPlotChart = function() {
                 ) {
                     distroplot.recalcData();
                 }
-                container.transition().duration(duration).call(chart);
+                container.transition(t).call(chart);
             };
             chart.container = this;
 
@@ -189,16 +190,17 @@ nv.models.distroPlotChart = function() {
                 .append('rect');
 
             g.select('#nv-x-label-clip-' + distroplot.id() + ' rect')
-                .attr('width', x.rangeBand() * (staggerLabels ? 2 : 1))
+                .attr('width', x.range() * (staggerLabels ? 2 : 1))
                 .attr('height', 16)
-                .attr('x', -x.rangeBand() / (staggerLabels ? 1 : 2 ));
+                .attr('x', -x.range() / (staggerLabels ? 1 : 2 ));
 
             // Setup Axes
             if (showXAxis) {
                 xAxis
                     .scale(x)
                     .ticks( nv.utils.calcTicksX(availableWidth/100, data) )
-                    .tickSize(-availableHeight, 0);
+            xAxis
+                    .tickSizeInner(-availableHeight);
 
                 g.select('.nv-x.nv-axis').attr('transform', 'translate(0,' + y.range()[0] + ')')
                 g.select('.nv-x.nv-axis').call(xAxis);
@@ -218,7 +220,8 @@ nv.models.distroPlotChart = function() {
                 yAxis
                     .scale(y)
                     .ticks( Math.floor(availableHeight/36) ) // can't use nv.utils.calcTicksY with Object data
-                    .tickSize( -availableWidth, 0);
+                yAxis
+                    .tickSizeInner( -availableWidth);
 
                 g.select('.nv-y.nv-axis').call(yAxis);
 
@@ -305,6 +308,9 @@ nv.models.distroPlotChart = function() {
         duration: {get: function(){return duration;}, set: function(_){
             duration = _;
             renderWatch.reset(duration);
+            t = d3.transition()
+                  .duration(duration)
+                  .ease(d3.easeLinear);
             distroplot.duration(duration);
             xAxis.duration(duration);
             yAxis.duration(duration);

@@ -16,7 +16,7 @@ nv.models.multiChart = function() {
         yDomain2,
         getX = function(d) { return d.x },
         getY = function(d) { return d.y},
-        interpolate = 'linear',
+        interpolate = d3.curveLinear,
         useVoronoi = true,
         interactiveLayer = nv.interactiveGuideline(),
         useInteractiveGuideline = false,
@@ -28,9 +28,9 @@ nv.models.multiChart = function() {
     // Private Variables
     //------------------------------------------------------------
 
-    var x = d3.scale.linear(),
-        yScale1 = d3.scale.linear(),
-        yScale2 = d3.scale.linear(),
+    var x = d3.scaleLinear(),
+        yScale1 = d3.scaleLinear(),
+        yScale2 = d3.scaleLinear(),
 
         lines1 = nv.models.line().yScale(yScale1).duration(duration),
         lines2 = nv.models.line().yScale(yScale2).duration(duration),
@@ -44,9 +44,9 @@ nv.models.multiChart = function() {
         stack1 = nv.models.stackedArea().yScale(yScale1).duration(duration),
         stack2 = nv.models.stackedArea().yScale(yScale2).duration(duration),
 
-        xAxis = nv.models.axis().scale(x).orient('bottom').tickPadding(5).duration(duration),
-        yAxis1 = nv.models.axis().scale(yScale1).orient('left').duration(duration),
-        yAxis2 = nv.models.axis().scale(yScale2).orient('right').duration(duration),
+        xAxis = d3.axisBottom(x).tickPadding(5),//@todo .duration(duration),
+        yAxis1 = d3.axisLeft(yScale1),//@todo .duration(duration),
+        yAxis2 = d3.axisRight(yScale2),//@todo .duration(duration),
 
         legend = nv.models.legend().height(30),
         tooltip = nv.models.tooltip(),
@@ -153,12 +153,12 @@ nv.models.multiChart = function() {
             lines1
                 .width(availableWidth)
                 .height(availableHeight)
-                .interpolate(interpolate)
+                //@todo .curve(interpolate)
                 .color(color_array.filter(function(d,i) { return !data[i].disabled && data[i].yAxis == 1 && data[i].type == 'line'}));
             lines2
                 .width(availableWidth)
                 .height(availableHeight)
-                .interpolate(interpolate)
+                //@todo .curve(interpolate)
                 .color(color_array.filter(function(d,i) { return !data[i].disabled && data[i].yAxis == 2 && data[i].type == 'line'}));
             scatters1
                 .width(availableWidth)
@@ -179,12 +179,12 @@ nv.models.multiChart = function() {
             stack1
                 .width(availableWidth)
                 .height(availableHeight)
-                .interpolate(interpolate)
+                //@todo .curve(interpolate)
                 .color(color_array.filter(function(d,i) { return !data[i].disabled && data[i].yAxis == 1 && data[i].type == 'area'}));
             stack2
                 .width(availableWidth)
                 .height(availableHeight)
-                .interpolate(interpolate)
+                //@todo .curve(interpolate)
                 .color(color_array.filter(function(d,i) { return !data[i].disabled && data[i].yAxis == 2 && data[i].type == 'area'}));
 
             g.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
@@ -281,7 +281,8 @@ nv.models.multiChart = function() {
 
             xAxis
                 ._ticks( nv.utils.calcTicksX(availableWidth/100, data) )
-                .tickSize(-availableHeight, 0);
+            xAxis
+                .tickSizeInner(-availableHeight);
 
             g.select('.nv-x.nv-axis')
                 .attr('transform', 'translate(0,' + availableHeight + ')');
@@ -290,7 +291,8 @@ nv.models.multiChart = function() {
 
             yAxis1
                 ._ticks( nv.utils.calcTicksY(availableHeight/36, data) )
-                .tickSize( -availableWidth, 0);
+            yAxis1
+                .tickSizeInner( -availableWidth);
 
 
             d3.transition(g.select('.nv-y1.nv-axis'))
@@ -298,7 +300,8 @@ nv.models.multiChart = function() {
 
             yAxis2
                 ._ticks( nv.utils.calcTicksY(availableHeight/36, data) )
-                .tickSize( -availableWidth, 0);
+            yAxis2
+                .tickSizeInner( -availableWidth);
 
             d3.transition(g.select('.nv-y2.nv-axis'))
                 .call(yAxis2);
@@ -672,7 +675,7 @@ nv.models.multiChart = function() {
         duration: {get: function(){return duration;}, set: function(_) {
             duration = _;
             [lines1, lines2, stack1, stack2, scatters1, scatters2, xAxis, yAxis1, yAxis2].forEach(function(model){
-              model.duration(duration);
+              //@todo model.duration(duration);
             });
         }}
     });

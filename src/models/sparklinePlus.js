@@ -22,7 +22,9 @@ nv.models.sparklinePlus = function() {
         , rightAlignValue = false
         , noData = null
         , dispatch = d3.dispatch('renderEnd')
-        ;
+        , t = d3.transition()
+              .duration(250)
+              .ease(d3.easeLinear);
         
     //============================================================
     // Private Variables
@@ -116,14 +118,14 @@ nv.models.sparklinePlus = function() {
                     .style('fill-opacity', 0);
 
                 hoverValue.exit()
-                    .transition().duration(250)
+                    .transition(t)
                     .style('stroke-opacity', 0)
                     .style('fill-opacity', 0)
                     .remove();
 
                 hoverValue
                     .attr('transform', function(d) { return 'translate(' + x(sparkline.x()(data[d],d)) + ',0)' })
-                    .transition().duration(250)
+                    .transition(t)
                     .style('stroke-opacity', 1)
                     .style('fill-opacity', 1);
 

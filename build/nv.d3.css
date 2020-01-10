@@ -1,4 +1,4 @@
-/* nvd3 version 1.8.6-dev (https://github.com/novus/nvd3) 2018-07-01 */
+/* nvd3 version 1.8.6-dev (https://github.com/novus/nvd3) 2020-01-10 */
 .nvd3 .nv-axis {
     pointer-events:none;
     opacity: 1;
@@ -47,6 +47,8 @@
 .nvd3 .nv-bars rect {
     fill-opacity: .75;
 
+    -webkit-transition: fill-opacity 250ms linear;
+
     transition: fill-opacity 250ms linear;
 }
 
@@ -70,6 +72,8 @@
 .nvd3 .nv-multibarHorizontal .nv-groups rect,
 .nvd3 .nv-discretebar .nv-groups rect {
     stroke-opacity: 0;
+
+    -webkit-transition: fill-opacity 250ms linear;
 
     transition: fill-opacity 250ms linear;
 }
@@ -150,6 +154,7 @@
 }
 
 .with-transitions .nv-candlestickBar .nv-ticks .nv-tick {
+    -webkit-transition: stroke-width 250ms linear, stroke-opacity 250ms linear;
     transition: stroke-width 250ms linear, stroke-opacity 250ms linear;
 }
 
@@ -222,6 +227,7 @@
 
 
 .with-transitions .nvd3 .nv-groups .nv-point {
+    -webkit-transition: stroke-width 250ms linear, stroke-opacity 250ms linear;
     transition: stroke-width 250ms linear, stroke-opacity 250ms linear;
 }
 
@@ -253,7 +259,10 @@
   Default CSS for an svg element nvd3 used
 */
 svg.nvd3-svg {
-    user-select: none;
+    -webkit-user-select: none;
+       -moz-user-select: none;
+        -ms-user-select: none;
+            user-select: none;
     display: block;
     width:100%;
     height:100%;
@@ -263,7 +272,8 @@ svg.nvd3-svg {
   Box shadow and border radius styling
 */
 .nvtooltip.with-3d-shadow, .with-3d-shadow .nvtooltip {
-    box-shadow: 0 5px 10px rgba(0,0,0,.2);
+    -webkit-box-shadow: 0 5px 10px rgba(0,0,0,.2);
+            box-shadow: 0 5px 10px rgba(0,0,0,.2);
     border-radius: 5px;
 }
 
@@ -291,12 +301,12 @@ svg.nvd3-svg {
 *  Brush
 */
 
-.nv-brush .extent {
+.nv-brush .selection {
     fill-opacity: .125;
     shape-rendering: crispEdges;
 }
 
-.nv-brush .resize path {
+.nv-brush .handle path {
     fill: #eee;
     stroke: #666;
 }
@@ -315,7 +325,7 @@ svg.nvd3-svg {
 }
 
 /* focus */
-.nvd3 .nv-brush .extent {
+.nvd3 .nv-brush .selection {
     fill-opacity: 0 !important;
 }
 
@@ -366,7 +376,7 @@ svg.nvd3-svg {
     stroke-opacity: .7;
 }
 
-.nvd3 .nv-parallelCoordinates-brush .extent {
+.nvd3 .nv-parallelCoordinates-brush .selection {
     fill: #fff;
     fill-opacity: .6;
     stroke: gray;
@@ -389,6 +399,7 @@ svg.nvd3-svg {
 
 .nvd3.nv-pie path {
     stroke-opacity: 0;
+    -webkit-transition: fill-opacity 250ms linear, stroke-width 250ms linear, stroke-opacity 250ms linear;
     transition: fill-opacity 250ms linear, stroke-width 250ms linear, stroke-opacity 250ms linear;
 }
 
@@ -496,6 +507,7 @@ svg.nvd3-svg {
 .nvd3.nv-stackedarea path.nv-area {
     fill-opacity: .7;
     stroke-opacity: 0;
+    -webkit-transition: fill-opacity 250ms linear, stroke-opacity 250ms linear;
     transition: fill-opacity 250ms linear, stroke-opacity 250ms linear;
 }
 
@@ -525,7 +537,13 @@ svg.nvd3-svg {
 
     white-space: nowrap;
 
-    user-select: none;
+    -webkit-user-select: none;
+
+       -moz-user-select: none;
+
+        -ms-user-select: none;
+
+            user-select: none;
 }
 
 .nvtooltip {
@@ -538,9 +556,12 @@ svg.nvd3-svg {
     putting a "with-transitions" class on the container div.
 */
 .nvtooltip.with-transitions, .with-transitions .nvtooltip {
+    -webkit-transition: opacity 50ms linear;
     transition: opacity 50ms linear;
 
-    transition-delay: 200ms;
+    -webkit-transition-delay: 200ms;
+
+            transition-delay: 200ms;
 }
 
 .nvtooltip.x-nvtooltip,

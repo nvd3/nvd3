@@ -7,8 +7,8 @@ nv.models.stackedAreaChart = function() {
     //------------------------------------------------------------
 
     var stacked = nv.models.stackedArea()
-        , xAxis = nv.models.axis()
-        , yAxis = nv.models.axis()
+        , xAxis = nv.models.axis(d3.axisBottom(d3.scaleLinear()), 'bottom')
+        , yAxis = nv.models.axis(d3.axisLeft(d3.scaleLinear()), 'left')
         , legend = nv.models.legend()
         , controls = nv.models.legend()
         , interactiveLayer = nv.interactiveGuideline()
@@ -41,11 +41,13 @@ nv.models.stackedAreaChart = function() {
         , controlOptions = ['Stacked','Stream','Expanded']
         , controlLabels = {}
         , duration = 250
-        ;
+        , t = d3.transition()
+              .duration(duration)
+              .ease(d3.easeLinear);
 
     state.style = stacked.style();
-    xAxis.orient('bottom').tickPadding(7);
-    yAxis.orient((rightAlignYAxis) ? 'right' : 'left');
+    xAxis.tickPadding(7);
+    //yAxis.orient((rightAlignYAxis) ? 'right' : 'left');
 
     tooltip
         .headerFormatter(function(d, i) {
@@ -111,7 +113,7 @@ nv.models.stackedAreaChart = function() {
             var availableWidth = nv.utils.availableWidth(width, container, margin),
                 availableHeight = nv.utils.availableHeight(height, container, margin) - (focusEnable ? focus.height() : 0);
 
-            chart.update = function() { container.transition().duration(duration).call(chart); };
+            chart.update = function() { container.transition(t).call(chart); };
             chart.container = this;
 
             state
@@ -287,7 +289,8 @@ nv.models.stackedAreaChart = function() {
             if (showXAxis) {
                 xAxis.scale(x)
                     ._ticks( nv.utils.calcTicksX(availableWidth/100, data) )
-                    .tickSize( -availableHeight, 0);
+                xAxis
+                    .tickSizeInner( -availableHeight);
             }
 
             if (showYAxis) {
@@ -300,7 +303,8 @@ nv.models.stackedAreaChart = function() {
                 }
                 yAxis.scale(y)
                     ._ticks(ticks)
-                    .tickSize(-availableWidth, 0);
+                yAxis
+                    .tickSizeInner(-availableWidth);
             }
 
             //============================================================
@@ -310,8 +314,7 @@ nv.models.stackedAreaChart = function() {
                 if(showXAxis) {
                     g.select('.nv-focus .nv-x.nv-axis')
                         .attr('transform', 'translate(0,' + availableHeight + ')')
-                        .transition()
-                        .duration(duration)
+                        .transition(t)
                         .call(xAxis)
                         ;
                 }
@@ -336,7 +339,7 @@ nv.models.stackedAreaChart = function() {
                     }
 
                     g.select('.nv-focus .nv-y.nv-axis')
-                    .transition().duration(0)
+                    .transition()
                     .call(yAxis);
                 }
             }
@@ -354,7 +357,7 @@ nv.models.stackedAreaChart = function() {
                     .attr('transform', 'translate(0,' + ( availableHeight + margin.bottom + focus.margin().top) + ')')
                     .datum(data.filter(function(d) { return !d.disabled; }))
                     .call(focus);
-                var extent = focus.brush.empty() ? focus.xDomain() : focus.brush.extent();
+                var extent = (d3.event==null || d3.event.selection === null) ? focus.xDomain() : focus.brush.extent();
                 if(extent !== null){
                     onBrush(extent);
                 }
@@ -375,7 +378,7 @@ nv.models.stackedAreaChart = function() {
                     });
 
                 state.disabled = data.map(function(d) { return !!d.disabled });
-                dispatch.stateChange(state);
+                dispatch.call('stateChange', that, state);
 
                 chart.update();
             });
@@ -383,7 +386,7 @@ nv.models.stackedAreaChart = function() {
             legend.dispatch.on('stateChange', function(newState) {
                 for (var key in newState)
                     state[key] = newState[key];
-                dispatch.stateChange(state);
+                dispatch.call('stateChange', that, state);
                 chart.update();
             });
 
@@ -400,7 +403,7 @@ nv.models.stackedAreaChart = function() {
 
 
                 state.style = stacked.style();
-                dispatch.stateChange(state);
+                dispatch.call('stateChange', that, state);
 
                 chart.update();
             });
@@ -557,7 +560,7 @@ nv.models.stackedAreaChart = function() {
                             };
                         })
                 );
-                stackedWrap.transition().duration(duration).call(stacked);
+                stackedWrap.transition(t).call(stacked);
 
                 // Update Main (Focus) Axes
                 updateXAxis();
@@ -641,6 +644,9 @@ nv.models.stackedAreaChart = function() {
         duration: {get: function(){return duration;}, set: function(_){
             duration = _;
             renderWatch.reset(duration);
+            t = d3.transition()
+                  .duration(duration)
+                  .ease(d3.easeLinear);
             stacked.duration(duration);
             xAxis.duration(duration);
             yAxis.duration(duration);
@@ -661,7 +667,7 @@ nv.models.stackedAreaChart = function() {
         }},
         rightAlignYAxis: {get: function(){return rightAlignYAxis;}, set: function(_){
             rightAlignYAxis = _;
-            yAxis.orient( rightAlignYAxis ? 'right' : 'left');
+            //@todo yAxis.orient( rightAlignYAxis ? 'right' : 'left');
         }},
         useInteractiveGuideline: {get: function(){return useInteractiveGuideline;}, set: function(_){
             useInteractiveGuideline = !!_;
