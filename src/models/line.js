@@ -74,9 +74,7 @@ nv.models.line = function() {
             scatter
                 .width(availableWidth)
                 .height(availableHeight);
-console.log("call scatter");
             scatterWrap.call(scatter);
-console.log("called scatter");
 
             defsEnter.merge(defsEnter).append('clipPath')
                 .attr('id', 'nv-edge-clip-' + scatter.id())

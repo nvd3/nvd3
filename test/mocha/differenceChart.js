@@ -630,7 +630,7 @@
         });
 
         describe('xScale', function () {
-          it('defaults to d3.time.scale()', function () {
+          it('defaults to d3.timeScale()', function () {
             var defaultXScale = builder.model.multiChart.xAxis.scale();
             defaultXScale.domain.toString().indexOf('Date').should.not.equal(-1);
           });

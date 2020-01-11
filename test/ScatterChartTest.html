@@ -4,7 +4,7 @@
 <link href="../js/nv.d3.css" rel="stylesheet" type="text/css">
 <link href="teststyle.css" rel="stylesheet" type='text/css'>
 <script src="../js/d3.js"></script>
-<script src="s/nv.d3.js"></script>
+<script src="../js/nv.d3.js"></script>
 
 <body>
 <div style='position:relative;' class='with-transitions'>
@@ -192,7 +192,7 @@ function scatterPlusLineTest(container, data) {
 function randomData(groups, points) { //# groups,# points per group
   var data = [],
       shapes = ['circle', 'cross', 'triangle-up', 'triangle-down', 'diamond', 'square'],
-      random = d3.random.normal();
+      random = d3.randomNormal();
 
   for (i = 0; i < groups; i++) {
     data.push({
@@ -216,7 +216,7 @@ function randomData(groups, points) { //# groups,# points per group
 function randomDataSloped(slope,intercept) { //# groups,# points per group
   var data = [],
       shapes = ['circle', 'cross', 'triangle-up', 'triangle-down', 'diamond', 'square'],
-      random = d3.random.normal();
+      random = d3.randomNormal();
 
   var groups = 2, points = 10;
   for (i = 0; i < groups; i++) {

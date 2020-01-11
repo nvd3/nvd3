@@ -74,7 +74,7 @@ function lineChartConfig(containerid, data, guideline, useDates, auxOptions) {
         formatter = function(d,i) {
                 var now = (new Date()).getTime() - 86400 * 1000 * 365;
                 now = new Date(now + d * 86400 * 1000);
-                return d3.time.format('%b %d %Y')(now );
+                return d3.timeFormat('%b %d %Y')(now );
         }
     }
     else {

@@ -263,7 +263,7 @@ function defaultChartConfig(container, data, useGuideline) {
                     ;
 
     chart.xAxis
-        .tickFormat(function(d) { return d3.time.format('%x')(new Date(d)) });
+        .tickFormat(function(d) { return d3.timeFormat('%x')(new Date(d)) });
 
     chart.yAxis
         .tickFormat(d3.format(',.2f'));
@@ -292,7 +292,7 @@ nv.addGraph(function() {
                 ;
 
   chart.xAxis
-      .tickFormat(function(d) { return d3.time.format('%x')(new Date(d)) });
+      .tickFormat(function(d) { return d3.timeFormat('%x')(new Date(d)) });
 
   chart.yAxis
       .tickFormat(d3.format(',.2f'));

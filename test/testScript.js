@@ -16,5 +16,5 @@ d3.selectAll(".chart button").on("click",function() {
         else
           return "none";
    });
-   window.onresize();
+   window.dispatchEvent(new Event('resize'));
 });
