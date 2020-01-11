@@ -170,7 +170,7 @@ nv.models.parallelCoordinates = function() {
             background.enter().append('path');
             background.exit().remove();
             background.attr('d', path);
-
+            
             // Add blue foreground lines for focus.
             foreground = wrap.select('.foreground').selectAll('path').data(data);
             foreground.enter().append('path')
@@ -240,7 +240,7 @@ nv.models.parallelCoordinates = function() {
             // Add and store a brush for each axis.
             restoreBrush(displayBrush);
 
-            var actives = dimensionNames.filter(function (p) { return !(d3.event.selection === null); }),
+            var actives = dimensionNames.filter(function (p) { return !(d3.event === null || d3.event.selection === null); }),
                     extents = actives.map(function (p) { return y[p].brush.extent(); });
             var formerActive = active.slice(0);
 

@@ -1,4 +1,4 @@
-/* nvd3 version 1.8.6-dev (https://github.com/novus/nvd3) 2020-01-10 */
+/* nvd3 version 1.8.6-dev (https://github.com/novus/nvd3) 2020-01-11 */
 (function(){
 
 // set up main nv object
@@ -13851,7 +13851,7 @@ nv.models.parallelCoordinates = function() {
             background.enter().append('path');
             background.exit().remove();
             background.attr('d', path);
-
+            
             // Add blue foreground lines for focus.
             foreground = wrap.select('.foreground').selectAll('path').data(data);
             foreground.enter().append('path')
@@ -13921,7 +13921,7 @@ nv.models.parallelCoordinates = function() {
             // Add and store a brush for each axis.
             restoreBrush(displayBrush);
 
-            var actives = dimensionNames.filter(function (p) { return !(d3.event.selection === null); }),
+            var actives = dimensionNames.filter(function (p) { return !(d3.event === null || d3.event.selection === null); }),
                     extents = actives.map(function (p) { return y[p].brush.extent(); });
             var formerActive = active.slice(0);
 
@@ -15116,7 +15116,8 @@ nv.models.pieChart = function() {
             pie.width(availableWidth).height(availableHeight);
             console.log(data);
             var pieWrap = g.select('.nv-pieWrap').datum([data]);
-            d3.transition(pieWrap).call(pie);
+            //@todo come back to transition d3.transition(pieWrap).call(pie);
+            pieWrap.call(pie);
 
             //============================================================
             // Event Handling/Dispatching (in chart's scope)
