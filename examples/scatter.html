@@ -40,7 +40,7 @@
 
         d3.select('#test1')
             .datum(randomData())
-            .transition(t)
+            .transition().duration(500)
             .call(chart);
 
         nv.utils.windowResize(chart.update);

@@ -108,7 +108,7 @@ nv.models.cumulativeLineChart = function() {
                 if (duration === 0)
                     container.call(chart);
                 else
-                    container.transition(t).call(chart)
+                    container.transition().duration(duration).call(chart)
             };
             chart.container = this;
 
@@ -314,7 +314,9 @@ nv.models.cumulativeLineChart = function() {
                 return yVal;
             };
 
-            avgLines.enter()
+            avgLines.exit().remove();
+
+            var avgLinesEnter=avgLines.enter()
                 .append('line')
                 .style('stroke-width',2)
                 .style('stroke-dasharray','10,10')
@@ -326,7 +328,7 @@ nv.models.cumulativeLineChart = function() {
                 .attr('y1', getAvgLineY)
                 .attr('y2', getAvgLineY);
 
-            avgLines
+            avgLinesEnter
                 .style('stroke-opacity',function(d){
                     //If average lines go offscreen, make them transparent
                     var yVal = y(average(d));
@@ -336,14 +338,12 @@ nv.models.cumulativeLineChart = function() {
                 .attr('x1',0)
                 .attr('x2',availableWidth)
                 .attr('y1', getAvgLineY)
-                .attr('y2', getAvgLineY);
-
-            avgLines.exit().remove();
+                .attr('y2', getAvgLineY).merge(avgLines);
 
             //Create index line
             var indexLine = linesWrap.selectAll('.nv-indexLine')
                 .data([index]);
-            indexLine.enter().append('rect').attr('class', 'nv-indexLine')
+            var indexLineEnter=indexLine.enter().append('rect').attr('class', 'nv-indexLine')
                 .attr('width', 3)
                 .attr('x', -2)
                 .attr('fill', 'red')
@@ -351,9 +351,9 @@ nv.models.cumulativeLineChart = function() {
                 .style("pointer-events","all")
                 .call(indexDrag);
 
-            indexLine
+            indexLineEnter
                 .attr('transform', function(d) { return 'translate(' + dx(d.i) + ',0)' })
-                .attr('height', availableHeight);
+                .attr('height', availableHeight).merge(indexLine);
 
             // Setup Axes
             if (showXAxis) {

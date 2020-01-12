@@ -240,7 +240,7 @@ nv.models.pie = function() {
                     }
                 }
 
-                pieLabels.enter().append("g").classed("nv-label",true).each(function(d,i) {
+                var pieLabelsEnter=pieLabels.enter().append("g").classed("nv-label",true).each(function(d,i) {
                     var group = d3.select(this);
 
                     group.attr('transform', function (d, i) {
@@ -282,7 +282,7 @@ nv.models.pie = function() {
                     return (d.endAngle - d.startAngle) / (2 * Math.PI);
                 };
 
-                pieLabels.watchTransition(renderWatch, 'pie labels').attr('transform', function (d, i) {
+                pieLabelsEnter.watchTransition(renderWatch, 'pie labels').attr('transform', function (d, i) {
                     if (labelSunbeamLayout) {
                         d.outerRadius = arcsRadiusOuter[i] + 10; // Set Outer Coordinate
                         d.innerRadius = arcsRadiusOuter[i] + 15; // Set Inner Coordinate
@@ -315,7 +315,7 @@ nv.models.pie = function() {
                     }
                 });
 
-                pieLabels.select(".nv-label text")
+                pieLabelsEnter.select(".nv-label text")
                     .style('text-anchor', function(d,i) {
                         //center the text on it's origin or begin/end if orthogonal aligned
                         return labelSunbeamLayout ? ((d.startAngle + d.endAngle) / 2 < Math.PI ? 'start' : 'end') : 'middle';
@@ -350,7 +350,7 @@ nv.models.pie = function() {
                 ;
 
                 if (hideOverlapLabels) {
-                    pieLabels
+                    pieLabelsEnter
                         .each(function (d, i) {
                             if (!this.getBBox) return;
                             var bb = this.getBBox(),
@@ -385,7 +385,7 @@ nv.models.pie = function() {
                         })
                     ;
                 }
-
+                pieLabelsEnter.merge(pieLabels);
             }
 
 

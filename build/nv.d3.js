@@ -391,14 +391,14 @@ nv.interactiveGuideline = function() {
                     var line = wrap.select(".nv-interactiveGuideLine")
                         .selectAll("line")
                         .data((x != null) ? [nv.utils.NaNtoZero(x)] : [], String);
+                    line.exit().remove();
                     line.enter()
                         .append("line")
                         .attr("class", "nv-guideline")
                         .attr("x1", function(d) { return d;})
                         .attr("x2", function(d) { return d;})
                         .attr("y1", availableHeight)
-                        .attr("y2",0);
-                    line.exit().remove();
+                        .attr("y2",0).merge(line);
                 });
             }
         });
@@ -2467,7 +2467,8 @@ nv.models.boxPlotChart = function() {
 
             chart.update = function() {
                 dispatch.call('beforeUpdate', that);
-                container.transition(t).call(chart);
+                var s=container.transition().duration(duration).call(chart);
+                s.merge(container);
             };
             chart.container = this;
 
@@ -2768,7 +2769,7 @@ nv.models.bullet = function() {
                 g.select('rect.nv-range'+i)
                     .datum(range)
                     .attr('height', availableHeight)
-                    .transition(t)
+                    .transition().duration(1000)
                     .attr('width', w1(range))
                     .attr('x', xp1(range))
             }
@@ -2798,7 +2799,7 @@ nv.models.bullet = function() {
                         color: d3.select(this).style("fill")
                     })
                 })
-                .transition(t)
+                .transition().duration(1000)
                 .attr('width', measurez < 0 ?
                     x1(0) - x1(measurez[0])
                     : x1(measurez[0]) - x1(0))
@@ -2842,7 +2843,7 @@ nv.models.bullet = function() {
 
             g.selectAll("path.nv-markerTriangle")
               .data(markerData)
-              .transition(t)
+              .transition().duration(1000)
               .attr('transform', function(d) { return 'translate(' + x1(d.value) + ',' + (availableHeight / 2) + ')' });
 
             var markerLinesData = markerLinez.map( function(marker, index) {
@@ -2885,7 +2886,7 @@ nv.models.bullet = function() {
 
             g.selectAll("line.nv-markerLine")
               .data(markerLinesData)
-              .transition(t)
+              .transition().duration(1000)
               .attr('x1', function(d) { return x1(d.value) })
               .attr('x2', function(d) { return x1(d.value) });
 
@@ -3514,7 +3515,7 @@ nv.models.cumulativeLineChart = function() {
                 if (duration === 0)
                     container.call(chart);
                 else
-                    container.transition(t).call(chart)
+                    container.transition().duration(duration).call(chart)
             };
             chart.container = this;
 
@@ -3720,7 +3721,9 @@ nv.models.cumulativeLineChart = function() {
                 return yVal;
             };
 
-            avgLines.enter()
+            avgLines.exit().remove();
+
+            var avgLinesEnter=avgLines.enter()
                 .append('line')
                 .style('stroke-width',2)
                 .style('stroke-dasharray','10,10')
@@ -3732,7 +3735,7 @@ nv.models.cumulativeLineChart = function() {
                 .attr('y1', getAvgLineY)
                 .attr('y2', getAvgLineY);
 
-            avgLines
+            avgLinesEnter
                 .style('stroke-opacity',function(d){
                     //If average lines go offscreen, make them transparent
                     var yVal = y(average(d));
@@ -3742,14 +3745,12 @@ nv.models.cumulativeLineChart = function() {
                 .attr('x1',0)
                 .attr('x2',availableWidth)
                 .attr('y1', getAvgLineY)
-                .attr('y2', getAvgLineY);
-
-            avgLines.exit().remove();
+                .attr('y2', getAvgLineY).merge(avgLines);
 
             //Create index line
             var indexLine = linesWrap.selectAll('.nv-indexLine')
                 .data([index]);
-            indexLine.enter().append('rect').attr('class', 'nv-indexLine')
+            var indexLineEnter=indexLine.enter().append('rect').attr('class', 'nv-indexLine')
                 .attr('width', 3)
                 .attr('x', -2)
                 .attr('fill', 'red')
@@ -3757,9 +3758,9 @@ nv.models.cumulativeLineChart = function() {
                 .style("pointer-events","all")
                 .call(indexDrag);
 
-            indexLine
+            indexLineEnter
                 .attr('transform', function(d) { return 'translate(' + dx(d.i) + ',0)' })
-                .attr('height', availableHeight);
+                .attr('height', availableHeight).merge(indexLine);
 
             // Setup Axes
             if (showXAxis) {
@@ -12822,7 +12823,10 @@ nv.models.multiChart = function() {
                 that = this;
             nv.utils.initSVG(container);
 
-            chart.update = function() { container.transition().call(chart); };
+            chart.update = function() {
+                var s=container.call(chart);
+                s.merge(container);
+            };
             chart.container = this;
 
             var availableWidth = nv.utils.availableWidth(width, container, margin),
@@ -12878,6 +12882,7 @@ nv.models.multiChart = function() {
             gEnter.append('g').attr('class', 'lines2Wrap');
             gEnter.append('g').attr('class', 'legendWrap');
             gEnter.append('g').attr('class', 'nv-interactive');
+            gEnter.merge(wrap);
 
             var g = wrap.select('g');
 
@@ -14710,7 +14715,7 @@ nv.models.pie = function() {
                     }
                 }
 
-                pieLabels.enter().append("g").classed("nv-label",true).each(function(d,i) {
+                var pieLabelsEnter=pieLabels.enter().append("g").classed("nv-label",true).each(function(d,i) {
                     var group = d3.select(this);
 
                     group.attr('transform', function (d, i) {
@@ -14752,7 +14757,7 @@ nv.models.pie = function() {
                     return (d.endAngle - d.startAngle) / (2 * Math.PI);
                 };
 
-                pieLabels.watchTransition(renderWatch, 'pie labels').attr('transform', function (d, i) {
+                pieLabelsEnter.watchTransition(renderWatch, 'pie labels').attr('transform', function (d, i) {
                     if (labelSunbeamLayout) {
                         d.outerRadius = arcsRadiusOuter[i] + 10; // Set Outer Coordinate
                         d.innerRadius = arcsRadiusOuter[i] + 15; // Set Inner Coordinate
@@ -14785,7 +14790,7 @@ nv.models.pie = function() {
                     }
                 });
 
-                pieLabels.select(".nv-label text")
+                pieLabelsEnter.select(".nv-label text")
                     .style('text-anchor', function(d,i) {
                         //center the text on it's origin or begin/end if orthogonal aligned
                         return labelSunbeamLayout ? ((d.startAngle + d.endAngle) / 2 < Math.PI ? 'start' : 'end') : 'middle';
@@ -14820,7 +14825,7 @@ nv.models.pie = function() {
                 ;
 
                 if (hideOverlapLabels) {
-                    pieLabels
+                    pieLabelsEnter
                         .each(function (d, i) {
                             if (!this.getBBox) return;
                             var bb = this.getBBox(),
@@ -14855,7 +14860,7 @@ nv.models.pie = function() {
                         })
                     ;
                 }
-
+                pieLabelsEnter.merge(pieLabels);
             }
 
 
@@ -17421,7 +17426,8 @@ nv.models.stackedArea = function() {
             var path = g.select('.nv-areaWrap').selectAll('path.nv-area')
                 .data(function(d) { return d });
 
-            path.enter().append('path').attr('class', function(d,i) { return 'nv-area nv-area-' + i })
+            path.exit().remove();
+            var pathEnter=path.enter().append('path').attr('class', function(d,i) { return 'nv-area nv-area-' + i })
                 .attr('d', function(d,i){
                     return zeroArea(d.values, d.seriesIndex);
                 })
@@ -17453,15 +17459,15 @@ nv.models.stackedArea = function() {
                     });
                 });
 
-            path.exit().remove();
-            path.style('fill', function(d,i){
+            pathEnter.style('fill', function(d,i){
                     return d.color || color(d, d.seriesIndex)
                 })
                 .style('stroke', function(d,i){ return d.color || color(d, d.seriesIndex) });
-            path.watchTransition(renderWatch,'stackedArea path')
+            pathEnter.watchTransition(renderWatch,'stackedArea path')
                 .attr('d', function(d,i) {
                     return area(d.values,i)
                 });
+            pathEnter.merge(path);
 
             //============================================================
             // Event Handling/Dispatching (in chart's scope)

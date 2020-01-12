@@ -59,7 +59,8 @@ nv.models.boxPlotChart = function() {
 
             chart.update = function() {
                 dispatch.call('beforeUpdate', that);
-                container.transition(t).call(chart);
+                var s=container.transition().duration(duration).call(chart);
+                s.merge(container);
             };
             chart.container = this;
 

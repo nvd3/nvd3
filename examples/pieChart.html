@@ -67,7 +67,7 @@
 
         d3.select("#test1")
             .datum(testdata2)
-            .transition(t)
+            .transition().duration(1200)
             .attr('width', width)
             .attr('height', height)
             .call(chart);
@@ -126,7 +126,7 @@
 
         d3.select("#test2")
             .datum(testdata)
-            .transition(t)
+            .transition().duration(1200)
             .attr('width', width)
             .attr('height', height)
             .call(chart);

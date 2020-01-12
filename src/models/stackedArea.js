@@ -149,7 +149,8 @@ nv.models.stackedArea = function() {
             var path = g.select('.nv-areaWrap').selectAll('path.nv-area')
                 .data(function(d) { return d });
 
-            path.enter().append('path').attr('class', function(d,i) { return 'nv-area nv-area-' + i })
+            path.exit().remove();
+            var pathEnter=path.enter().append('path').attr('class', function(d,i) { return 'nv-area nv-area-' + i })
                 .attr('d', function(d,i){
                     return zeroArea(d.values, d.seriesIndex);
                 })
@@ -181,15 +182,15 @@ nv.models.stackedArea = function() {
                     });
                 });
 
-            path.exit().remove();
-            path.style('fill', function(d,i){
+            pathEnter.style('fill', function(d,i){
                     return d.color || color(d, d.seriesIndex)
                 })
                 .style('stroke', function(d,i){ return d.color || color(d, d.seriesIndex) });
-            path.watchTransition(renderWatch,'stackedArea path')
+            pathEnter.watchTransition(renderWatch,'stackedArea path')
                 .attr('d', function(d,i) {
                     return area(d.values,i)
                 });
+            pathEnter.merge(path);
 
             //============================================================
             // Event Handling/Dispatching (in chart's scope)

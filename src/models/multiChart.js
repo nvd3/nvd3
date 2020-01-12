@@ -60,7 +60,10 @@ nv.models.multiChart = function() {
                 that = this;
             nv.utils.initSVG(container);
 
-            chart.update = function() { container.transition().call(chart); };
+            chart.update = function() {
+                var s=container.call(chart);
+                s.merge(container);
+            };
             chart.container = this;
 
             var availableWidth = nv.utils.availableWidth(width, container, margin),
@@ -116,6 +119,7 @@ nv.models.multiChart = function() {
             gEnter.append('g').attr('class', 'lines2Wrap');
             gEnter.append('g').attr('class', 'legendWrap');
             gEnter.append('g').attr('class', 'nv-interactive');
+            gEnter.merge(wrap);
 
             var g = wrap.select('g');
 

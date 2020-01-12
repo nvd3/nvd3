@@ -119,7 +119,7 @@ nv.models.bullet = function() {
                 g.select('rect.nv-range'+i)
                     .datum(range)
                     .attr('height', availableHeight)
-                    .transition(t)
+                    .transition().duration(1000)
                     .attr('width', w1(range))
                     .attr('x', xp1(range))
             }
@@ -149,7 +149,7 @@ nv.models.bullet = function() {
                         color: d3.select(this).style("fill")
                     })
                 })
-                .transition(t)
+                .transition().duration(1000)
                 .attr('width', measurez < 0 ?
                     x1(0) - x1(measurez[0])
                     : x1(measurez[0]) - x1(0))
@@ -193,7 +193,7 @@ nv.models.bullet = function() {
 
             g.selectAll("path.nv-markerTriangle")
               .data(markerData)
-              .transition(t)
+              .transition().duration(1000)
               .attr('transform', function(d) { return 'translate(' + x1(d.value) + ',' + (availableHeight / 2) + ')' });
 
             var markerLinesData = markerLinez.map( function(marker, index) {
@@ -236,7 +236,7 @@ nv.models.bullet = function() {
 
             g.selectAll("line.nv-markerLine")
               .data(markerLinesData)
-              .transition(t)
+              .transition().duration(1000)
               .attr('x1', function(d) { return x1(d.value) })
               .attr('x2', function(d) { return x1(d.value) });
 

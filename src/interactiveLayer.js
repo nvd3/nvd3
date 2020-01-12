@@ -197,14 +197,14 @@ nv.interactiveGuideline = function() {
                     var line = wrap.select(".nv-interactiveGuideLine")
                         .selectAll("line")
                         .data((x != null) ? [nv.utils.NaNtoZero(x)] : [], String);
+                    line.exit().remove();
                     line.enter()
                         .append("line")
                         .attr("class", "nv-guideline")
                         .attr("x1", function(d) { return d;})
                         .attr("x2", function(d) { return d;})
                         .attr("y1", availableHeight)
-                        .attr("y2",0);
-                    line.exit().remove();
+                        .attr("y2",0).merge(line);
                 });
             }
         });

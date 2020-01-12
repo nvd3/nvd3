@@ -53,7 +53,7 @@
                 .height(height);
 
             var svg = d3.select('#chart svg').datum(data);
-            svg.transition(t).call(chart);
+            svg.transition().duration(500).call(chart);
             return chart;
         },
         callback: function(graph) {

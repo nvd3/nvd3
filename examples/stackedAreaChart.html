@@ -98,7 +98,7 @@
 
         d3.select('#chart1')
             .datum(histcatexplong)
-            .transition(t)
+            .transition().duration(1000)
             .call(chart)
             .each('start', function() {
                 setTimeout(function() {
