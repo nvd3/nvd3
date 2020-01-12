@@ -1,6 +1,6 @@
 ## NVD3 - A reusable D3 charting library
 
-### This project is for D3v4.  For a D3v3 compatible version of nvd3, see the [novus/nvd3](http://github.com/novus/nvd3/) repository.  If you want to help out with this, please send us pull requests!!
+### This project is for D3v5.  For a D3v3 compatible version of nvd3, see the [novus/nvd3](http://github.com/novus/nvd3/) repository.  If you want to help out with this, please send us pull requests!!
 
 Inspired by the work of Mike Bostock's [Towards Reusable Charts](http://bost.ocks.org/mike/chart/), and supported by a combined effort of [Novus](http://www.novus.com) and the NVD3 community.
 
@@ -35,7 +35,7 @@ NVD3 runs best on WebKit based browsers.
 * Firefox: latest version
 * Internet Explorer: 10+
 
-## Do we support D3 v4.x?
+## Do we support D3 v5.x?
 
 That's what this project is for!  Send us pull requests to help out!
 

@@ -41,6 +41,9 @@
   </div>
 
 <script>
+    var t = d3.transition()
+              .duration(500)
+              .ease(d3.easeLinear);
 
 //------------ CHART 1
 lineChartConfig("chart1", sinAndCos(),true, false);
@@ -92,7 +95,7 @@ function lineChartConfig(containerid, data, guideline, useDates, auxOptions) {
 
     d3.select('#' + containerid + ' svg')
         .datum(data)
-      .transition().duration(500)
+      .transition(t)
         .call(chart);
 
     nv.utils.windowResize(chart.update);
@@ -120,7 +123,7 @@ function barChartConfig(data) {
       .tickFormat(d3.format(',.4f'));
       d3.select("#chart2 svg")
         .datum(data)
-        .transition().duration(500)
+        .transition(t)
         .call(chart);
 
       nv.utils.windowResize(chart.update);

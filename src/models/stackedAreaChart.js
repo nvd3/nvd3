@@ -348,7 +348,8 @@ nv.models.stackedAreaChart = function() {
             // Update Focus
             //============================================================
             if(!focusEnable) {
-                stackedWrap.transition().call(stacked);
+                //@todo stackedWrap.transition().call(stacked);
+                stackedWrap.call(stacked);
                 updateXAxis();
                 updateYAxis();
             } else {

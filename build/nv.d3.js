@@ -1,4 +1,4 @@
-/* nvd3 version 1.8.6-dev (https://github.com/novus/nvd3) 2020-01-11 */
+/* nvd3 version 1.8.6-dev (https://github.com/novus/nvd3) 2020-01-12 */
 (function(){
 
 // set up main nv object
@@ -16955,21 +16955,22 @@ nv.models.sparkline = function() {
             var gEnter = wrapEnter.append('g');
             var g = wrap.select('g');
 
-            wrap.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')')
+            wrapEnter.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')')
 
-            var paths = wrap.selectAll('path')
+            var paths = wrapEnter.selectAll('path')
                 .data(function(d) { return [d] });
-            paths.enter().append('path');
             paths.exit().remove();
-            paths
+            var pathsEnter=paths.enter().append('path');
+            pathsEnter
                 .style('stroke', function(d,i) { return d.color || color(d, i) })
                 .attr('d', d3.line()
                     .x(function(d,i) { return x(getX(d,i)) })
                     .y(function(d,i) { return y(getY(d,i)) })
             );
-
+            pathsEnter.merge(paths);
+            
             // TODO: Add CURRENT data point (Need Min, Mac, Current / Most recent)
-            var points = wrap.selectAll('circle.nv-point')
+            var points = wrapEnter.selectAll('circle.nv-point')
                 .data(function(data) {
                     var yValues = data.map(function(d, i) { return getY(d,i); });
                     function pointIndex(index) {
@@ -16986,9 +16987,9 @@ nv.models.sparkline = function() {
                         currentPoint = pointIndex(yValues.length - 1);
                     return [(showMinMaxPoints ? minPoint : null), (showMinMaxPoints ? maxPoint : null), (showCurrentPoint ? currentPoint : null)].filter(function (d) {return d != null;});
                 });
-            points.enter().append('circle');
             points.exit().remove();
-            points
+            var pointsEnter=points.enter().append('circle');
+            pointsEnter
                 .attr('cx', function(d,i) { return x(getX(d,d.pointIndex)) })
                 .attr('cy', function(d,i) { return y(getY(d,d.pointIndex)) })
                 .attr('r', 2)
@@ -16996,6 +16997,7 @@ nv.models.sparkline = function() {
                     return getX(d, d.pointIndex) == x.domain()[1] ? 'nv-point nv-currentValue' :
                             getY(d, d.pointIndex) == y.domain()[0] ? 'nv-point nv-minValue' : 'nv-point nv-maxValue'
                 });
+                pointsEnter.merge(points);
         });
         
         renderWatch.renderEnd('sparkline immediate');
@@ -17109,71 +17111,76 @@ nv.models.sparklinePlus = function() {
             var gEnter = wrapEnter.append('g');
             var g = wrap.select('g');
 
-            gEnter.append('g').attr('class', 'nv-sparklineWrap');
-            gEnter.append('g').attr('class', 'nv-valueWrap');
-            gEnter.append('g').attr('class', 'nv-hoverArea');
+            var sparklineWrapAppend=gEnter.append('g').attr('class', 'nv-sparklineWrap');
+            var valueWrapAppend=gEnter.append('g').attr('class', 'nv-valueWrap');
+            var hoverAreaAppend=gEnter.append('g').attr('class', 'nv-hoverArea');
 
-            wrap.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
-
+            wrapEnter.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+            wrapEnter.merge(wrap);
+            
             // Main Chart Component(s)
-            var sparklineWrap = g.select('.nv-sparklineWrap');
+            //var sparklineWrap = g.select('.nv-sparklineWrap');
 
             sparkline.width(availableWidth).height(availableHeight);
-            sparklineWrap.call(sparkline);
+            var sp=sparklineWrapAppend.call(sparkline);
+            sp.merge(sparklineWrapAppend);
 
             if (showLastValue) {
-                var valueWrap = g.select('.nv-valueWrap');
-                var value = valueWrap.selectAll('.nv-currentValue')
+                //var valueWrap = g.select('.nv-valueWrap');
+                var value = valueWrapAppend.selectAll('.nv-currentValue')
                     .data([currentValue]);
 
-                value.enter().append('text').attr('class', 'nv-currentValue')
+                var valueEnter=value.enter().append('text').attr('class', 'nv-currentValue')
                     .attr('dx', rightAlignValue ? -8 : 8)
                     .attr('dy', '.9em')
                     .style('text-anchor', rightAlignValue ? 'end' : 'start');
 
-                value
+                valueEnter
                     .attr('x', availableWidth + (rightAlignValue ? margin.right : 0))
                     .attr('y', alignValue ? function (d) {
                         return y(d)
                     } : 0)
                     .style('fill', sparkline.color()(data[data.length - 1], data.length - 1))
                     .text(yTickFormat(currentValue));
+                valueEnter.merge(value);
             }
 
-            gEnter.select('.nv-hoverArea').append('rect')
+            var rect=hoverAreaAppend.append('rect')
                 .on('mousemove', sparklineHover)
                 .on('click', function() { paused = !paused })
                 .on('mouseout', function() { index = []; updateValueLine(); });
 
-            g.select('.nv-hoverArea rect')
+            rect
                 .attr('transform', function(d) { return 'translate(' + -margin.left + ',' + -margin.top + ')' })
                 .attr('width', availableWidth + margin.left + margin.right)
                 .attr('height', availableHeight + margin.top);
-
+            rect.merge(hoverAreaAppend);
             //index is currently global (within the chart), may or may not keep it that way
             function updateValueLine() {
                 if (paused) return;
 
-                var hoverValue = g.selectAll('.nv-hoverValue').data(index);
+                var hoverValue = hoverAreaAppend.selectAll('.nv-hoverValue').data(index);
 
-                var hoverEnter = hoverValue.enter()
+                hoverValue.exit()
+                    .transition().duration(250)
+                    .style('stroke-opacity', 0)
+                    .style('fill-opacity', 0).remove();
+
+                 var hoverEnter = hoverValue.enter()
                     .append('g').attr('class', 'nv-hoverValue')
                     .style('stroke-opacity', 0)
                     .style('fill-opacity', 0);
 
-                hoverValue.exit()
-                    .transition(t)
-                    .style('stroke-opacity', 0)
-                    .style('fill-opacity', 0)
-                    .remove();
-
                 hoverValue
                     .attr('transform', function(d) { return 'translate(' + x(sparkline.x()(data[d],d)) + ',0)' })
-                    .transition(t)
-                    .style('stroke-opacity', 1)
-                    .style('fill-opacity', 1);
+                    .transition().duration(250)
+                    .style('stroke-opacity', !index.length ? 0 : 1)
+                    .style('fill-opacity', !index.length ? 0 : 1);
 
-                if (!index.length) return;
+                if (!index.length){
+                    hoverValue.merge(hoverValue);
+                    return;
+                }
 
                 hoverEnter.append('line')
                     .attr('x1', 0)
@@ -17187,7 +17194,7 @@ nv.models.sparklinePlus = function() {
                     .attr('text-anchor', 'end')
                     .attr('dy', '.9em');
 
-                g.select('.nv-hoverValue .nv-xValue')
+                hoverAreaAppend.select('.nv-hoverValue .nv-xValue')
                     .text(xTickFormat(sparkline.x()(data[index[0]], index[0])));
 
                 hoverEnter.append('text').attr('class', 'nv-yValue')
@@ -17196,8 +17203,10 @@ nv.models.sparklinePlus = function() {
                     .attr('text-anchor', 'start')
                     .attr('dy', '.9em');
 
-                g.select('.nv-hoverValue .nv-yValue')
+                hoverAreaAppend.select('.nv-hoverValue .nv-yValue')
                     .text(yTickFormat(sparkline.y()(data[index[0]], index[0])));
+//                hoverEnter.merge(hoverValue);
+//                hoverEnter.merge(hoverValue);
             }
 
             function sparklineHover() {
@@ -17940,7 +17949,8 @@ nv.models.stackedAreaChart = function() {
             // Update Focus
             //============================================================
             if(!focusEnable) {
-                stackedWrap.transition().call(stacked);
+                //@todo stackedWrap.transition().call(stacked);
+                stackedWrap.call(stacked);
                 updateXAxis();
                 updateYAxis();
             } else {
