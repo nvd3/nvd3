@@ -282,7 +282,11 @@ nv.models.scatter = function() {
 
                     // delete duplicates from vertices - essential assumption for d3.geom.voronoi
                     var epsilon = 1e-4; // Uses 1e-4 to determine equivalence.
-                    vertices = vertices.sort(function(a,b){return ((a[0] - b[0]) || (a[1] - b[1]))});
+                    vertices = vertices.sort(function(a,b){
+                      return Math.abs(a[0] - b[0]) >= epsilon ? 
+                      a[0] - b[0] : 
+                      a[1] - b[1];
+                    });
                     for (var i = 0; i < vertices.length - 1; ) {
                         if ((Math.abs(vertices[i][0] - vertices[i+1][0]) < epsilon) &&
                         (Math.abs(vertices[i][1] - vertices[i+1][1]) < epsilon)) {
