@@ -33,7 +33,7 @@
             var width = nv.utils.windowSize().width - 40,
                 height = nv.utils.windowSize().height - 40;
 
-            var d3Colors = d3.scaleOrdinal(d3.schemeCategory20);
+            var d3Colors = d3.scaleOrdinal(d3.schemePaired);
             var chart = nv.models.forceDirectedGraph()
                 .width(width)
                 .height(height)
