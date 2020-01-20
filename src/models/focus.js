@@ -55,7 +55,7 @@ nv.models.focus = function(content) {
                 if( duration === 0 ) {
                     container.call( chart );
                 } else {
-                    container.transition(t).call(chart);
+                    container.transition().duration(duration).call(chart);
                 }
             };
             chart.container = this;
@@ -71,19 +71,19 @@ nv.models.focus = function(content) {
 
             wrap.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
 
-            gEnter.append('g').attr('class', 'nv-background').append('rect');
-            gEnter.append('g').attr('class', 'nv-x nv-axis');
-            gEnter.append('g').attr('class', 'nv-y nv-axis');
-            gEnter.append('g').attr('class', 'nv-contentWrap');
-            gEnter.append('g').attr('class', 'nv-brushBackground');
-            gEnter.append('g').attr('class', 'nv-x nv-brush');
+            var backgroundAppend=gEnter.append('g').attr('class', 'nv-background').append('rect');
+            var xAxisAppend=gEnter.append('g').attr('class', 'nv-x nv-axis');
+            var yAxisAppend=gEnter.append('g').attr('class', 'nv-y nv-axis');
+            var contentWrapAppend=gEnter.append('g').attr('class', 'nv-contentWrap');
+            var brushBackgroundAppend=gEnter.append('g').attr('class', 'nv-brushBackground');
+            var xBrushAppend=gEnter.append('g').attr('class', 'nv-x nv-brush');
 
             if (rightAlignYAxis) {
-                g.select(".nv-y.nv-axis")
+                yAxisAppend
                     .attr("transform", "translate(" + availableWidth + ",0)");
             }
 
-            g.select('.nv-background rect')
+            backgroundAppend
                 .attr('width', availableWidth)
                 .attr('height', availableHeight);
                 
@@ -94,10 +94,11 @@ nv.models.focus = function(content) {
                     return d.color || color(d, i);
                 }).filter(function(d,i) { return !data[i].disabled; }));
 
-            var contentWrap = g.select('.nv-contentWrap')
+            contentWrapAppend
                 .datum(data.filter(function(d) { return !d.disabled; }));
 
-            d3.transition(contentWrap).call(content);
+            var s=d3.transition(contentWrapAppend).call(content);
+            s.merge(gEnter);
             
             // Setup Brush
             brush
@@ -114,7 +115,7 @@ nv.models.focus = function(content) {
 
             if (brushExtent) brush.extent(brushExtent);
 
-            var brushBG = g.select('.nv-brushBackground').selectAll('g')
+            var brushBG = brushBackgroundAppend.selectAll('g')
                 .data([brushExtent || brush.extent()]);
     
             var brushBGenter = brushBG.enter()
@@ -130,19 +131,19 @@ nv.models.focus = function(content) {
                 .attr('class', 'right')
                 .attr('x', 0)
                 .attr('y', 0)
-                .attr('height', availableHeight);
+                .attr('height', availableHeight).merge(gEnter);
 
-            var gBrush = g.select('.nv-x.nv-brush')
+            var gBrush = xBrushAppend
                 .call(brush);
             gBrush.selectAll('rect')
                 .attr('height', availableHeight);
-            gBrush.selectAll('.resize').append('path').attr('d', resizePath);
+            gBrush.selectAll('.resize').append('path').attr('d', resizePath).merge(gEnter);
 
             onBrush(true);
 
-            g.select('.nv-background rect')
+            backgroundAppend
                 .attr('width', availableWidth)
-                .attr('height', availableHeight);
+                .attr('height', availableHeight).merge(gEnter);
 
             if (showXAxis) {
                 xAxis.scale(x)
@@ -150,10 +151,11 @@ nv.models.focus = function(content) {
                 xAxis
                     .tickSizeInner(-availableHeight);
   
-                g.select('.nv-x.nv-axis')
+                xAxisAppend
                     .attr('transform', 'translate(0,' + y.range()[0] + ')');
-                d3.transition(g.select('.nv-x.nv-axis'))
+                var xs=d3.transition(xAxisAppend)
                     .call(xAxis);
+                    xs.merge(xAxisAppend);
             }
 
             if (showYAxis) {
@@ -163,12 +165,14 @@ nv.models.focus = function(content) {
                 yAxis
                     .tickSizeInner( -availableWidth);
 
-                d3.transition(g.select('.nv-y.nv-axis'))
+                var ys=yAxisAppend
                     .call(yAxis);
+                ys.merge(yAxisAppend);
             }
             
-            g.select('.nv-x.nv-axis')
-                .attr('transform', 'translate(0,' + y.range()[0] + ')');
+            xAxisAppend
+                .attr('transform', 'translate(0,' + y.range()[0] + ')').merge(gEnter);
+            //gEnter.merge(wrap);
 
             //============================================================
             // Event Handling/Dispatching (in chart's scope)

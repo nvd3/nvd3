@@ -27,7 +27,7 @@
     nv.addGraph(function() {
         chart = nv.models.sunburstChart();
 
-        chart.color(d3.scaleOrdinal(d3.schemeCategory20c));
+        chart.color(d3.scaleOrdinal(d3.schemePaired));
 
         d3.select("#test1")
                 .datum(getData())

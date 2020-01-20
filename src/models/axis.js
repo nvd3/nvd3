@@ -51,7 +51,7 @@ nv.models.axis = function(axis, orientation) {
                 axis.ticks(Math.abs(scale.range()[1] - scale.range()[0]) / 100);
 
             //TODO: consider calculating width/height based on whether or not label is added, for reference in charts using this component
-            g.watchTransition(renderWatch, 'axis').call(axis);
+            gEnter.watchTransition(renderWatch, 'axis').call(axis);
 
             scale0 = scale0 || axis.scale();
 
@@ -60,22 +60,23 @@ nv.models.axis = function(axis, orientation) {
                 fmt = scale0.tickFormat();
             }
 
-            var axisLabel = g.selectAll('text.nv-axislabel')
+            var axisLabel = gEnter.selectAll('text.nv-axislabel')
                 .data([axisLabelText || null]);
             axisLabel.exit().remove();
 
             //only skip when fontSize is undefined so it can be cleared with a null or blank string
             if (fontSize !== undefined) {
-                g.selectAll('g').select("text").style('font-size', fontSize);
+                gEnter.selectAll('g').select("text").style('font-size', fontSize);
             }
 
+            var axislabelAppend;
             var xLabelMargin;
             var axisMaxMin;
             var w;
             switch (orientation) {
                 case 'top':
                     xLabelMargin = axisLabelDistance + 36;
-                    axisLabel.enter().append('text').attr('class', 'nv-axislabel');
+                    var axislabelAppend=axisLabel.enter().append('text').attr('class', 'nv-axislabel');
                   w = 0;
                   if (scale.range().length === 1) {
                     w = isOrdinal ? scale.range()[0] * 2 + scale.bandwidth() : 0;
@@ -84,7 +85,7 @@ nv.models.axis = function(axis, orientation) {
                   } else if ( scale.range().length > 2){
                     w = scale.range()[scale.range().length-1]+(scale.range()[1]-scale.range()[0]);
                   };
-                    axisLabel
+                    axislabelAppend
                         .attr('text-anchor', 'middle')
                         .attr('y', -xLabelMargin)
                         .attr('x', w/2);
@@ -118,7 +119,7 @@ nv.models.axis = function(axis, orientation) {
                     xLabelMargin = axisLabelDistance + 36;
                     var maxTextWidth = 30;
                     var textHeight = 0;
-                    var xTicks = g.selectAll('g').select("text");
+                    var xTicks = gEnter.selectAll('g').select("text");
                     var rotateLabelsRule = '';
                     if (rotateLabels%360) {
                         //Reset transform on ticks so textHeight can be calculated correctly
@@ -148,7 +149,7 @@ nv.models.axis = function(axis, orientation) {
                             xTicks.attr('transform', "translate(0,0)");
                         }
                     }
-                    axisLabel.enter().append('text').attr('class', 'nv-axislabel');
+                    axislabelAppend=axisLabel.enter().append('text').attr('class', 'nv-axislabel');
                     w = 0;
                     if (scale.range().length === 1) {
                         w = isOrdinal ? scale.range()[0] * 2 + scale.bandwidth() : 0;
@@ -157,7 +158,7 @@ nv.models.axis = function(axis, orientation) {
                     } else if ( scale.range().length > 2){
                         w = scale.range()[scale.range().length-1]+(scale.range()[1]-scale.range()[0]);
                     };
-                    axisLabel
+                    axislabelAppend
                         .attr('text-anchor', 'middle')
                         .attr('y', xLabelMargin)
                         .attr('x', w/2);
@@ -192,8 +193,8 @@ nv.models.axis = function(axis, orientation) {
 
                     break;
                 case 'right':
-                    axisLabel.enter().append('text').attr('class', 'nv-axislabel');
-                    axisLabel
+                    axislabelAppend=axisLabel.enter().append('text').attr('class', 'nv-axislabel');
+                    axislabelAppend
                         .style('text-anchor', rotateYLabel ? 'middle' : 'begin')
                         .attr('transform', rotateYLabel ? 'rotate(90)' : '')
                         .attr('y', rotateYLabel ? (-Math.max(margin.right, width) + 12 - (axisLabelDistance || 0)) : -10) //TODO: consider calculating this based on largest tick width... OR at least expose this on chart
@@ -237,8 +238,8 @@ nv.models.axis = function(axis, orientation) {
                      if(labelPadding > width) width = labelPadding;
                      });
                      */
-                    axisLabel.enter().append('text').attr('class', 'nv-axislabel');
-                    axisLabel
+                    axislabelAppend=axisLabel.enter().append('text').attr('class', 'nv-axislabel');
+                    axislabelAppend
                         .style('text-anchor', rotateYLabel ? 'middle' : 'end')
                         .attr('transform', rotateYLabel ? 'rotate(-90)' : '')
                         .attr('y', rotateYLabel ? (-Math.max(margin.left, width) + 25 - (axisLabelDistance || 0)) : -10)
@@ -274,11 +275,11 @@ nv.models.axis = function(axis, orientation) {
                     }
                     break;
             }
-            axisLabel.text(function(d) { return d });
+            axislabelAppend.text(function(d) { return d });
 
             if (showMaxMin && (orientation === 'left' || orientation === 'right')) {
                 //check if max and min overlap other values, if so, hide the values that overlap
-                g.selectAll('g') // the g's wrapping each tick
+                gEnter.selectAll('g') // the g's wrapping each tick
                     .each(function(d,i) {
                         d3.select(this).select('text').attr('opacity', 1);
                         if (scale(d) < scale.range()[1] + 10 || scale(d) > scale.range()[0] - 10) { // 10 is assuming text height is 16... if d is 0, leave it!
@@ -314,7 +315,7 @@ nv.models.axis = function(axis, orientation) {
                         }
                     });
                 // the g's wrapping each tick
-                g.selectAll('g').each(function(d, i) {
+                gEnter.selectAll('g').each(function(d, i) {
                     if (scale(d) < maxMinRange[0] || scale(d) > maxMinRange[1]) {
                         if (d > 1e-10 || d < -1e-10) // accounts for minor floating point errors... though could be problematic if the scale is EXTREMELY SMALL
                             d3.select(this).remove();
@@ -325,7 +326,7 @@ nv.models.axis = function(axis, orientation) {
             }
 
             //Highlight zero tick line
-            g.selectAll('.tick')
+            gEnter.selectAll('.tick')
                 .filter(function (d) {
                     /*
                     The filter needs to return only ticks at or near zero.

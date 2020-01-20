@@ -85,7 +85,7 @@
 
             d3.select('#chart1 svg')
                 .attr('viewBox', '0 0 ' + w + ' ' + h)
-                .transition(t)
+                .transition().duration(500)
                 .call(chart);
         }
 

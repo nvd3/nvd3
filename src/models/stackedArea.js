@@ -93,10 +93,10 @@ nv.models.stackedArea = function() {
             var gEnter = wrapEnter.append('g');
             var g = wrap.select('g');
 
-            gEnter.append('g').attr('class', 'nv-areaWrap');
-            gEnter.append('g').attr('class', 'nv-scatterWrap');
+            var areaWrapAppend=gEnter.append('g').attr('class', 'nv-areaWrap');
+            var scatterWrapAppend=gEnter.append('g').attr('class', 'nv-scatterWrap');
 
-            wrap.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+            wrapEnter.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
 
             // If the user has not specified forceY, make sure 0 is included in the domain
             // Otherwise, use user-specified values for forceY
@@ -116,7 +116,7 @@ nv.models.stackedArea = function() {
                     return d.color;
                 }));
 
-            var scatterWrap = g.select('.nv-scatterWrap')
+            var scatterWrap = scatterWrapAppend
                 .datum(data);
 
             scatterWrap.call(scatter);
@@ -125,9 +125,9 @@ nv.models.stackedArea = function() {
                 .attr('id', 'nv-edge-clip-' + id)
                 .append('rect');
 
-            wrap.select('#nv-edge-clip-' + id + ' rect')
+            wrapEnter.select('#nv-edge-clip-' + id + ' rect')
                 .attr('width', availableWidth)
-                .attr('height', availableHeight);
+                .attr('height', availableHeight).merge(wrap);
 
             g.attr('clip-path', clipEdge ? 'url(#nv-edge-clip-' + id + ')' : '');
 
@@ -146,7 +146,7 @@ nv.models.stackedArea = function() {
                 .y0(function(d) { return y(d.display.y0) })
                 .y1(function(d) { return y(d.display.y0) });
 
-            var path = g.select('.nv-areaWrap').selectAll('path.nv-area')
+            var path = areaWrapAppend.selectAll('path.nv-area')
                 .data(function(d) { return d });
 
             path.exit().remove();

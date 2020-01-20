@@ -54,7 +54,7 @@
     var chart;
     nv.addGraph(function() {
         chart = nv.models.multiBarChart()
-            .barColor(d3.scaleOrdinal(d3.schemeCategory20).range())
+            .barColor(d3.scaleOrdinal(d3.schemePaired).range())
             .duration(300)
             .margin({bottom: 100, left: 70})
             .rotateLabels(45)

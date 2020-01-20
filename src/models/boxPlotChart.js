@@ -58,9 +58,9 @@ nv.models.boxPlotChart = function() {
             var availableHeight = (height || parseInt(container.style('height')) || 400) - margin.top - margin.bottom;
 
             chart.update = function() {
-                dispatch.call('beforeUpdate', that);
+                dispatch.call('beforeUpdate', this);
                 var s=container.transition().duration(duration).call(chart);
-                s.merge(container);
+                //s.merge(container);
             };
             chart.container = this;
 
@@ -95,7 +95,7 @@ nv.models.boxPlotChart = function() {
             var g = wrap.select('g');
 
             gEnter.append('g').attr('class', 'nv-x nv-axis');
-            gEnter.append('g').attr('class', 'nv-y nv-axis')
+            var lineAppend=gEnter.append('g').attr('class', 'nv-y nv-axis')
                 .append('g').attr('class', 'nv-zeroLine')
                 .append('line');
 
@@ -154,7 +154,7 @@ nv.models.boxPlotChart = function() {
             }
 
             // Zero line
-            g.select('.nv-zeroLine line')
+            lineAppend
                 .attr('x1',0)
                 .attr('x2',availableWidth)
                 .attr('y1', y(0))

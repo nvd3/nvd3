@@ -194,12 +194,12 @@ nv.models.cumulativeLineChart = function() {
             var gEnter = wrap.enter().append('g').attr('class', 'nvd3 nv-wrap nv-cumulativeLine').append('g');
             var g = wrap.select('g');
 
-            gEnter.append('g').attr('class', 'nv-interactive');
-            gEnter.append('g').attr('class', 'nv-x nv-axis').style("pointer-events","none");
-            gEnter.append('g').attr('class', 'nv-y nv-axis');
-            gEnter.append('g').attr('class', 'nv-background');
-            gEnter.append('g').attr('class', 'nv-linesWrap').style("pointer-events",interactivePointerEvents);
-            gEnter.append('g').attr('class', 'nv-avgLinesWrap').style("pointer-events","none");
+            var interactiveAppend=gEnter.append('g').attr('class', 'nv-interactive');
+            var xAxisAppend=gEnter.append('g').attr('class', 'nv-x nv-axis').style("pointer-events","none");
+            var yAxisAppend=gEnter.append('g').attr('class', 'nv-y nv-axis');
+            var backgroundAppend=gEnter.append('g').attr('class', 'nv-background');
+            var linesWrapAppend=gEnter.append('g').attr('class', 'nv-linesWrap').style("pointer-events",interactivePointerEvents);
+            var avgLinesWrapAppend=gEnter.append('g').attr('class', 'nv-avgLinesWrap').style("pointer-events","none");
             gEnter.append('g').attr('class', 'nv-legendWrap');
             gEnter.append('g').attr('class', 'nv-controlsWrap');
 
@@ -246,7 +246,7 @@ nv.models.cumulativeLineChart = function() {
             wrap.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
 
             if (rightAlignYAxis) {
-                g.select(".nv-y.nv-axis")
+                yAxisAppend
                     .attr("transform", "translate(" + availableWidth + ",0)");
             }
 
@@ -270,13 +270,13 @@ nv.models.cumulativeLineChart = function() {
                     .margin({left:margin.left,top:margin.top})
                     .svgContainer(container)
                     .xScale(x);
-                wrap.select(".nv-interactive").call(interactiveLayer);
+                interactiveAppend.call(interactiveLayer);
             }
 
-            gEnter.select('.nv-background')
+            var rectAppend=backgroundAppend
                 .append('rect');
 
-            g.select('.nv-background rect')
+            rectAppend
                 .attr('width', availableWidth)
                 .attr('height', availableHeight);
 
@@ -289,7 +289,7 @@ nv.models.cumulativeLineChart = function() {
                     return d.color || color(d, i);
                 }).filter(function(d,i) { return !data[i].disabled && !data[i].tempDisabled; }));
 
-            var linesWrap = g.select('.nv-linesWrap')
+            var linesWrap = linesWrapAppend
                 .datum(data.filter(function(d) { return  !d.disabled && !d.tempDisabled }));
 
             linesWrap.call(lines);
@@ -303,7 +303,7 @@ nv.models.cumulativeLineChart = function() {
                 return !d.disabled && !!average(d);
             });
 
-            var avgLines = g.select(".nv-avgLinesWrap").selectAll("line")
+            var avgLines = avgLinesWrapAppend.selectAll("line")
                 .data(avgLineData, function(d) { return d.key; });
 
             var getAvgLineY = function(d) {
@@ -363,10 +363,10 @@ nv.models.cumulativeLineChart = function() {
                 xAxis
                     .tickSizeInner(-availableHeight);
 
-                g.select('.nv-x.nv-axis')
+                xAxisAppend
                     .attr('transform', 'translate(0,' + y.range()[0] + ')');
-                g.select('.nv-x.nv-axis')
-                    .call(xAxis);
+                xAxisAppend
+                    .call(xAxis).merge(gEnter);
             }
 
             if (showYAxis) {
@@ -376,7 +376,7 @@ nv.models.cumulativeLineChart = function() {
                 yAxis
                     .tickSizeInner( -availableWidth);
 
-                g.select('.nv-y.nv-axis')
+                yAxisAppend
                     .call(yAxis);
             }
 
@@ -396,7 +396,7 @@ nv.models.cumulativeLineChart = function() {
                 chart.duration(oldDuration);
             }
 
-            g.select('.nv-background rect')
+            rectAppend
                 .on('click', function() {
                     index.x = d3.mouse(this)[0];
                     index.i = Math.round(dx.invert(index.x));

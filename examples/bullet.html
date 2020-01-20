@@ -7,7 +7,7 @@
 </head>
 <body>
 
-<div class="gallery" id="chart"><svg id="test1"></svg></div>
+<div class="gallery" id="chart"></div>
 
 <script>
 
@@ -24,9 +24,9 @@
     ];
 
     //TODO: to be consistent with other models, should be appending a g to an already made svg, not creating the svg element
-    var vis = d3.select("#test1")
+    var vis = d3.select("#chart").selectAll("svg")
         .data(data)
-        //.enter().append("g")
+        .enter().append("svg")
         .attr("class", "bullet nvd3")
         .attr("width", width)
         .attr("height", height);

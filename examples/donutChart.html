@@ -86,7 +86,7 @@
 
         d3.select("#test1")
             .datum(testdata)
-            .transition(t)
+            .transition().duration(1200)
             .call(chart1);
 
         // LISTEN TO WINDOW RESIZE
@@ -125,7 +125,7 @@
             .y(function(d) { return d.y })
             //.labelThreshold(.08)
             //.showLabels(false)
-            .color(d3.scaleOrdinal(d3.schemeCategory20).range().slice(10))
+            .color(d3.scaleOrdinal(d3.schemePaired).range().slice(10))
             .width(width)
             .height(height)
             .donut(true)
@@ -141,7 +141,7 @@
         d3.select("#test2")
             //.datum(historicalBarChart)
             .datum(testdata)
-            .transition(t)
+            .transition().duration(1200)
             .call(chart2);
 
         return chart2;

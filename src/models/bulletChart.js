@@ -50,7 +50,7 @@ nv.models.bulletChart = function() {
                 container.selectAll('.nv-noData').remove();
             }
 
-            var rangez = ranges.call(this, d, i).slice().sort(d3.descending),
+                var rangez = ranges.call(this, d, i).slice().sort(d3.descending),
                 markerz = markers.call(this, d, i).slice().sort(d3.descending),
                 measurez = measures.call(this, d, i).slice().sort(d3.descending);
 
@@ -60,8 +60,8 @@ nv.models.bulletChart = function() {
             var gEnter = wrapEnter.append('g');
             var g = wrap.select('g');
 
-            gEnter.append('g').attr('class', 'nv-bulletWrap');
-            gEnter.append('g').attr('class', 'nv-titles');
+            var bulletWrapAppend=gEnter.append('g').attr('class', 'nv-bulletWrap');
+            var titlesAppend=gEnter.append('g').attr('class', 'nv-titles');
 
             wrap.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
 
@@ -81,7 +81,7 @@ nv.models.bulletChart = function() {
             var w0 = function(d) { return Math.abs(x0(d) - x0(0)) }, // TODO: could optimize by precalculating x0(0) and x1(0)
                 w1 = function(d) { return Math.abs(x1(d) - x1(0)) };
 
-            var title = gEnter.select('.nv-titles').append('g')
+            var title = titlesAppend.append('g')
                 .attr('text-anchor', 'end')
                 .attr('transform', 'translate(-6,' + (height - margin.top - margin.bottom) / 2 + ')');
             title.append('text')
@@ -97,8 +97,8 @@ nv.models.bulletChart = function() {
                 .width(availableWidth)
                 .height(availableHeight);
 
-            var bulletWrap = g.select('.nv-bulletWrap');
-            d3.transition(bulletWrap).call(bullet);
+//@todo            var bulletWrap = g.select('.nv-bulletWrap');
+            bulletWrapAppend.transition().call(bullet);
 
             // Compute the tick format.
             var format = tickFormat || x1.tickFormat( availableWidth / 100 );

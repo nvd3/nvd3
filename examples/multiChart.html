@@ -71,7 +71,7 @@
 
         d3.select('#chart1 svg')
             .datum(testdata)
-            .transition(t).call(chart);
+            .transition().duration(500).call(chart);
 
         return chart;
     });

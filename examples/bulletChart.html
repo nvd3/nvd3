@@ -24,10 +24,10 @@
 <body>
 
 Normal Bullet Chart
-<div class="gallery with-transitions" id="chart"><svg id="test1"></svg></div>
+<div class="gallery with-transitions" id="chart"></div>
 
 Bullet Chart with Custom Labels
-<div class='gallery with-transitions' id='chart2'><svg id="test2"></svg></div>
+<div class='gallery with-transitions' id='chart2'></div>
 
 <script>
 
@@ -63,18 +63,18 @@ Bullet Chart with Custom Labels
     }];
 
     //TODO: to be consistent with other models, should be appending a g to an already made svg, not creating the svg element
-    var vis = d3.select("#test1")
-        //.enter().append("svg")
+    var vis = d3.select("#chart1").selectAll("svg")
         .data(data)
+        .enter().append("svg")
         .attr("class", "bullet nvd3")
         .attr("width", width)
         .attr("height", height);
 
     vis.call(chart);
 
-    var vis2 = d3.select("#test2")
-        //.enter().append('svg')
+    var vis2 = d3.select("#chart2").selectAll("svg")
         .data(dataWithLabels)
+        .enter().append('svg')
         .attr('class',"bullet nvd3")
         .attr("width",width)
         .attr("height",height);

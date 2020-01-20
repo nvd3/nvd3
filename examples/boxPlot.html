@@ -39,8 +39,8 @@
       d3.select('#chart1 svg')
           .datum(exampleData())
           .call(chart);
-      console.log(chart.width);
-      nv.utils.windowResize(chart.update);
+
+        nv.utils.windowResize(chart.update);
 
       return chart;
     });

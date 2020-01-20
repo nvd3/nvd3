@@ -54,9 +54,9 @@ nv.models.multiBarHorizontal = function() {
 
             if (stacked)
                 data = d3.stack()
-                    .offset('zero')
-                    .values(function(d){ return d.values })
-                    .y(getY)
+                    .offset(d3.stackOffsetNone)
+                    .value(function(d){ return d.values })
+                    //.y(getY)
                 (data);
 
             //add series index and key to each data point for reference

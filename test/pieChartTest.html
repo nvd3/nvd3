@@ -129,7 +129,7 @@ function defaultChart(containerId, data, labelType) {
 
         d3.select("#" + containerId + " svg")
             .datum(data)
-          .transition(t)
+          .transition().duration(1200)
             .attr('width', width)
             .attr('height', height)
             .call(chart);
@@ -173,7 +173,7 @@ function defaultDonutChart(containerId, data, options) {
 
         d3.select("#" + containerId + " svg")
                 .datum(data)
-                .transition(t)
+                .transition().duration(1200)
                 .attr('width', width)
                 .attr('height', height)
                 .call(chart);

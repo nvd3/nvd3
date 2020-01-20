@@ -164,7 +164,7 @@ nv.models.boxPlot = function() {
             });
 
             // boxes
-            boxEnter.append('rect')
+            var rectAppend=boxEnter.append('rect')
                 .attr('class', 'nv-boxplot-box')
                 // tooltip events
                 .on('mouseover', function(d,i) {
@@ -202,7 +202,7 @@ nv.models.boxPlot = function() {
                 });
 
             // box transitions
-            boxplots.select('rect.nv-boxplot-box')
+            rectAppend
               .watchTransition(renderWatch, 'nv-boxplot: boxes')
                 .attr('y', function(d,i) { return yScale(getQ3(d)); })
                 .attr('width', box_width)

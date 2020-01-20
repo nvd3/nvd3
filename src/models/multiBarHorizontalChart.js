@@ -99,7 +99,7 @@ nv.models.multiBarHorizontalChart = function() {
             var availableWidth = nv.utils.availableWidth(width, container, margin),
                 availableHeight = nv.utils.availableHeight(height, container, margin);
 
-            chart.update = function() { container.transition(t).call(chart) };
+            chart.update = function() { container.transition().duration(duration).call(chart) };
             chart.container = this;
 
             stacked = multibar.stacked();
@@ -379,9 +379,6 @@ nv.models.multiBarHorizontalChart = function() {
         duration: {get: function(){return duration;}, set: function(_){
             duration = _;
             renderWatch.reset(duration);
-            t = d3.transition()
-                  .duration(duration)
-                  .ease(d3.easeLinear);
             multibar.duration(duration);
             xAxis.duration(duration);
             yAxis.duration(duration);

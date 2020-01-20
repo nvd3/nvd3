@@ -57,7 +57,7 @@ nv.addGraph(function() {
 
   d3.select('#chart svg')
       .datum(data)
-      .transition(t)
+      .transition().duration(500)
       .call(chart);
 
   nv.utils.windowResize(chart.update);

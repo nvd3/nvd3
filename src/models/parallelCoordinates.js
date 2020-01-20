@@ -248,7 +248,7 @@ nv.models.parallelCoordinates = function() {
             active = [];
             foreground.style("display", function (d) {
                 var isActive = actives.every(function (p, i) {
-                    if ((isNaN(d.values[p]) || isNaN(parseFloat(d.values[p]))) && extents[i][0] == y[p].brush.y().domain()[0]) {
+                    if ((isNaN(d.values[p]) || isNaN(parseFloat(d.values[p]))) && extents[i][0] == y[p].brush.extent()[1][0]) {
                         return true;
                     }
                     return (extents[i][0] <= d.values[p] && d.values[p] <= extents[i][1]) && !isNaN(parseFloat(d.values[p]));
@@ -276,7 +276,7 @@ nv.models.parallelCoordinates = function() {
                         if (axisWithUndefinedValues.indexOf(p.key) < 0) {
 
                             var newscale = d3.scaleLinear().domain([min, domain[1]]).range([availableHeight - 12, range[1]]);
-                            y[p.key].brush.y(newscale);
+                            y[p.key].brush.extent([[newscale.range()[0], 0], [newscale.range()[1], 1]]);//@todo set brush height
                             axisWithUndefinedValues.push(p.key);
                         }
                         if (isNaN(d.values[p.key]) || isNaN(parseFloat(d.values[p.key]))) {
@@ -301,7 +301,7 @@ nv.models.parallelCoordinates = function() {
             function restoreBrush(visible) {
                 filters.forEach(function (f) {
                     //If filter brushed NaN values, keep the brush on the bottom of the axis.
-                    var brushDomain = y[f.dimension].brush.y().domain();
+                    var brushDomain = y[f.dimension].brush.extent();
                     if (f.hasOnlyNaN) {
                         f.extent[1] = (y[f.dimension].domain()[1] - brushDomain[0]) * (f.extent[1] - f.extent[0]) / (oldDomainMaxValue[f.dimension] - f.extent[0]) + brushDomain[0];
                     }
@@ -351,7 +351,7 @@ nv.models.parallelCoordinates = function() {
                 active = []; //erase current active list
                 foreground.style('display', function(d) {
                     var isActive = actives.every(function(p, i) {
-                        if ((isNaN(d.values[p]) || isNaN(parseFloat(d.values[p]))) && extents[i][0] == y[p].brush.y().domain()[0]) return true;
+                        if ((isNaN(d.values[p]) || isNaN(parseFloat(d.values[p]))) && extents[i][0] == y[p].brush.extent()[1][0]) return true;
                         return (extents[i][0] <= d.values[p] && d.values[p] <= extents[i][1]) && !isNaN(parseFloat(d.values[p]));
                     });
                     if (isActive) active.push(d);
@@ -368,7 +368,7 @@ nv.models.parallelCoordinates = function() {
             function brushend() {
                 var hasActiveBrush = actives.length > 0 ? true : false;
                 filters.forEach(function (f) {
-                    if (f.extent[0] === y[f.dimension].brush.y().domain()[0] && axisWithUndefinedValues.indexOf(f.dimension) >= 0)
+                    if (f.extent[0] === y[f.dimension].brush.extent()[1] && axisWithUndefinedValues.indexOf(f.dimension) >= 0)
                         f.hasNaN = true;
                     if (f.extent[1] < y[f.dimension].domain()[0])
                         f.hasOnlyNaN = true;
