@@ -576,6 +576,15 @@ Add new symbols by doing nv.utils.symbols.set('name', function(size){...});
 */
 nv.utils.symbolMap = d3.map();
 
+nv.utils.typeMap =  d3.map()
+    .set('circle', d3.symbolCircle)
+    .set("cross", d3.symbolCross)
+    .set("diamond", d3.symbolDiamond)
+    .set("square", d3.symbolSquare)
+    .set("star", d3.symbolStar)
+    .set("triangle-up", d3.symbolTriangle)
+    .set("wye", d3.symbolWye);
+
 
 /*
 Replaces d3.symbol so that we can look both there and our own map
@@ -589,7 +598,7 @@ nv.utils.symbol = function() {
         // TODO: Not sure if symbol('circle') would return a d3.symbolCircle. In v4 symbols are enums and not strings
 
         if (nv.utils.symbolMap.get(t) === undefined) {
-            return d3.symbol(t)(s);
+            return d3.symbol().type(nv.utils.typeMap.get(t)).size(s)();
         } else {
             return nv.utils.symbolMap.get(t)(s);
         }

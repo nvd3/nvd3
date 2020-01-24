@@ -1,4 +1,4 @@
-/* nvd3 version 1.8.6-dev (https://github.com/novus/nvd3) 2020-01-20 */
+/* nvd3 version 1.8.6-dev (https://github.com/novus/nvd3) 2020-01-24 */
 (function(){
 
 // set up main nv object
@@ -1476,6 +1476,15 @@ Add new symbols by doing nv.utils.symbols.set('name', function(size){...});
 */
 nv.utils.symbolMap = d3.map();
 
+nv.utils.typeMap =  d3.map()
+    .set('circle', d3.symbolCircle)
+    .set("cross", d3.symbolCross)
+    .set("diamond", d3.symbolDiamond)
+    .set("square", d3.symbolSquare)
+    .set("star", d3.symbolStar)
+    .set("triangle-up", d3.symbolTriangle)
+    .set("wye", d3.symbolWye);
+
 
 /*
 Replaces d3.symbol so that we can look both there and our own map
@@ -1489,7 +1498,15 @@ nv.utils.symbol = function() {
         // TODO: Not sure if symbol('circle') would return a d3.symbolCircle. In v4 symbols are enums and not strings
 
         if (nv.utils.symbolMap.get(t) === undefined) {
-            return d3.symbol(t)(s);
+            console.log(t+" "+(t==='circle'));
+            console.log(s);
+//            if(t==='circle')return d3.symbol().type(d3.symbolCircle).size(s)();
+//            else if(t==='cross')return d3.symbol().type(d3.symbolCross).size(s)();
+//            else if(t==='triangle-up')return d3.symbol().type(d3.symbolTriangle).size(s);
+//            else if(t==='star')return d3.symbol().type(d3.symbolStar).size(s);
+//            else if(t==='diamond')return d3.symbol().type(d3.symbolDiamond).size(s);
+//            else if(t==='square')return d3.symbol().type(d3.symbolSquare).size(s);
+            return d3.symbol().type(nv.utils.typeMap.get(t)).size(s)();
         } else {
             return nv.utils.symbolMap.get(t)(s);
         }
@@ -16305,7 +16322,7 @@ nv.models.scatter = function() {
                 })
                 .attr('d',
                     nv.utils.symbol()
-                    .type(function(d) { return getShape(d[0]); })
+                    .type(function(d) {console.log("type1 "+getShape(d[0]));  return getShape(d[0]); })
                     .size(function(d) { return z(getSize(d[0],d[1])) })
             );
             points.exit().each(delCache).remove();
@@ -16354,7 +16371,7 @@ nv.models.scatter = function() {
             })
             .watchTransition(renderWatch, 'scatter points')
             .attr('d', nv.utils.symbol()
-                .type(function (d) { return getShape(d[0]) })
+                .type(function (d) {console.log("type "+getShape(d[0])); return getShape(d[0]) })
                 .size(function (d) { return z(getSize(d[0], d[1])) })
             );
 
@@ -16673,26 +16690,26 @@ nv.models.scatterChart = function() {
             // background for pointer events
             gEnter.append('rect').attr('class', 'nvd3 nv-background').style("pointer-events","none");
 
-            gEnter.append('g').attr('class', 'nv-x nv-axis');
-            gEnter.append('g').attr('class', 'nv-y nv-axis');
-            gEnter.append('g').attr('class', 'nv-scatterWrap');
-            gEnter.append('g').attr('class', 'nv-regressionLinesWrap');
-            gEnter.append('g').attr('class', 'nv-distWrap');
-            gEnter.append('g').attr('class', 'nv-legendWrap');
+            var xAxisAppend=gEnter.append('g').attr('class', 'nv-x nv-axis');
+            var yAxisAppend=gEnter.append('g').attr('class', 'nv-y nv-axis');
+            var scatterWrapAppend=gEnter.append('g').attr('class', 'nv-scatterWrap');
+            var regressionLinesWrapAppend=gEnter.append('g').attr('class', 'nv-regressionLinesWrap');
+            var distWrapAppend=gEnter.append('g').attr('class', 'nv-distWrap');
+            var legendWrapAppend=gEnter.append('g').attr('class', 'nv-legendWrap');
 
             if (rightAlignYAxis) {
-                g.select(".nv-y.nv-axis")
+                yAxisAppend
                     .attr("transform", "translate(" + availableWidth + ",0)");
             }
 
             // Legend
             if (!showLegend) {
-                g.select('.nv-legendWrap').selectAll('*').remove();
+                legendWrapAppend.selectAll('*').remove();
             } else {
                 var legendWidth = availableWidth;
                 legend.width(legendWidth);
 
-                wrap.select('.nv-legendWrap')
+                var legendCall=legendWrapAppend
                     .datum(data)
                     .call(legend);
 
@@ -16701,7 +16718,7 @@ nv.models.scatterChart = function() {
                     availableHeight = nv.utils.availableHeight(height, container, margin);
                 }
 
-                wrap.select('.nv-legendWrap')
+                legendCall
                     .attr('transform', 'translate(0' + ',' + (-margin.top) +')');
             }
 
@@ -16717,15 +16734,15 @@ nv.models.scatterChart = function() {
                 }).filter(function(d,i) { return !data[i].disabled }))
                 .showLabels(showLabels);
 
-            wrap.select('.nv-scatterWrap')
+            scatterWrapAppend
                 .datum(data.filter(function(d) { return !d.disabled }))
                 .call(scatter);
 
 
-            wrap.select('.nv-regressionLinesWrap')
+            regressionLinesWrapAppend
                 .attr('clip-path', 'url(#nv-edge-clip-' + scatter.id() + ')');
 
-            var regWrap = wrap.select('.nv-regressionLinesWrap').selectAll('.nv-regLines')
+            var regWrap = regressionLinesWrapAppend.selectAll('.nv-regLines')
                 .data(function (d) {
                     return d;
                 });
@@ -16769,7 +16786,7 @@ nv.models.scatterChart = function() {
                 xAxis
                     .tickSizeInner( -availableHeight);
 
-                g.select('.nv-x.nv-axis')
+                xAxisAppend
                     .attr('transform', 'translate(0,' + y.range()[0] + ')')
                     .call(xAxis);
             }
@@ -16781,7 +16798,7 @@ nv.models.scatterChart = function() {
                 yAxis
                     .tickSizeInner( -availableWidth);
 
-                g.select('.nv-y.nv-axis')
+                yAxisAppend
                     .call(yAxis);
             }
 
@@ -16793,9 +16810,9 @@ nv.models.scatterChart = function() {
                 .color(data.map(function(d,i) {
                     return d.color || color(d, i);
                 }).filter(function(d,i) { return !data[i].disabled }));
-            gEnter.select('.nv-distWrap').append('g')
+            var distributionXAppend=distWrapAppend.append('g')
                 .attr('class', 'nv-distributionX');
-            g.select('.nv-distributionX')
+            distributionXAppend
                 .attr('transform', 'translate(0,' + y.range()[0] + ')')
                 .datum(data.filter(function(d) { return !d.disabled }))
                 .call(distX)
@@ -16811,9 +16828,9 @@ nv.models.scatterChart = function() {
                 .color(data.map(function(d,i) {
                     return d.color || color(d, i);
                 }).filter(function(d,i) { return !data[i].disabled }));
-            gEnter.select('.nv-distWrap').append('g')
+            var distributionYAppend=distWrapAppend.append('g')
                 .attr('class', 'nv-distributionY');
-            g.select('.nv-distributionY')
+            distributionYAppend
                 .attr('transform', 'translate(' + (rightAlignYAxis ? availableWidth : -distY.size() ) + ',0)')
                 .datum(data.filter(function(d) { return !d.disabled }))
                 .call(distY)
