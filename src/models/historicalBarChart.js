@@ -68,7 +68,7 @@ nv.models.historicalBarChart = function(bar_model) {
             var availableWidth = nv.utils.availableWidth(width, container, margin),
                 availableHeight = nv.utils.availableHeight(height, container, margin);
 
-            chart.update = function() { container.transition(t).call(chart) };
+            chart.update = function() { container.transition().duration(transitionDuration).call(chart) };
             chart.container = this;
 
             //set state.disabled

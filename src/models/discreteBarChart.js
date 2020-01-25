@@ -74,7 +74,7 @@ nv.models.discreteBarChart = function() {
 
             chart.update = function() {
                 dispatch.call('beforeUpdate', that);
-                container.transition(t).call(chart);
+                container.transition().duration(duration).call(chart);
             };
             chart.container = this;
 

@@ -118,7 +118,7 @@ nv.models.linePlusBarChart = function() {
                     - (focusEnable ? focusHeight : 0),
                 availableHeight2 = focusHeight - margin2.top - margin2.bottom;
 
-            chart.update = function() { container.transition(t).call(chart); };
+            chart.update = function() { container.transition().duration(transitionDuration).call(chart); };
             chart.container = this;
 
             state
@@ -481,11 +481,11 @@ nv.models.linePlusBarChart = function() {
 
                 xAxis.domain([Math.ceil(extent[0]), Math.floor(extent[1])]);
 
-                g.select('.nv-x.nv-axis').transition(t).call(xAxis);
+                g.select('.nv-x.nv-axis').transition().duration(transitionDuration).call(xAxis);
 
                 // Update Main (Focus) Bars and Lines
-                focusBarsWrap.transition(t).call(bars);
-                focusLinesWrap.transition(t).call(lines);
+                focusBarsWrap.transition().duration(transitionDuration).call(bars);
+                focusLinesWrap.transition().duration(transitionDuration).call(lines);
 
                 // Setup and Update Main (Focus) Y Axes
                 g.select('.nv-focus .nv-x.nv-axis')
@@ -520,9 +520,9 @@ nv.models.linePlusBarChart = function() {
                     .style('opacity', y2Opacity)
                     .attr('transform', 'translate(' + x.range()[1] + ',0)');
 
-                g.select('.nv-focus .nv-y1.nv-axis').transition(t)
+                g.select('.nv-focus .nv-y1.nv-axis').transition().duration(transitionDuration)
                     .call(y1Axis);
-                g.select('.nv-focus .nv-y2.nv-axis').transition(t)
+                g.select('.nv-focus .nv-y2.nv-axis').transition().duration(transitionDuration)
                     .call(y2Axis);
             }
 

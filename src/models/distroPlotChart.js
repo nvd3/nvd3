@@ -134,7 +134,7 @@ nv.models.distroPlotChart = function() {
                 ) {
                     distroplot.recalcData();
                 }
-                container.transition(t).call(chart);
+                container.transition().duration(duration).call(chart);
             };
             chart.container = this;
 

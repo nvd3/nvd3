@@ -100,7 +100,7 @@
             .datum(histcatexplong)
             .transition().duration(1000)
             .call(chart)
-            .each('start', function() {
+            .each(function() {
                 setTimeout(function() {
                     d3.selectAll('#chart1 *').each(function() {
                         if(this.__transition__)

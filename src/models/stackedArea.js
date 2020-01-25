@@ -24,7 +24,7 @@ nv.models.stackedArea = function() {
         , y //can be accessed via chart.yScale()
         , scatter = nv.models.scatter()
         , duration = 250
-        , transformData = function(d, y0, y) { d.display = { y: y, y0: y0 }; }
+        , transformData = function(d, y0, y) {d.display = { y: y, y0: y0 }; }
         , areaY1 = function(d) { return y(d.display.y + d.display.y0) }
         , dispatch =  d3.dispatch('areaClick', 'areaMouseover', 'areaMouseout','renderEnd', 'elementClick', 'elementMouseover', 'elementMouseout')
         ;
@@ -76,14 +76,15 @@ nv.models.stackedArea = function() {
             var dataFiltered = data.filter(function(series) {
                 return !series.disabled;
             });
+            dataFiltered.forEach(function(d) {d.display = { y: d.y, y0: d.y0 }; });
 
             data = d3.stack()
                 .order(order)
                 .offset(offset)
                 .value(function(d) { return d.values })  //TODO: make values customizeable in EVERY model in this fashion
-                //@todo .x(getX)
-                //.y(getY)
-                //.out(transformData)
+//                .x(getX)
+//                .y(getY)
+//                .out(transformData)
             (dataFiltered);
 
             // Setup containers and skeleton of chart
@@ -121,15 +122,15 @@ nv.models.stackedArea = function() {
 
             scatterWrap.call(scatter);
 
-            defsEnter.append('clipPath')
+            var rectAppend=defsEnter.append('clipPath')
                 .attr('id', 'nv-edge-clip-' + id)
                 .append('rect');
 
-            wrapEnter.select('#nv-edge-clip-' + id + ' rect')
+            rectAppend
                 .attr('width', availableWidth)
-                .attr('height', availableHeight).merge(wrap);
+                .attr('height', availableHeight);
 
-            g.attr('clip-path', clipEdge ? 'url(#nv-edge-clip-' + id + ')' : '');
+            gEnter.attr('clip-path', clipEdge ? 'url(#nv-edge-clip-' + id + ')' : '');
 
             var area = d3.area()
                 .defined(defined)
@@ -190,7 +191,7 @@ nv.models.stackedArea = function() {
                 .attr('d', function(d,i) {
                     return area(d.values,i)
                 });
-            pathEnter.merge(path);
+            //pathEnter.merge(areaWrapAppend);
 
             //============================================================
             // Event Handling/Dispatching (in chart's scope)

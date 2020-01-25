@@ -171,7 +171,7 @@ nv.models.pie = function() {
             ae.on('mouseover', function(d, i) {
                 d3.select(this).classed('hover', true);
                 if (growOnHover) {
-                    d3.select(this).select("path").transition(t70)
+                    d3.select(this).select("path").transition().duration(70)
                         .attr("d", arcsOver[i]);
                 }
                 dispatch.call('elementMouseover', this, {
@@ -184,7 +184,7 @@ nv.models.pie = function() {
             ae.on('mouseout', function(d, i) {
                 d3.select(this).classed('hover', false);
                 if (growOnHover) {
-                    d3.select(this).select("path").transition(t50)
+                    d3.select(this).select("path").transition().duration(50)
                         .attr("d", arcs[i]);
                 }
                 dispatch.call('elementMouseout', this, {data: d.data, index: i});
@@ -218,7 +218,7 @@ nv.models.pie = function() {
             });
 
             ae.select('path')
-                .transition(t)
+                .transition().duration(duration)
                 .attr('d', function (d, i) { return arcs[i](d); })
                 .attrTween('d', arcTween);
             ae.merge(slices);

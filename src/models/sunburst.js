@@ -155,7 +155,7 @@ nv.models.sunburst = function() {
         // to allow reference to the new center node
         node = d;
 
-        path.transition(t)
+        path.transition().duration(duration)
             .attrTween("d", arcTweenZoom)
             .each('end', function(e) {
                 // partially taken from here: http://bl.ocks.org/metmajer/5480307
@@ -167,7 +167,7 @@ nv.models.sunburst = function() {
                         var arcText = parentNode.select('text');
 
                         // fade in the text element and recalculate positions
-                        arcText.transition(t)
+                        arcText.transition().duration(duration)
                         .text( function(e){return labelFormat(e) })
                         .attr("opacity", function(d){
                             if(labelThresholdMatched(d)) {
@@ -295,7 +295,7 @@ nv.models.sunburst = function() {
             ///Without iteration the data (in the element) didn't update.
             cG.each(function(d){
                 d3.select(this).select('path')
-                    .transition(t)
+                    .transition().duration(duration)
                     .attrTween('d', arcTweenUpdate);
             });
 
@@ -306,7 +306,7 @@ nv.models.sunburst = function() {
                 //this way labels are on top of newly added arcs
                 cG.append('text')
                     .text( function(e){ return labelFormat(e)})
-                    .transition(t)
+                    .transition().duration(duration)
                     .attr("opacity", function(d){
                         if(labelThresholdMatched(d)) {
                             return 1;
@@ -339,7 +339,7 @@ nv.models.sunburst = function() {
 
             //remove unmatched elements ...
             cG.exit()
-                .transition(t)
+                .transition().duration(duration)
                 .attr('opacity',0)
                 .each('end',function(d){
                     var k = key(d);

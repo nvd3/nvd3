@@ -305,7 +305,7 @@ nv.models.legend = function() {
                 var seriesBG = g.select('.nv-legend-bg');
 
                 seriesBG
-                .transition(t)
+                .transition().duration(300)
                     .attr('x', -versPadding )
                     .attr('width', legendWidth + versPadding - 12)
                     .attr('height', height + 10)

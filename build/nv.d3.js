@@ -1498,14 +1498,6 @@ nv.utils.symbol = function() {
         // TODO: Not sure if symbol('circle') would return a d3.symbolCircle. In v4 symbols are enums and not strings
 
         if (nv.utils.symbolMap.get(t) === undefined) {
-            console.log(t+" "+(t==='circle'));
-            console.log(s);
-//            if(t==='circle')return d3.symbol().type(d3.symbolCircle).size(s)();
-//            else if(t==='cross')return d3.symbol().type(d3.symbolCross).size(s)();
-//            else if(t==='triangle-up')return d3.symbol().type(d3.symbolTriangle).size(s);
-//            else if(t==='star')return d3.symbol().type(d3.symbolStar).size(s);
-//            else if(t==='diamond')return d3.symbol().type(d3.symbolDiamond).size(s);
-//            else if(t==='square')return d3.symbol().type(d3.symbolSquare).size(s);
             return d3.symbol().type(nv.utils.typeMap.get(t)).size(s)();
         } else {
             return nv.utils.symbolMap.get(t)(s);
@@ -4263,7 +4255,7 @@ nv.models.differenceChart = function () {
         if (duration === 0) {
           container.call(chart);
         } else {
-          container.transition(t).call(chart);
+          container.transition().duration(duration).call(chart);
         }
       };
 
@@ -4892,7 +4884,7 @@ nv.models.discreteBarChart = function() {
 
             chart.update = function() {
                 dispatch.call('beforeUpdate', that);
-                container.transition(t).call(chart);
+                container.transition().duration(duration).call(chart);
             };
             chart.container = this;
 
@@ -6301,7 +6293,7 @@ nv.models.distroPlotChart = function() {
                 ) {
                     distroplot.recalcData();
                 }
-                container.transition(t).call(chart);
+                container.transition().duration(duration).call(chart);
             };
             chart.container = this;
 
@@ -8323,7 +8315,7 @@ nv.models.heatMapChart = function() {
 
             chart.update = function() {
                 dispatch.call('beforeUpdate', this);
-                container.transition(t).call(chart);
+                container.transition().duration(duration).call(chart);
             };
             chart.container = this;
 
@@ -8869,7 +8861,7 @@ nv.models.historicalBarChart = function(bar_model) {
             var availableWidth = nv.utils.availableWidth(width, container, margin),
                 availableHeight = nv.utils.availableHeight(height, container, margin);
 
-            chart.update = function() { container.transition(t).call(chart) };
+            chart.update = function() { container.transition().duration(transitionDuration).call(chart) };
             chart.container = this;
 
             //set state.disabled
@@ -9517,7 +9509,7 @@ nv.models.legend = function() {
                 var seriesBG = g.select('.nv-legend-bg');
 
                 seriesBG
-                .transition(t)
+                .transition().duration(300)
                     .attr('x', -versPadding )
                     .attr('width', legendWidth + versPadding - 12)
                     .attr('height', height + 10)
@@ -10521,7 +10513,7 @@ nv.models.linePlusBarChart = function() {
                     - (focusEnable ? focusHeight : 0),
                 availableHeight2 = focusHeight - margin2.top - margin2.bottom;
 
-            chart.update = function() { container.transition(t).call(chart); };
+            chart.update = function() { container.transition().duration(transitionDuration).call(chart); };
             chart.container = this;
 
             state
@@ -10884,11 +10876,11 @@ nv.models.linePlusBarChart = function() {
 
                 xAxis.domain([Math.ceil(extent[0]), Math.floor(extent[1])]);
 
-                g.select('.nv-x.nv-axis').transition(t).call(xAxis);
+                g.select('.nv-x.nv-axis').transition().duration(transitionDuration).call(xAxis);
 
                 // Update Main (Focus) Bars and Lines
-                focusBarsWrap.transition(t).call(bars);
-                focusLinesWrap.transition(t).call(lines);
+                focusBarsWrap.transition().duration(transitionDuration).call(bars);
+                focusLinesWrap.transition().duration(transitionDuration).call(lines);
 
                 // Setup and Update Main (Focus) Y Axes
                 g.select('.nv-focus .nv-x.nv-axis')
@@ -10923,9 +10915,9 @@ nv.models.linePlusBarChart = function() {
                     .style('opacity', y2Opacity)
                     .attr('transform', 'translate(' + x.range()[1] + ',0)');
 
-                g.select('.nv-focus .nv-y1.nv-axis').transition(t)
+                g.select('.nv-focus .nv-y1.nv-axis').transition().duration(transitionDuration)
                     .call(y1Axis);
-                g.select('.nv-focus .nv-y2.nv-axis').transition(t)
+                g.select('.nv-focus .nv-y2.nv-axis').transition().duration(transitionDuration)
                     .call(y2Axis);
             }
 
@@ -11650,7 +11642,7 @@ nv.models.multiBarChart = function() {
                 if (duration === 0)
                     container.call(chart);
                 else
-                    container.transition(t)
+                    container.transition().duration(duration)
                         .call(chart);
             };
             chart.container = this;
@@ -14688,7 +14680,7 @@ nv.models.pie = function() {
             ae.on('mouseover', function(d, i) {
                 d3.select(this).classed('hover', true);
                 if (growOnHover) {
-                    d3.select(this).select("path").transition(t70)
+                    d3.select(this).select("path").transition().duration(70)
                         .attr("d", arcsOver[i]);
                 }
                 dispatch.call('elementMouseover', this, {
@@ -14701,7 +14693,7 @@ nv.models.pie = function() {
             ae.on('mouseout', function(d, i) {
                 d3.select(this).classed('hover', false);
                 if (growOnHover) {
-                    d3.select(this).select("path").transition(t50)
+                    d3.select(this).select("path").transition().duration(50)
                         .attr("d", arcs[i]);
                 }
                 dispatch.call('elementMouseout', this, {data: d.data, index: i});
@@ -14735,7 +14727,7 @@ nv.models.pie = function() {
             });
 
             ae.select('path')
-                .transition(t)
+                .transition().duration(duration)
                 .attr('d', function (d, i) { return arcs[i](d); })
                 .attrTween('d', arcTween);
             ae.merge(slices);
@@ -16645,7 +16637,7 @@ nv.models.scatterChart = function() {
                 if (duration === 0)
                     container.call(chart);
                 else
-                    container.transition(t).call(chart);
+                    container.transition().duration(duration).call(chart);
             };
             chart.container = this;
 
@@ -17343,7 +17335,7 @@ nv.models.stackedArea = function() {
         , y //can be accessed via chart.yScale()
         , scatter = nv.models.scatter()
         , duration = 250
-        , transformData = function(d, y0, y) { d.display = { y: y, y0: y0 }; }
+        , transformData = function(d, y0, y) {d.display = { y: y, y0: y0 }; }
         , areaY1 = function(d) { return y(d.display.y + d.display.y0) }
         , dispatch =  d3.dispatch('areaClick', 'areaMouseover', 'areaMouseout','renderEnd', 'elementClick', 'elementMouseover', 'elementMouseout')
         ;
@@ -17395,14 +17387,15 @@ nv.models.stackedArea = function() {
             var dataFiltered = data.filter(function(series) {
                 return !series.disabled;
             });
+            dataFiltered.forEach(function(d) {d.display = { y: d.y, y0: d.y0 }; });
 
             data = d3.stack()
                 .order(order)
                 .offset(offset)
                 .value(function(d) { return d.values })  //TODO: make values customizeable in EVERY model in this fashion
-                //@todo .x(getX)
-                //.y(getY)
-                //.out(transformData)
+//                .x(getX)
+//                .y(getY)
+//                .out(transformData)
             (dataFiltered);
 
             // Setup containers and skeleton of chart
@@ -17440,15 +17433,15 @@ nv.models.stackedArea = function() {
 
             scatterWrap.call(scatter);
 
-            defsEnter.append('clipPath')
+            var rectAppend=defsEnter.append('clipPath')
                 .attr('id', 'nv-edge-clip-' + id)
                 .append('rect');
 
-            wrapEnter.select('#nv-edge-clip-' + id + ' rect')
+            rectAppend
                 .attr('width', availableWidth)
-                .attr('height', availableHeight).merge(wrap);
+                .attr('height', availableHeight);
 
-            g.attr('clip-path', clipEdge ? 'url(#nv-edge-clip-' + id + ')' : '');
+            gEnter.attr('clip-path', clipEdge ? 'url(#nv-edge-clip-' + id + ')' : '');
 
             var area = d3.area()
                 .defined(defined)
@@ -17509,7 +17502,7 @@ nv.models.stackedArea = function() {
                 .attr('d', function(d,i) {
                     return area(d.values,i)
                 });
-            pathEnter.merge(path);
+            //pathEnter.merge(areaWrapAppend);
 
             //============================================================
             // Event Handling/Dispatching (in chart's scope)
@@ -17762,7 +17755,7 @@ nv.models.stackedAreaChart = function() {
             var availableWidth = nv.utils.availableWidth(width, container, margin),
                 availableHeight = nv.utils.availableHeight(height, container, margin) - (focusEnable ? focus.height() : 0);
 
-            chart.update = function() { container.transition(t).call(chart); };
+            chart.update = function() { container.transition().duration(duration).call(chart); };
             chart.container = this;
 
             state
@@ -17800,15 +17793,15 @@ nv.models.stackedAreaChart = function() {
             var gEnter = wrap.enter().append('g').attr('class', 'nvd3 nv-wrap nv-stackedAreaChart').append('g');
             var g = wrap.select('g');
 
-            gEnter.append('g').attr('class', 'nv-legendWrap');
-            gEnter.append('g').attr('class', 'nv-controlsWrap');
+            var legendWrapAppend=gEnter.append('g').attr('class', 'nv-legendWrap');
+            var controlsWrapAppend=gEnter.append('g').attr('class', 'nv-controlsWrap');
 
             var focusEnter = gEnter.append('g').attr('class', 'nv-focus');
-            focusEnter.append('g').attr('class', 'nv-background').append('rect');
-            focusEnter.append('g').attr('class', 'nv-x nv-axis');
-            focusEnter.append('g').attr('class', 'nv-y nv-axis');
-            focusEnter.append('g').attr('class', 'nv-stackedWrap');
-            focusEnter.append('g').attr('class', 'nv-interactive');
+            var rectAppend=focusEnter.append('g').attr('class', 'nv-background').append('rect');
+            var xAxisAppend=focusEnter.append('g').attr('class', 'nv-x nv-axis');
+            var yAxisAppend=focusEnter.append('g').attr('class', 'nv-y nv-axis');
+            var stackedWrapAppend=focusEnter.append('g').attr('class', 'nv-stackedWrap');
+            var interactiveAppend=focusEnter.append('g').attr('class', 'nv-interactive');
 
             // g.select("rect").attr("width",availableWidth).attr("height",availableHeight);
 
@@ -17816,19 +17809,19 @@ nv.models.stackedAreaChart = function() {
 
             // Legend
             if (!showLegend) {
-                g.select('.nv-legendWrap').selectAll('*').remove();
+                legendWrapAppend.selectAll('*').remove();
             } else {
                 var legendWidth = (showControls && legendPosition === 'top') ? availableWidth - controlWidth : availableWidth;
 
                 legend.width(legendWidth);
-                g.select('.nv-legendWrap').datum(data).call(legend);
+                legendWrapAppend.datum(data).call(legend);
 
                 if (legendPosition === 'bottom') {
                 	var xAxisHeight = xAxis.height();
                    	margin.bottom = Math.max(legend.height() + xAxisHeight, margin.bottom);
                    	availableHeight = nv.utils.availableHeight(height, container, margin) - (focusEnable ? focus.height() : 0);
                 	var legendTop = availableHeight + xAxisHeight;
-                    g.select('.nv-legendWrap')
+                    legendWrapAppend
                         .attr('transform', 'translate(0,' + legendTop +')');
                 } else if (legendPosition === 'top') {
                     if (!marginTop && margin.top != legend.height()) {
@@ -17836,14 +17829,14 @@ nv.models.stackedAreaChart = function() {
                         availableHeight = nv.utils.availableHeight(height, container, margin) - (focusEnable ? focus.height() : 0);
                     }
 
-                    g.select('.nv-legendWrap')
+                    legendWrapAppend
                     	.attr('transform', 'translate(' + (availableWidth-legendWidth) + ',' + (-margin.top) +')');
                 }
             }
 
             // Controls
             if (!showControls) {
-                 g.select('.nv-controlsWrap').selectAll('*').remove();
+                 controlsWrapAppend.selectAll('*').remove();
             } else {
                 var controlsData = [
                     {
@@ -17887,7 +17880,7 @@ nv.models.stackedAreaChart = function() {
                     .width( controlWidth )
                     .color(['#444', '#444', '#444']);
 
-                g.select('.nv-controlsWrap')
+                controlsWrapAppend
                     .datum(controlsData)
                     .call(controls);
 
@@ -17898,14 +17891,14 @@ nv.models.stackedAreaChart = function() {
                     availableHeight = nv.utils.availableHeight(height, container, margin) - (focusEnable ? focus.height() : 0);
                 }
 
-                g.select('.nv-controlsWrap')
+                controlsWrapAppend
                     .attr('transform', 'translate(0,' + (-margin.top) +')');
             }
 
             wrap.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
 
             if (rightAlignYAxis) {
-                g.select(".nv-y.nv-axis")
+                yAxisAppend
                     .attr("transform", "translate(" + availableWidth + ",0)");
             }
 
@@ -17917,10 +17910,10 @@ nv.models.stackedAreaChart = function() {
                     .margin({left: margin.left, top: margin.top})
                     .svgContainer(container)
                     .xScale(x);
-                wrap.select(".nv-interactive").call(interactiveLayer);
+                interactiveAppend.call(interactiveLayer);
             }
 
-            g.select('.nv-focus .nv-background rect')
+            rectAppend
                 .attr('width', availableWidth)
                 .attr('height', availableHeight);
 
@@ -17931,7 +17924,7 @@ nv.models.stackedAreaChart = function() {
                     return d.color || color(d, i);
                 }).filter(function(d,i) { return !data[i].disabled; }));
 
-            var stackedWrap = g.select('.nv-focus .nv-stackedWrap')
+            var stackedWrap = stackedWrapAppend
                 .datum(data.filter(function(d) { return !d.disabled; }));
 
             // Setup Axes
@@ -17963,7 +17956,7 @@ nv.models.stackedAreaChart = function() {
                 if(showXAxis) {
                     g.select('.nv-focus .nv-x.nv-axis')
                         .attr('transform', 'translate(0,' + availableHeight + ')')
-                        .transition(t)
+                        .transition().duration(duration)
                         .call(xAxis)
                         ;
                 }
@@ -17997,13 +17990,12 @@ nv.models.stackedAreaChart = function() {
             // Update Focus
             //============================================================
             if(!focusEnable) {
-                //@todo stackedWrap.transition().call(stacked);
-                stackedWrap.call(stacked);
+                stackedWrap.transition().call(stacked);
                 updateXAxis();
                 updateYAxis();
             } else {
                 focus.width(availableWidth);
-                g.select('.nv-focusWrap')
+                contextEnter
                     .attr('transform', 'translate(0,' + ( availableHeight + margin.bottom + focus.margin().top) + ')')
                     .datum(data.filter(function(d) { return !d.disabled; }))
                     .call(focus);
@@ -18028,7 +18020,7 @@ nv.models.stackedAreaChart = function() {
                     });
 
                 state.disabled = data.map(function(d) { return !!d.disabled });
-                dispatch.call('stateChange', that, state);
+                dispatch.call('stateChange', this, state);
 
                 chart.update();
             });
@@ -18036,7 +18028,7 @@ nv.models.stackedAreaChart = function() {
             legend.dispatch.on('stateChange', function(newState) {
                 for (var key in newState)
                     state[key] = newState[key];
-                dispatch.call('stateChange', that, state);
+                dispatch.call('stateChange', this, state);
                 chart.update();
             });
 
@@ -18053,7 +18045,7 @@ nv.models.stackedAreaChart = function() {
 
 
                 state.style = stacked.style();
-                dispatch.call('stateChange', that, state);
+                dispatch.call('stateChange', this, state);
 
                 chart.update();
             });
@@ -18210,7 +18202,7 @@ nv.models.stackedAreaChart = function() {
                             };
                         })
                 );
-                stackedWrap.transition(t).call(stacked);
+                stackedWrap.transition().duration(duration).call(stacked);
 
                 // Update Main (Focus) Axes
                 updateXAxis();
@@ -18495,7 +18487,7 @@ nv.models.sunburst = function() {
         // to allow reference to the new center node
         node = d;
 
-        path.transition(t)
+        path.transition().duration(duration)
             .attrTween("d", arcTweenZoom)
             .each('end', function(e) {
                 // partially taken from here: http://bl.ocks.org/metmajer/5480307
@@ -18507,7 +18499,7 @@ nv.models.sunburst = function() {
                         var arcText = parentNode.select('text');
 
                         // fade in the text element and recalculate positions
-                        arcText.transition(t)
+                        arcText.transition().duration(duration)
                         .text( function(e){return labelFormat(e) })
                         .attr("opacity", function(d){
                             if(labelThresholdMatched(d)) {
@@ -18635,7 +18627,7 @@ nv.models.sunburst = function() {
             ///Without iteration the data (in the element) didn't update.
             cG.each(function(d){
                 d3.select(this).select('path')
-                    .transition(t)
+                    .transition().duration(duration)
                     .attrTween('d', arcTweenUpdate);
             });
 
@@ -18646,7 +18638,7 @@ nv.models.sunburst = function() {
                 //this way labels are on top of newly added arcs
                 cG.append('text')
                     .text( function(e){ return labelFormat(e)})
-                    .transition(t)
+                    .transition().duration(duration)
                     .attr("opacity", function(d){
                         if(labelThresholdMatched(d)) {
                             return 1;
@@ -18679,7 +18671,7 @@ nv.models.sunburst = function() {
 
             //remove unmatched elements ...
             cG.exit()
-                .transition(t)
+                .transition().duration(duration)
                 .attr('opacity',0)
                 .each('end',function(d){
                     var k = key(d);
@@ -18788,7 +18780,7 @@ nv.models.sunburstChart = function() {
                 if (duration === 0) {
                     container.call(chart);
                 } else {
-                    container.transition(t).call(chart);
+                    container.transition().duration(duration).call(chart);
                 }
             };
             chart.container = container;

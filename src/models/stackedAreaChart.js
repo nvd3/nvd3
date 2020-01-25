@@ -113,7 +113,7 @@ nv.models.stackedAreaChart = function() {
             var availableWidth = nv.utils.availableWidth(width, container, margin),
                 availableHeight = nv.utils.availableHeight(height, container, margin) - (focusEnable ? focus.height() : 0);
 
-            chart.update = function() { container.transition(t).call(chart); };
+            chart.update = function() { container.transition().duration(duration).call(chart); };
             chart.container = this;
 
             state
@@ -151,15 +151,15 @@ nv.models.stackedAreaChart = function() {
             var gEnter = wrap.enter().append('g').attr('class', 'nvd3 nv-wrap nv-stackedAreaChart').append('g');
             var g = wrap.select('g');
 
-            gEnter.append('g').attr('class', 'nv-legendWrap');
-            gEnter.append('g').attr('class', 'nv-controlsWrap');
+            var legendWrapAppend=gEnter.append('g').attr('class', 'nv-legendWrap');
+            var controlsWrapAppend=gEnter.append('g').attr('class', 'nv-controlsWrap');
 
             var focusEnter = gEnter.append('g').attr('class', 'nv-focus');
-            focusEnter.append('g').attr('class', 'nv-background').append('rect');
-            focusEnter.append('g').attr('class', 'nv-x nv-axis');
-            focusEnter.append('g').attr('class', 'nv-y nv-axis');
-            focusEnter.append('g').attr('class', 'nv-stackedWrap');
-            focusEnter.append('g').attr('class', 'nv-interactive');
+            var rectAppend=focusEnter.append('g').attr('class', 'nv-background').append('rect');
+            var xAxisAppend=focusEnter.append('g').attr('class', 'nv-x nv-axis');
+            var yAxisAppend=focusEnter.append('g').attr('class', 'nv-y nv-axis');
+            var stackedWrapAppend=focusEnter.append('g').attr('class', 'nv-stackedWrap');
+            var interactiveAppend=focusEnter.append('g').attr('class', 'nv-interactive');
 
             // g.select("rect").attr("width",availableWidth).attr("height",availableHeight);
 
@@ -167,19 +167,19 @@ nv.models.stackedAreaChart = function() {
 
             // Legend
             if (!showLegend) {
-                g.select('.nv-legendWrap').selectAll('*').remove();
+                legendWrapAppend.selectAll('*').remove();
             } else {
                 var legendWidth = (showControls && legendPosition === 'top') ? availableWidth - controlWidth : availableWidth;
 
                 legend.width(legendWidth);
-                g.select('.nv-legendWrap').datum(data).call(legend);
+                legendWrapAppend.datum(data).call(legend);
 
                 if (legendPosition === 'bottom') {
                 	var xAxisHeight = xAxis.height();
                    	margin.bottom = Math.max(legend.height() + xAxisHeight, margin.bottom);
                    	availableHeight = nv.utils.availableHeight(height, container, margin) - (focusEnable ? focus.height() : 0);
                 	var legendTop = availableHeight + xAxisHeight;
-                    g.select('.nv-legendWrap')
+                    legendWrapAppend
                         .attr('transform', 'translate(0,' + legendTop +')');
                 } else if (legendPosition === 'top') {
                     if (!marginTop && margin.top != legend.height()) {
@@ -187,14 +187,14 @@ nv.models.stackedAreaChart = function() {
                         availableHeight = nv.utils.availableHeight(height, container, margin) - (focusEnable ? focus.height() : 0);
                     }
 
-                    g.select('.nv-legendWrap')
+                    legendWrapAppend
                     	.attr('transform', 'translate(' + (availableWidth-legendWidth) + ',' + (-margin.top) +')');
                 }
             }
 
             // Controls
             if (!showControls) {
-                 g.select('.nv-controlsWrap').selectAll('*').remove();
+                 controlsWrapAppend.selectAll('*').remove();
             } else {
                 var controlsData = [
                     {
@@ -238,7 +238,7 @@ nv.models.stackedAreaChart = function() {
                     .width( controlWidth )
                     .color(['#444', '#444', '#444']);
 
-                g.select('.nv-controlsWrap')
+                controlsWrapAppend
                     .datum(controlsData)
                     .call(controls);
 
@@ -249,14 +249,14 @@ nv.models.stackedAreaChart = function() {
                     availableHeight = nv.utils.availableHeight(height, container, margin) - (focusEnable ? focus.height() : 0);
                 }
 
-                g.select('.nv-controlsWrap')
+                controlsWrapAppend
                     .attr('transform', 'translate(0,' + (-margin.top) +')');
             }
 
             wrap.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
 
             if (rightAlignYAxis) {
-                g.select(".nv-y.nv-axis")
+                yAxisAppend
                     .attr("transform", "translate(" + availableWidth + ",0)");
             }
 
@@ -268,10 +268,10 @@ nv.models.stackedAreaChart = function() {
                     .margin({left: margin.left, top: margin.top})
                     .svgContainer(container)
                     .xScale(x);
-                wrap.select(".nv-interactive").call(interactiveLayer);
+                interactiveAppend.call(interactiveLayer);
             }
 
-            g.select('.nv-focus .nv-background rect')
+            rectAppend
                 .attr('width', availableWidth)
                 .attr('height', availableHeight);
 
@@ -282,7 +282,7 @@ nv.models.stackedAreaChart = function() {
                     return d.color || color(d, i);
                 }).filter(function(d,i) { return !data[i].disabled; }));
 
-            var stackedWrap = g.select('.nv-focus .nv-stackedWrap')
+            var stackedWrap = stackedWrapAppend
                 .datum(data.filter(function(d) { return !d.disabled; }));
 
             // Setup Axes
@@ -314,7 +314,7 @@ nv.models.stackedAreaChart = function() {
                 if(showXAxis) {
                     g.select('.nv-focus .nv-x.nv-axis')
                         .attr('transform', 'translate(0,' + availableHeight + ')')
-                        .transition(t)
+                        .transition().duration(duration)
                         .call(xAxis)
                         ;
                 }
@@ -348,13 +348,12 @@ nv.models.stackedAreaChart = function() {
             // Update Focus
             //============================================================
             if(!focusEnable) {
-                //@todo stackedWrap.transition().call(stacked);
-                stackedWrap.call(stacked);
+                stackedWrap.transition().call(stacked);
                 updateXAxis();
                 updateYAxis();
             } else {
                 focus.width(availableWidth);
-                g.select('.nv-focusWrap')
+                contextEnter
                     .attr('transform', 'translate(0,' + ( availableHeight + margin.bottom + focus.margin().top) + ')')
                     .datum(data.filter(function(d) { return !d.disabled; }))
                     .call(focus);
@@ -379,7 +378,7 @@ nv.models.stackedAreaChart = function() {
                     });
 
                 state.disabled = data.map(function(d) { return !!d.disabled });
-                dispatch.call('stateChange', that, state);
+                dispatch.call('stateChange', this, state);
 
                 chart.update();
             });
@@ -387,7 +386,7 @@ nv.models.stackedAreaChart = function() {
             legend.dispatch.on('stateChange', function(newState) {
                 for (var key in newState)
                     state[key] = newState[key];
-                dispatch.call('stateChange', that, state);
+                dispatch.call('stateChange', this, state);
                 chart.update();
             });
 
@@ -404,7 +403,7 @@ nv.models.stackedAreaChart = function() {
 
 
                 state.style = stacked.style();
-                dispatch.call('stateChange', that, state);
+                dispatch.call('stateChange', this, state);
 
                 chart.update();
             });
@@ -561,7 +560,7 @@ nv.models.stackedAreaChart = function() {
                             };
                         })
                 );
-                stackedWrap.transition(t).call(stacked);
+                stackedWrap.transition().duration(duration).call(stacked);
 
                 // Update Main (Focus) Axes
                 updateXAxis();

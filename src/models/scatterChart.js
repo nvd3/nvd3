@@ -101,7 +101,7 @@ nv.models.scatterChart = function() {
                 if (duration === 0)
                     container.call(chart);
                 else
-                    container.transition(t).call(chart);
+                    container.transition().duration(duration).call(chart);
             };
             chart.container = this;
 
