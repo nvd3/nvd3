@@ -92,27 +92,29 @@ nv.models.discreteBarChart = function() {
 
             // Setup containers and skeleton of chart
             var wrap = container.selectAll('g.nv-wrap.nv-discreteBarWithAxes').data([data]);
-            var gEnter = wrap.enter().append('g').attr('class', 'nvd3 nv-wrap nv-discreteBarWithAxes').append('g');
+            var wrapEnter = wrap.enter().append('g').attr('class', 'nvd3 nv-wrap nv-discreteBarWithAxes');
+            wrapEnter.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+
+            var gEnter = wrapEnter.append('g');
             var defsEnter = gEnter.append('defs');
             var g = wrap.select('g');
 
-            gEnter.append('g').attr('class', 'nv-x nv-axis');
-            gEnter.append('g').attr('class', 'nv-y nv-axis')
+            var xAxisAppend=gEnter.append('g').attr('class', 'nv-x nv-axis');
+            var yAxisAppend=gEnter.append('g').attr('class', 'nv-y nv-axis');
+            var lineAppend=yAxisAppend
                 .append('g').attr('class', 'nv-zeroLine')
                 .append('line');
 
-            gEnter.append('g').attr('class', 'nv-barsWrap');
-	    gEnter.append('g').attr('class', 'nv-legendWrap');
-
-            g.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+            var barsWrapAppend=gEnter.append('g').attr('class', 'nv-barsWrap');
+	    var legendWrapAppend=gEnter.append('g').attr('class', 'nv-legendWrap');
 
             // Legend
             if (!showLegend) {
-                g.select('.nv-legendWrap').selectAll('*').remove();
+                legendWrapAppend.selectAll('*').remove();
             } else {
                 legend.width(availableWidth);
 
-                g.select('.nv-legendWrap')
+                legendWrapAppend
                     .datum(data)
                     .call(legend);
 
@@ -121,12 +123,12 @@ nv.models.discreteBarChart = function() {
                     availableHeight = nv.utils.availableHeight(height, container, margin);
                 }
 
-                wrap.select('.nv-legendWrap')
+                legendWrapAppend
                     .attr('transform', 'translate(0,' + (-margin.top) +')')
             }
 
             if (rightAlignYAxis) {
-                g.select(".nv-y.nv-axis")
+                yAxisAppend
                     .attr("transform", "translate(" + availableWidth + ",0)");
             }
 
@@ -135,7 +137,7 @@ nv.models.discreteBarChart = function() {
                 .width(availableWidth)
                 .height(availableHeight);
 
-            var barsWrap = g.select('.nv-barsWrap')
+            var barsWrap = barsWrapAppend
                 .datum(data.filter(function(d) { return !d.disabled }));
 
             barsWrap.transition().call(discretebar);
@@ -158,11 +160,11 @@ nv.models.discreteBarChart = function() {
                 xAxis
                     .tickSizeInner(-availableHeight);
 
-                g.select('.nv-x.nv-axis')
+                xAxisAppend
                     .attr('transform', 'translate(0,' + (y.range()[0] + ((discretebar.showValues() && y.domain()[0] < 0) ? 16 : 0)) + ')');
-                g.select('.nv-x.nv-axis').call(xAxis);
+                xAxisAppend.call(xAxis);
 
-                var xTicks = g.select('.nv-x.nv-axis').selectAll('g');
+                var xTicks = xAxisAppend.selectAll('g');
                 if (staggerLabels) {
                     xTicks
                         .selectAll('text')
@@ -189,11 +191,11 @@ nv.models.discreteBarChart = function() {
                 yAxis
                     .tickSizeInner( -availableWidth);
 
-                g.select('.nv-y.nv-axis').call(yAxis);
+                yAxisAppend.call(yAxis);
             }
 
             // Zero line
-            g.select(".nv-zeroLine line")
+            lineAppend
                 .attr("x1",0)
                 .attr("x2",(rightAlignYAxis) ? -availableWidth : availableWidth)
                 .attr("y1", y(0))

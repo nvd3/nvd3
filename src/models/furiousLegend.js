@@ -30,10 +30,11 @@ nv.models.furiousLegend = function() {
 
             // Setup containers and skeleton of chart
             var wrap = container.selectAll('g.nv-legend').data([data]);
-            var gEnter = wrap.enter().append('g').attr('class', 'nvd3 nv-legend').append('g');
-            var g = wrap.select('g');
+            var wrapEnter = wrap.enter().append('g').attr('class', 'nvd3 nv-legend');
+            wrapEnter.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
 
-            wrap.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+            var gEnter = wrapEnter.append('g');
+            var g = wrap.select('g');
 
             var series = g.selectAll('.nv-series')
                 .data(function(d) {

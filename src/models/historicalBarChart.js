@@ -99,7 +99,10 @@ nv.models.historicalBarChart = function(bar_model) {
 
             // Setup containers and skeleton of chart
             var wrap = container.selectAll('g.nv-wrap.nv-historicalBarChart').data([data]);
-            var gEnter = wrap.enter().append('g').attr('class', 'nvd3 nv-wrap nv-historicalBarChart').append('g');
+            var wrapEnter=wrap.enter().append('g').attr('class', 'nvd3 nv-wrap nv-historicalBarChart');
+            wrapEnter.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+
+            var gEnter = wrapEnter.append('g');
             var g = wrap.select('g');
 
             var xAxisAppend=gEnter.append('g').attr('class', 'nv-x nv-axis');
@@ -126,8 +129,6 @@ nv.models.historicalBarChart = function(bar_model) {
                 legendWrapAppend
                     .attr('transform', 'translate(0,' + (-margin.top) +')')
             }
-            wrap.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
-
             if (rightAlignYAxis) {
                 yAxisAppend
                     .attr("transform", "translate(" + availableWidth + ",0)");

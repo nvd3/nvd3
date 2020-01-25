@@ -51,19 +51,18 @@ nv.models.distribution = function() {
 
             var wrap = container.selectAll('g.nv-distribution').data([data]);
             var wrapEnter = wrap.enter().append('g').attr('class', 'nvd3 nv-distribution');
+            wrapEnter.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')')
+
             var gEnter = wrapEnter.append('g');
             var g = wrap.select('g');
-
-            wrap.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')')
 
             //------------------------------------------------------------
 
 
-            var distWrap = g.selectAll('g.nv-dist')
+            var distWrap = gEnter.selectAll('g.nv-dist')
                 .data(function(d) { return d }, function(d) { return d.key });
 
-            distWrap.enter().append('g');
-            distWrap
+            distWrap.enter().append('g')
                 .attr('class', function(d,i) { return 'nv-dist nv-series-' + i })
                 .style('stroke', function(d,i) { return color(d, i) });
 

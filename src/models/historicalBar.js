@@ -65,12 +65,12 @@ nv.models.historicalBar = function() {
             // Setup containers and skeleton of chart
             var wrap = container.selectAll('g.nv-wrap.nv-historicalBar-' + id).data([data[0].values]);
             var wrapEnter = wrap.enter().append('g').attr('class', 'nvd3 nv-wrap nv-historicalBar-' + id);
+            wrapEnter.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
             var defsEnter = wrapEnter.append('defs');
             var gEnter = wrapEnter.append('g');
             var g = wrap.select('g');
 
-            gEnter.append('g').attr('class', 'nv-bars');
-            wrap.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+            var barsAppend=gEnter.append('g').attr('class', 'nv-bars');
 
             container
                 .on('click', function(d,i) {
@@ -92,7 +92,7 @@ nv.models.historicalBar = function() {
 
             g.attr('clip-path', clipEdge ? 'url(#nv-chart-clip-path-' + id + ')' : '');
 
-            var bars = wrap.select('.nv-bars').selectAll('.nv-bar')
+            var bars = barsAppend.selectAll('.nv-bar')
                 .data(function(d) { return d }, function(d,i) {return getX(d,i)});
             bars.exit().remove();
 

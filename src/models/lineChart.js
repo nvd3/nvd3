@@ -140,7 +140,10 @@ nv.models.lineChart = function() {
 
             // Setup containers and skeleton of chart
             var wrap = container.selectAll('g.nv-wrap.nv-lineChart').data([data]);
-            var gEnter = wrap.enter().append('g').attr('class', 'nvd3 nv-wrap nv-lineChart').append('g');
+            var wrapEnter = wrap.enter().append('g').attr('class', 'nvd3 nv-wrap nv-lineChart');
+            wrapEnter.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+
+            var gEnter = wrapEnter.append('g');
             var g = gEnter.select('g');
 
             var legendWrapAppend=gEnter.append('g').attr('class', 'nv-legendWrap');
@@ -179,8 +182,6 @@ nv.models.lineChart = function() {
                         .attr('transform', 'translate(0,' + (-margin.top) +')');
                 }
             }
-
-            wrap.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
 
             if (rightAlignYAxis) {
                 yAxisAppend
@@ -237,7 +238,7 @@ nv.models.lineChart = function() {
             //============================================================
             function updateXAxis() {
               if(showXAxis) {
-                g.select('.nv-focus .nv-x.nv-axis')
+                xAxisAppend
                   .transition().duration(duration)
                   .call(xAxis)
                 ;
@@ -246,7 +247,7 @@ nv.models.lineChart = function() {
 
             function updateYAxis() {
               if(showYAxis) {
-                g.select('.nv-focus .nv-y.nv-axis')
+                yAxisAppend
                   .transition().duration(duration)
                   .call(yAxis)
                 ;

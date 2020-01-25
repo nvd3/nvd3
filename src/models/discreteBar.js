@@ -76,14 +76,14 @@ nv.models.discreteBar = function() {
             // Setup containers and skeleton of chart
             var wrap = container.selectAll('g.nv-wrap.nv-discretebar').data([data]);
             var wrapEnter = wrap.enter().append('g').attr('class', 'nvd3 nv-wrap nv-discretebar');
+            wrapEnter.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
             var gEnter = wrapEnter.append('g');
             var g = wrap.select('g');
 
-            gEnter.append('g').attr('class', 'nv-groups');
-            wrap.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+            var groupsAppend=gEnter.append('g').attr('class', 'nv-groups');
 
             //TODO: by definition, the discrete bar should not have multiple groups, will modify/remove later
-            var groups = wrap.select('.nv-groups').selectAll('.nv-group')
+            var groups = groupsAppend.selectAll('.nv-group')
                 .data(function(d) { return d }, function(d) { return d.key });
             groups.enter().append('g')
                 .style('stroke-opacity', 1e-6)

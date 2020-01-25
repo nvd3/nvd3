@@ -74,9 +74,9 @@ nv.models.candlestickBar = function() {
 
             // Setup containers and skeleton of chart
             var wrap = d3.select(this).selectAll('g.nv-wrap.nv-candlestickBar').data([data[0].values]);
-            wrap.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
-
             var wrapEnter = wrap.enter().append('g').attr('class', 'nvd3 nv-wrap nv-candlestickBar');
+            wrapEnter.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+
             var defsEnter = wrapEnter.append('defs');
             var gEnter = wrapEnter.append('g');
             var g = wrap.select('g');

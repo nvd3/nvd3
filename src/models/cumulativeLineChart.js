@@ -191,7 +191,10 @@ nv.models.cumulativeLineChart = function() {
             // Setup containers and skeleton of chart
             var interactivePointerEvents = (useInteractiveGuideline) ? "none" : "all";
             var wrap = container.selectAll('g.nv-wrap.nv-cumulativeLine').data([data]);
-            var gEnter = wrap.enter().append('g').attr('class', 'nvd3 nv-wrap nv-cumulativeLine').append('g');
+            var wrapEnter=wrap.enter().append('g').attr('class', 'nvd3 nv-wrap nv-cumulativeLine');
+            wrapEnter.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+
+            var gEnter = wrapEnter.append('g');
             var g = wrap.select('g');
 
             var interactiveAppend=gEnter.append('g').attr('class', 'nv-interactive');
@@ -200,16 +203,16 @@ nv.models.cumulativeLineChart = function() {
             var backgroundAppend=gEnter.append('g').attr('class', 'nv-background');
             var linesWrapAppend=gEnter.append('g').attr('class', 'nv-linesWrap').style("pointer-events",interactivePointerEvents);
             var avgLinesWrapAppend=gEnter.append('g').attr('class', 'nv-avgLinesWrap').style("pointer-events","none");
-            gEnter.append('g').attr('class', 'nv-legendWrap');
-            gEnter.append('g').attr('class', 'nv-controlsWrap');
+            var legendWrapAppend=gEnter.append('g').attr('class', 'nv-legendWrap');
+            var controlsWrapAppend=gEnter.append('g').attr('class', 'nv-controlsWrap');
 
             // Legend
             if (!showLegend) {
-                g.select('.nv-legendWrap').selectAll('*').remove();
+                legendWrapAppend.selectAll('*').remove();
             } else {
                 legend.width(availableWidth);
 
-                g.select('.nv-legendWrap')
+                legendWrapAppend
                     .datum(data)
                     .call(legend);
 
@@ -218,13 +221,13 @@ nv.models.cumulativeLineChart = function() {
                     availableHeight = nv.utils.availableHeight(height, container, margin);
                 }
 
-                g.select('.nv-legendWrap')
+                legendWrapAppend
                     .attr('transform', 'translate(0,' + (-margin.top) +')')
             }
 
             // Controls
             if (!showControls) {
-                 g.select('.nv-controlsWrap').selectAll('*').remove();
+                 controlsWrapAppend.selectAll('*').remove();
             } else {
                 var controlsData = [
                     { key: 'Re-scale y-axis', disabled: !rescaleY }
@@ -237,13 +240,11 @@ nv.models.cumulativeLineChart = function() {
                     .margin({top: 5, right: 0, bottom: 5, left: 20})
                 ;
 
-                g.select('.nv-controlsWrap')
+                controlsWrapAppend
                     .datum(controlsData)
                     .attr('transform', 'translate(0,' + (-margin.top) +')')
                     .call(controls);
             }
-
-            wrap.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
 
             if (rightAlignYAxis) {
                 yAxisAppend

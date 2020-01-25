@@ -139,8 +139,8 @@ nv.models.scatterChart = function() {
 
             // Setup containers and skeleton of chart
             var wrap = container.selectAll('g.nv-wrap.nv-scatterChart').data([data]);
-            wrap.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
             var wrapEnter = wrap.enter().append('g').attr('class', 'nvd3 nv-wrap nv-scatterChart nv-chart-' + scatter.id());
+            wrapEnter.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
             var gEnter = wrapEnter.append('g');
             var g = wrap.select('g');
 

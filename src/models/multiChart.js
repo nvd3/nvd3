@@ -104,7 +104,10 @@ nv.models.multiChart = function() {
                 .range([0, availableWidth]);
 
             var wrap = container.selectAll('g.wrap.multiChart').data([data]);
-            var gEnter = wrap.enter().append('g').attr('class', 'wrap nvd3 multiChart').append('g');
+            var wrapEnter = wrap.enter().append('g').attr('class', 'wrap nvd3 multiChart');
+            wrapEnter.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+
+            var gEnter = wrapEnter.append('g');
 
             var xAxisAppend=gEnter.append('g').attr('class', 'nv-x nv-axis');
             var y1AxisAppend=gEnter.append('g').attr('class', 'nv-y1 nv-axis');
@@ -119,7 +122,6 @@ nv.models.multiChart = function() {
             var lines2WrapAppend=gEnter.append('g').attr('class', 'lines2Wrap');
             var legendWrapAppend=gEnter.append('g').attr('class', 'legendWrap');
             var interactiveAppend=gEnter.append('g').attr('class', 'nv-interactive');
-            //gEnter.merge(wrap);
 
             var g = wrap.select('g');
 
@@ -190,8 +192,6 @@ nv.models.multiChart = function() {
                 .height(availableHeight)
                 .interpolate(interpolate)
                 .color(color_array.filter(function(d,i) { return !data[i].disabled && data[i].yAxis == 2 && data[i].type == 'area'}));
-
-            g.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
 
             var lines1Wrap = lines1WrapAppend
                 .datum(dataLines1.filter(function(d){return !d.disabled}));
