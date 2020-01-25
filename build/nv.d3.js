@@ -1,4 +1,4 @@
-/* nvd3 version 1.8.6-dev (https://github.com/novus/nvd3) 2020-01-24 */
+/* nvd3 version 1.8.6-dev (https://github.com/novus/nvd3) 2020-01-25 */
 (function(){
 
 // set up main nv object
@@ -2175,11 +2175,10 @@ nv.models.boxPlot = function() {
 
             // Setup containers and skeleton of chart
             var wrap = container.selectAll('g.nv-wrap').data([data]);
-            var wrapEnter = wrap.enter().append('g').attr('class', 'nvd3 nv-wrap');
             wrap.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+            var wrapEnter = wrap.enter().append('g').attr('class', 'nvd3 nv-wrap');
 
-            var boxplots = wrap.selectAll('.nv-boxplot').data(function(d) { return d });
-            var boxEnter = boxplots.enter().append('g').style('stroke-opacity', 1e-6).style('fill-opacity', 1e-6);
+            var boxplots = wrapEnter.selectAll('.nv-boxplot').data(function(d) { return d });
             boxplots
                 .attr('class', 'nv-boxplot')
                 .attr('transform', function(d,i,j) { return 'translate(' + (xScale(getX(d,i)) + xScale.bandwidth() * 0.05) + ', 0)'; })
@@ -2193,6 +2192,7 @@ nv.models.boxPlot = function() {
                     return 'translate(' + (xScale(getX(d,i)) + xScale.bandwidth() * 0.05) + ', 0)';
                 });
             boxplots.exit().remove();
+            var boxEnter = boxplots.enter().append('g').style('stroke-opacity', 1e-6).style('fill-opacity', 1e-6);
 
             // ----- add the SVG elements for each boxPlot -----
 
@@ -2305,9 +2305,9 @@ nv.models.boxPlot = function() {
                 .style('stroke', function(d,i) { return getColor(d) || color(d,i) });
 
             // median line
-            boxEnter.append('line').attr('class', 'nv-boxplot-median');
+            var lineAppend=boxEnter.append('line').attr('class', 'nv-boxplot-median');
 
-            boxplots.select('line.nv-boxplot-median')
+            lineAppend
               .watchTransition(renderWatch, 'nv-boxplot: boxplots line')
                 .attr('x1', box_left)
                 .attr('y1', function(d,i) { return yScale(getQ2(d)); })
@@ -2477,8 +2477,7 @@ nv.models.boxPlotChart = function() {
 
             chart.update = function() {
                 dispatch.call('beforeUpdate', this);
-                var s=container.transition().duration(duration).call(chart);
-                //s.merge(container);
+                container.transition().duration(duration).call(chart);
             };
             chart.container = this;
 
@@ -2487,7 +2486,7 @@ nv.models.boxPlotChart = function() {
             if (!data || !data.length) {
                 var noDataText = container.selectAll('.nv-noData').data([noData]);
 
-                noDataText.enter().append('text')
+                var textAppend=noDataText.enter().append('text')
                     .attr('class', 'nvd3 nv-noData')
                     .attr('dy', '-.7em')
                     .style('text-anchor', 'middle');
@@ -2512,23 +2511,24 @@ nv.models.boxPlotChart = function() {
             var defsEnter = gEnter.append('defs');
             var g = wrap.select('g');
 
-            gEnter.append('g').attr('class', 'nv-x nv-axis');
-            var lineAppend=gEnter.append('g').attr('class', 'nv-y nv-axis')
+            var xAxisAppend=gEnter.append('g').attr('class', 'nv-x nv-axis');
+            var yAxisAppend=gEnter.append('g').attr('class', 'nv-y nv-axis');
+            var lineAppend=yAxisAppend
                 .append('g').attr('class', 'nv-zeroLine')
                 .append('line');
 
-            gEnter.append('g').attr('class', 'nv-barsWrap');
-            g.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+            var barsWrapAppend=gEnter.append('g').attr('class', 'nv-barsWrap');
+            gEnter.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
 
             if (rightAlignYAxis) {
-                g.select('.nv-y.nv-axis')
+                yAxisAppend
                     .attr('transform', 'translate(' + availableWidth + ',0)');
             }
 
             // Main Chart Component(s)
             boxplot.width(availableWidth).height(availableHeight);
 
-            var barsWrap = g.select('.nv-barsWrap')
+            var barsWrap = barsWrapAppend
                 .datum(data.filter(function(d) { return !d.disabled }))
 
             barsWrap.transition().call(boxplot);
@@ -2537,7 +2537,7 @@ nv.models.boxPlotChart = function() {
                 .attr('id', 'nv-x-label-clip-' + boxplot.id())
                 .append('rect');
 
-            g.select('#nv-x-label-clip-' + boxplot.id() + ' rect')
+            gEnter.select('#nv-x-label-clip-' + boxplot.id() + ' rect')
                 .attr('width', x.range() * (staggerLabels ? 2 : 1))
                 .attr('height', 16)
                 .attr('x', -x.range() / (staggerLabels ? 1 : 2 ));
@@ -2550,10 +2550,10 @@ nv.models.boxPlotChart = function() {
                 xAxis
                     .tickSizeInner(-availableHeight);
 
-                g.select('.nv-x.nv-axis').attr('transform', 'translate(0,' + y.range()[0] + ')');
-                g.select('.nv-x.nv-axis').call(xAxis);
+                xAxisAppend.attr('transform', 'translate(0,' + y.range()[0] + ')');
+                xAxisAppend.call(xAxis);
 
-                var xTicks = g.select('.nv-x.nv-axis').selectAll('g');
+                var xTicks = xAxisAppend.selectAll('g');
                 if (staggerLabels) {
                     xTicks
                         .selectAll('text')
@@ -2568,7 +2568,7 @@ nv.models.boxPlotChart = function() {
                 yAxis
                     .tickSizeInner( -availableWidth);
 
-                g.select('.nv-y.nv-axis').call(yAxis);
+                yAxisAppend.call(yAxis);
             }
 
             // Zero line
@@ -3264,14 +3264,14 @@ nv.models.candlestickBar = function() {
 
             // Setup containers and skeleton of chart
             var wrap = d3.select(this).selectAll('g.nv-wrap.nv-candlestickBar').data([data[0].values]);
+            wrap.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+
             var wrapEnter = wrap.enter().append('g').attr('class', 'nvd3 nv-wrap nv-candlestickBar');
             var defsEnter = wrapEnter.append('defs');
             var gEnter = wrapEnter.append('g');
             var g = wrap.select('g');
 
             var ticksAppend=gEnter.append('g').attr('class', 'nv-ticks');
-
-            wrap.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
 
             container
                 .on('click', function(d,i) {
@@ -3283,11 +3283,11 @@ nv.models.candlestickBar = function() {
                     });
                 });
 
-            defsEnter.append('clipPath')
+            var rectAppend=defsEnter.append('clipPath')
                 .attr('id', 'nv-chart-clip-path-' + id)
                 .append('rect');
 
-            wrap.select('#nv-chart-clip-path-' + id + ' rect')
+            rectAppend
                 .attr('width', availableWidth)
                 .attr('height', availableHeight);
 
@@ -12841,9 +12841,9 @@ nv.models.multiChart = function() {
         stack1 = nv.models.stackedArea().yScale(yScale1).duration(duration),
         stack2 = nv.models.stackedArea().yScale(yScale2).duration(duration),
 
-        xAxis = d3.axisBottom(x).tickPadding(5),//@todo .duration(duration),
-        yAxis1 = d3.axisLeft(yScale1),//@todo .duration(duration),
-        yAxis2 = d3.axisRight(yScale2),//@todo .duration(duration),
+        xAxis = nv.models.axis(d3.axisBottom(x), 'bottom').tickPadding(5).duration(duration),
+        yAxis1 = nv.models.axis(d3.axisLeft(yScale1), 'left').duration(duration),
+        yAxis2 = nv.models.axis(d3.axisRight(yScale2), 'right').duration(duration),
 
         legend = nv.models.legend().height(30),
         tooltip = nv.models.tooltip(),
@@ -16675,6 +16675,7 @@ nv.models.scatterChart = function() {
 
             // Setup containers and skeleton of chart
             var wrap = container.selectAll('g.nv-wrap.nv-scatterChart').data([data]);
+            wrap.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
             var wrapEnter = wrap.enter().append('g').attr('class', 'nvd3 nv-wrap nv-scatterChart nv-chart-' + scatter.id());
             var gEnter = wrapEnter.append('g');
             var g = wrap.select('g');
@@ -16714,7 +16715,6 @@ nv.models.scatterChart = function() {
                     .attr('transform', 'translate(0' + ',' + (-margin.top) +')');
             }
 
-            wrap.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
 
             // Main Chart Component(s)
             scatter
@@ -16739,9 +16739,9 @@ nv.models.scatterChart = function() {
                     return d;
                 });
 
-            regWrap.enter().append('g').attr('class', 'nv-regLines');
+            var regLinesAppend=regWrap.enter().append('g').attr('class', 'nv-regLines');
 
-            var regLine = regWrap.selectAll('.nv-regLine')
+            var regLine = regLinesAppend.selectAll('.nv-regLine')
                 .data(function (d) {
                     return [d]
                 });
