@@ -92,11 +92,10 @@ nv.models.axis = function(axis, orientation) {
                     if (showMaxMin) {
                         axisMaxMin = wrap.selectAll('g.nv-axisMaxMin')
                             .data(scale.domain());
+                        axisMaxMin.exit().remove();
                         axisMaxMin.enter().append('g').attr('class',function(d,i){
                                 return ['nv-axisMaxMin','nv-axisMaxMin-x',(i == 0 ? 'nv-axisMin-x':'nv-axisMax-x')].join(' ')
-                        }).append('text');
-                        axisMaxMin.exit().remove();
-                        axisMaxMin
+                        }).append('text').merge(axisMaxMin)
                             .attr('transform', function(d,i) {
                                 return 'translate(' + nv.utils.NaNtoZero(scale(d)) + ',0)'
                             })

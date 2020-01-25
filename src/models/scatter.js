@@ -495,7 +495,7 @@ nv.models.scatter = function() {
                 })
                 .attr('d',
                     nv.utils.symbol()
-                    .type(function(d) {console.log("type1 "+getShape(d[0]));  return getShape(d[0]); })
+                    .type(function(d) { return getShape(d[0]); })
                     .size(function(d) { return z(getSize(d[0],d[1])) })
             );
             points.exit().each(delCache).remove();
@@ -544,7 +544,7 @@ nv.models.scatter = function() {
             })
             .watchTransition(renderWatch, 'scatter points')
             .attr('d', nv.utils.symbol()
-                .type(function (d) {console.log("type "+getShape(d[0])); return getShape(d[0]) })
+                .type(function (d) { return getShape(d[0]) })
                 .size(function (d) { return z(getSize(d[0], d[1])) })
             );
 

@@ -163,7 +163,7 @@ function defaultChartTest(container, data, margin) {
     chart.tooltipContent(function(key) {
         return "<h3>" + key + "</h3>";
     });
-    d3.select('#' + container + ' svg').datum(data).transition(t).call(chart);
+    d3.select('#' + container + ' svg').datum(data).transition().duration(500).call(chart);
 
     nv.utils.windowResize(chart.update);
 
@@ -183,7 +183,7 @@ function scatterPlusLineTest(container, data) {
     chart.tooltipContent(function(key) {
         return "<h3>" + key + "</h3>";
     });
-    d3.select('#' + container + ' svg').datum(data).transition(t).call(chart);
+    d3.select('#' + container + ' svg').datum(data).transition().duration(500).call(chart);
     nv.utils.windowResize(chart.update);
     return chart;
   });

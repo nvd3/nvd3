@@ -56,14 +56,14 @@ nv.models.bulletChart = function() {
 
             // Setup containers and skeleton of chart
             var wrap = container.selectAll('g.nv-wrap.nv-bulletChart').data([d]);
+            wrap.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+
             var wrapEnter = wrap.enter().append('g').attr('class', 'nvd3 nv-wrap nv-bulletChart');
             var gEnter = wrapEnter.append('g');
             var g = wrap.select('g');
 
             var bulletWrapAppend=gEnter.append('g').attr('class', 'nv-bulletWrap');
             var titlesAppend=gEnter.append('g').attr('class', 'nv-titles');
-
-            wrap.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
 
             // Compute the new x-scale.
             var x1 = d3.scaleLinear()
@@ -97,8 +97,8 @@ nv.models.bulletChart = function() {
                 .width(availableWidth)
                 .height(availableHeight);
 
-//@todo            var bulletWrap = g.select('.nv-bulletWrap');
-            bulletWrapAppend.transition().call(bullet);
+            var bulletWrap = bulletWrapAppend
+                              .transition().call(bullet);
 
             // Compute the tick format.
             var format = tickFormat || x1.tickFormat( availableWidth / 100 );
@@ -119,14 +119,14 @@ nv.models.bulletChart = function() {
                 .attr('y1', availableHeight)
                 .attr('y2', availableHeight * 7 / 6);
 
-            tickEnter.append('text')
+            var textAppend=tickEnter.append('text')
                 .attr('text-anchor', 'middle')
                 .attr('dy', '1em')
                 .attr('y', availableHeight * 7 / 6)
                 .text(format);
 
             // Transition the updating ticks to the new scale, x1.
-            var tickUpdate = d3.transition(tick)
+            var tickUpdate = tick
                 .transition()
                 .duration(bullet.duration())
                 .attr('transform', function(d) { return 'translate(' + x1(d) + ',0)' })
@@ -140,7 +140,7 @@ nv.models.bulletChart = function() {
                 .attr('y', availableHeight * 7 / 6);
 
             // Transition the exiting ticks to the new scale, x1.
-            d3.transition(tick.exit())
+            tickEnter
                 .transition()
                 .duration(bullet.duration())
                 .attr('transform', function(d) { return 'translate(' + x1(d) + ',0)' })

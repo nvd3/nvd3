@@ -249,7 +249,7 @@ nv.models.sunburst = function() {
                 .append("g")
                 .attr("class",'arc-container')
 
-            cGE.append("path")
+            var pathAppend=cGE.append("path")
                 .attr("d", arc)
                 .style("fill", function (d) {
                     if (d.color) {

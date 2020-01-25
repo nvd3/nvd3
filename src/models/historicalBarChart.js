@@ -102,19 +102,19 @@ nv.models.historicalBarChart = function(bar_model) {
             var gEnter = wrap.enter().append('g').attr('class', 'nvd3 nv-wrap nv-historicalBarChart').append('g');
             var g = wrap.select('g');
 
-            gEnter.append('g').attr('class', 'nv-x nv-axis');
-            gEnter.append('g').attr('class', 'nv-y nv-axis');
-            gEnter.append('g').attr('class', 'nv-barsWrap');
-            gEnter.append('g').attr('class', 'nv-legendWrap');
-            gEnter.append('g').attr('class', 'nv-interactive');
+            var xAxisAppend=gEnter.append('g').attr('class', 'nv-x nv-axis');
+            var yAxisAppend=gEnter.append('g').attr('class', 'nv-y nv-axis');
+            var barsWrapAppend=gEnter.append('g').attr('class', 'nv-barsWrap');
+            var legendWrapAppend=gEnter.append('g').attr('class', 'nv-legendWrap');
+            var interactiveAppend=gEnter.append('g').attr('class', 'nv-interactive');
 
             // Legend
             if (!showLegend) {
-                g.select('.nv-legendWrap').selectAll('*').remove();
+                legendWrapAppend.selectAll('*').remove();
             } else {
                 legend.width(availableWidth);
 
-                g.select('.nv-legendWrap')
+                legendWrapAppend
                     .datum(data)
                     .call(legend);
 
@@ -123,13 +123,13 @@ nv.models.historicalBarChart = function(bar_model) {
                     availableHeight = nv.utils.availableHeight(height, container, margin);
                 }
 
-                wrap.select('.nv-legendWrap')
+                legendWrapAppend
                     .attr('transform', 'translate(0,' + (-margin.top) +')')
             }
             wrap.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
 
             if (rightAlignYAxis) {
-                g.select(".nv-y.nv-axis")
+                yAxisAppend
                     .attr("transform", "translate(" + availableWidth + ",0)");
             }
 
@@ -141,7 +141,7 @@ nv.models.historicalBarChart = function(bar_model) {
                     .margin({left:margin.left, top:margin.top})
                     .svgContainer(container)
                     .xScale(x);
-                wrap.select(".nv-interactive").call(interactiveLayer);
+                interactiveAppend.call(interactiveLayer);
             }
             bars
                 .width(availableWidth)
@@ -150,7 +150,7 @@ nv.models.historicalBarChart = function(bar_model) {
                     return d.color || color(d, i);
                 }).filter(function(d,i) { return !data[i].disabled }));
 
-            var barsWrap = g.select('.nv-barsWrap')
+            var barsWrap = barsWrapAppend
                 .datum(data.filter(function(d) { return !d.disabled }));
             barsWrap.transition().call(bars);
 
@@ -162,9 +162,9 @@ nv.models.historicalBarChart = function(bar_model) {
                 xAxis
                     .tickSizeInner(-availableHeight);
 
-                g.select('.nv-x.nv-axis')
+                xAxisAppend
                     .attr('transform', 'translate(0,' + y.range()[0] + ')');
-                g.select('.nv-x.nv-axis')
+                xAxisAppend
                     .transition()
                     .call(xAxis);
             }
@@ -176,7 +176,7 @@ nv.models.historicalBarChart = function(bar_model) {
                 yAxis
                     .tickSizeInner( -availableWidth);
 
-                g.select('.nv-y.nv-axis')
+                yAxisAppend
                     .transition()
                     .call(yAxis);
             }

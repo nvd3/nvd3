@@ -12,7 +12,7 @@ window.addEventListener("load", function load(event) {
     var chart = nv.models.bulletChart();
     d3.select('#chart svg')
         .datum(exampleData())
-        .transition(t)
+        .transition().duration(1000)
         .call(chart);
     return chart;
   });

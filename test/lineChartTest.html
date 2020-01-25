@@ -172,7 +172,7 @@ nv.addGraph(function() {
   d3.select('#chart2 svg')
       //.datum([]) //for testing noData
       .datum(dummyStocks(50))
-      .transition(t)
+      .transition().duration(500)
       .call(chart);
 
   nv.utils.windowResize(chart.update);
@@ -246,7 +246,7 @@ function defaultChartConfig(containerid, data, guideline, useDates, auxOptions) 
 
     d3.select('#' + containerid + ' svg')
         .datum(data)
-      .transition(t)
+      .transition().duration(500)
         .call(chart);
 
     nv.utils.windowResize(chart.update);

@@ -102,10 +102,6 @@
         {"date": 15953, "open": 165.85, "high": 166.4, "low": 165.73, "close": 165.96, "volume": 62930500, "adjusted": 165.96}
     ]}];
 
-    var t = d3.transition()
-              .duration(500)
-              .ease(d3.easeLinear);
-
     nv.addGraph(function() {
         var chart = nv.models.candlestickBarChart()
             .x(function(d) { return d['date'] })

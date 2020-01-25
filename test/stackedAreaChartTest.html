@@ -270,7 +270,7 @@ function defaultChartConfig(container, data, useGuideline) {
 
     d3.select('#' + container + ' svg')
           .datum(data)
-        .transition(t).call(chart);
+        .transition().duration(500).call(chart);
 
     nv.utils.windowResize(chart.update);
 

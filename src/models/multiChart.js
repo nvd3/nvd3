@@ -157,12 +157,12 @@ nv.models.multiChart = function() {
             lines1
                 .width(availableWidth)
                 .height(availableHeight)
-                //@todo .curve(interpolate)
+                .interpolate(interpolate)
                 .color(color_array.filter(function(d,i) { return !data[i].disabled && data[i].yAxis == 1 && data[i].type == 'line'}));
             lines2
                 .width(availableWidth)
                 .height(availableHeight)
-                //@todo .curve(interpolate)
+                .interpolate(interpolate)
                 .color(color_array.filter(function(d,i) { return !data[i].disabled && data[i].yAxis == 2 && data[i].type == 'line'}));
             scatters1
                 .width(availableWidth)
@@ -183,12 +183,12 @@ nv.models.multiChart = function() {
             stack1
                 .width(availableWidth)
                 .height(availableHeight)
-                //@todo .curve(interpolate)
+                .interpolate(interpolate)
                 .color(color_array.filter(function(d,i) { return !data[i].disabled && data[i].yAxis == 1 && data[i].type == 'area'}));
             stack2
                 .width(availableWidth)
                 .height(availableHeight)
-                //@todo .curve(interpolate)
+                .interpolate(interpolate)
                 .color(color_array.filter(function(d,i) { return !data[i].disabled && data[i].yAxis == 2 && data[i].type == 'area'}));
 
             g.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
@@ -679,7 +679,7 @@ nv.models.multiChart = function() {
         duration: {get: function(){return duration;}, set: function(_) {
             duration = _;
             [lines1, lines2, stack1, stack2, scatters1, scatters2, xAxis, yAxis1, yAxis2].forEach(function(model){
-              //@todo model.duration(duration);
+              model.duration(duration);
             });
         }}
     });
