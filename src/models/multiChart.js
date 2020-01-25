@@ -44,9 +44,9 @@ nv.models.multiChart = function() {
         stack1 = nv.models.stackedArea().yScale(yScale1).duration(duration),
         stack2 = nv.models.stackedArea().yScale(yScale2).duration(duration),
 
-        xAxis = d3.axisBottom(x).tickPadding(5),//@todo .duration(duration),
-        yAxis1 = d3.axisLeft(yScale1),//@todo .duration(duration),
-        yAxis2 = d3.axisRight(yScale2),//@todo .duration(duration),
+        xAxis = nv.models.axis(d3.axisBottom(x), 'bottom').tickPadding(5).duration(duration),
+        yAxis1 = nv.models.axis(d3.axisLeft(yScale1), 'left').duration(duration),
+        yAxis2 = nv.models.axis(d3.axisRight(yScale2), 'right').duration(duration),
 
         legend = nv.models.legend().height(30),
         tooltip = nv.models.tooltip(),

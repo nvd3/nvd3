@@ -74,14 +74,14 @@ nv.models.candlestickBar = function() {
 
             // Setup containers and skeleton of chart
             var wrap = d3.select(this).selectAll('g.nv-wrap.nv-candlestickBar').data([data[0].values]);
+            wrap.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+
             var wrapEnter = wrap.enter().append('g').attr('class', 'nvd3 nv-wrap nv-candlestickBar');
             var defsEnter = wrapEnter.append('defs');
             var gEnter = wrapEnter.append('g');
             var g = wrap.select('g');
 
             var ticksAppend=gEnter.append('g').attr('class', 'nv-ticks');
-
-            wrap.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
 
             container
                 .on('click', function(d,i) {
@@ -93,11 +93,11 @@ nv.models.candlestickBar = function() {
                     });
                 });
 
-            defsEnter.append('clipPath')
+            var rectAppend=defsEnter.append('clipPath')
                 .attr('id', 'nv-chart-clip-path-' + id)
                 .append('rect');
 
-            wrap.select('#nv-chart-clip-path-' + id + ' rect')
+            rectAppend
                 .attr('width', availableWidth)
                 .attr('height', availableHeight);
 

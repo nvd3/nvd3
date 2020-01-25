@@ -82,11 +82,10 @@ nv.models.boxPlot = function() {
 
             // Setup containers and skeleton of chart
             var wrap = container.selectAll('g.nv-wrap').data([data]);
-            var wrapEnter = wrap.enter().append('g').attr('class', 'nvd3 nv-wrap');
             wrap.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+            var wrapEnter = wrap.enter().append('g').attr('class', 'nvd3 nv-wrap');
 
-            var boxplots = wrap.selectAll('.nv-boxplot').data(function(d) { return d });
-            var boxEnter = boxplots.enter().append('g').style('stroke-opacity', 1e-6).style('fill-opacity', 1e-6);
+            var boxplots = wrapEnter.selectAll('.nv-boxplot').data(function(d) { return d });
             boxplots
                 .attr('class', 'nv-boxplot')
                 .attr('transform', function(d,i,j) { return 'translate(' + (xScale(getX(d,i)) + xScale.bandwidth() * 0.05) + ', 0)'; })
@@ -100,6 +99,7 @@ nv.models.boxPlot = function() {
                     return 'translate(' + (xScale(getX(d,i)) + xScale.bandwidth() * 0.05) + ', 0)';
                 });
             boxplots.exit().remove();
+            var boxEnter = boxplots.enter().append('g').style('stroke-opacity', 1e-6).style('fill-opacity', 1e-6);
 
             // ----- add the SVG elements for each boxPlot -----
 
@@ -212,9 +212,9 @@ nv.models.boxPlot = function() {
                 .style('stroke', function(d,i) { return getColor(d) || color(d,i) });
 
             // median line
-            boxEnter.append('line').attr('class', 'nv-boxplot-median');
+            var lineAppend=boxEnter.append('line').attr('class', 'nv-boxplot-median');
 
-            boxplots.select('line.nv-boxplot-median')
+            lineAppend
               .watchTransition(renderWatch, 'nv-boxplot: boxplots line')
                 .attr('x1', box_left)
                 .attr('y1', function(d,i) { return yScale(getQ2(d)); })

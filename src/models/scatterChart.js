@@ -139,6 +139,7 @@ nv.models.scatterChart = function() {
 
             // Setup containers and skeleton of chart
             var wrap = container.selectAll('g.nv-wrap.nv-scatterChart').data([data]);
+            wrap.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
             var wrapEnter = wrap.enter().append('g').attr('class', 'nvd3 nv-wrap nv-scatterChart nv-chart-' + scatter.id());
             var gEnter = wrapEnter.append('g');
             var g = wrap.select('g');
@@ -178,7 +179,6 @@ nv.models.scatterChart = function() {
                     .attr('transform', 'translate(0' + ',' + (-margin.top) +')');
             }
 
-            wrap.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
 
             // Main Chart Component(s)
             scatter
@@ -203,9 +203,9 @@ nv.models.scatterChart = function() {
                     return d;
                 });
 
-            regWrap.enter().append('g').attr('class', 'nv-regLines');
+            var regLinesAppend=regWrap.enter().append('g').attr('class', 'nv-regLines');
 
-            var regLine = regWrap.selectAll('.nv-regLine')
+            var regLine = regLinesAppend.selectAll('.nv-regLine')
                 .data(function (d) {
                     return [d]
                 });

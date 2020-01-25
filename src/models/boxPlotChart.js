@@ -59,8 +59,7 @@ nv.models.boxPlotChart = function() {
 
             chart.update = function() {
                 dispatch.call('beforeUpdate', this);
-                var s=container.transition().duration(duration).call(chart);
-                //s.merge(container);
+                container.transition().duration(duration).call(chart);
             };
             chart.container = this;
 
@@ -69,7 +68,7 @@ nv.models.boxPlotChart = function() {
             if (!data || !data.length) {
                 var noDataText = container.selectAll('.nv-noData').data([noData]);
 
-                noDataText.enter().append('text')
+                var textAppend=noDataText.enter().append('text')
                     .attr('class', 'nvd3 nv-noData')
                     .attr('dy', '-.7em')
                     .style('text-anchor', 'middle');
@@ -94,23 +93,24 @@ nv.models.boxPlotChart = function() {
             var defsEnter = gEnter.append('defs');
             var g = wrap.select('g');
 
-            gEnter.append('g').attr('class', 'nv-x nv-axis');
-            var lineAppend=gEnter.append('g').attr('class', 'nv-y nv-axis')
+            var xAxisAppend=gEnter.append('g').attr('class', 'nv-x nv-axis');
+            var yAxisAppend=gEnter.append('g').attr('class', 'nv-y nv-axis');
+            var lineAppend=yAxisAppend
                 .append('g').attr('class', 'nv-zeroLine')
                 .append('line');
 
-            gEnter.append('g').attr('class', 'nv-barsWrap');
-            g.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+            var barsWrapAppend=gEnter.append('g').attr('class', 'nv-barsWrap');
+            gEnter.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
 
             if (rightAlignYAxis) {
-                g.select('.nv-y.nv-axis')
+                yAxisAppend
                     .attr('transform', 'translate(' + availableWidth + ',0)');
             }
 
             // Main Chart Component(s)
             boxplot.width(availableWidth).height(availableHeight);
 
-            var barsWrap = g.select('.nv-barsWrap')
+            var barsWrap = barsWrapAppend
                 .datum(data.filter(function(d) { return !d.disabled }))
 
             barsWrap.transition().call(boxplot);
@@ -119,7 +119,7 @@ nv.models.boxPlotChart = function() {
                 .attr('id', 'nv-x-label-clip-' + boxplot.id())
                 .append('rect');
 
-            g.select('#nv-x-label-clip-' + boxplot.id() + ' rect')
+            gEnter.select('#nv-x-label-clip-' + boxplot.id() + ' rect')
                 .attr('width', x.range() * (staggerLabels ? 2 : 1))
                 .attr('height', 16)
                 .attr('x', -x.range() / (staggerLabels ? 1 : 2 ));
@@ -132,10 +132,10 @@ nv.models.boxPlotChart = function() {
                 xAxis
                     .tickSizeInner(-availableHeight);
 
-                g.select('.nv-x.nv-axis').attr('transform', 'translate(0,' + y.range()[0] + ')');
-                g.select('.nv-x.nv-axis').call(xAxis);
+                xAxisAppend.attr('transform', 'translate(0,' + y.range()[0] + ')');
+                xAxisAppend.call(xAxis);
 
-                var xTicks = g.select('.nv-x.nv-axis').selectAll('g');
+                var xTicks = xAxisAppend.selectAll('g');
                 if (staggerLabels) {
                     xTicks
                         .selectAll('text')
@@ -150,7 +150,7 @@ nv.models.boxPlotChart = function() {
                 yAxis
                     .tickSizeInner( -availableWidth);
 
-                g.select('.nv-y.nv-axis').call(yAxis);
+                yAxisAppend.call(yAxis);
             }
 
             // Zero line
