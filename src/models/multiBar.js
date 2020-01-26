@@ -172,10 +172,10 @@ nv.models.multiBar = function() {
             var groupsAppend=gEnter.append('g').attr('class', 'nv-groups');
             wrap.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
 
-            defsEnter.append('clipPath')
+            var defsRect=defsEnter.append('clipPath')
                 .attr('id', 'nv-edge-clip-' + id)
                 .append('rect');
-            wrap.select('#nv-edge-clip-' + id + ' rect')
+            defsRect
                 .attr('width', availableWidth)
                 .attr('height', availableHeight);
 

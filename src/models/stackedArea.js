@@ -76,7 +76,10 @@ nv.models.stackedArea = function() {
             var dataFiltered = data.filter(function(series) {
                 return !series.disabled;
             });
-            dataFiltered.forEach(function(d) {d.display = { y: d.y, y0: d.y0 }; });
+            dataFiltered.forEach(function(d, y, y0) {
+                d.display = { y: y, y0: y0 };
+                //console.log(d.display);
+            });
 
             data = d3.stack()
                 .order(order)

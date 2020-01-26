@@ -82,13 +82,13 @@ to take two arguments and use the index to keep backward compatibility
 */
 nv.utils.getColor = function(color) {
     //if you pass in nothing, get default colors back
-    if (color === undefined) {
+    if (color === undefined || (nv.utils.isArray(color) && color.length===0)) {
         return nv.utils.defaultColor();
 
     //if passed an array, turn it into a color scale
     } else if(nv.utils.isArray(color)) {
         var domainArray = new Array();
-        console.log("min:"+d3.min(color)+" "+color[0]);
+        //console.log("min:"+d3.min(color)+" "+color[0]);
         if(d3.min(color)===color[0]){
             domainArray.push(0);
             for(var i=1;i<color.length-1;i++){

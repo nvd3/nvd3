@@ -115,14 +115,14 @@ nv.models.boxPlotChart = function() {
 
             barsWrap.transition().call(boxplot);
 
-            defsEnter.append('clipPath')
+            var defsRect=defsEnter.append('clipPath')
                 .attr('id', 'nv-x-label-clip-' + boxplot.id())
                 .append('rect');
 
-            gEnter.select('#nv-x-label-clip-' + boxplot.id() + ' rect')
-                .attr('width', x.range() * (staggerLabels ? 2 : 1))
+            defsRect
+                .attr('width', x.bandwidth() * (staggerLabels ? 2 : 1))
                 .attr('height', 16)
-                .attr('x', -x.range() / (staggerLabels ? 1 : 2 ));
+                .attr('x', -x.bandwidth() / (staggerLabels ? 1 : 2 ));
 
             // Setup Axes
             if (showXAxis) {

@@ -1,4 +1,4 @@
-/* nvd3 version 1.8.6-dev (https://github.com/novus/nvd3) 2020-01-25 */
+/* nvd3 version 1.8.6-dev (https://github.com/novus/nvd3) 2020-01-26 */
 (function(){
 
 // set up main nv object
@@ -982,13 +982,13 @@ to take two arguments and use the index to keep backward compatibility
 */
 nv.utils.getColor = function(color) {
     //if you pass in nothing, get default colors back
-    if (color === undefined) {
+    if (color === undefined || (nv.utils.isArray(color) && color.length===0)) {
         return nv.utils.defaultColor();
 
     //if passed an array, turn it into a color scale
     } else if(nv.utils.isArray(color)) {
         var domainArray = new Array();
-        console.log("min:"+d3.min(color)+" "+color[0]);
+        //console.log("min:"+d3.min(color)+" "+color[0]);
         if(d3.min(color)===color[0]){
             domainArray.push(0);
             for(var i=1;i<color.length-1;i++){
@@ -2176,15 +2176,16 @@ nv.models.boxPlot = function() {
 
             // Setup containers and skeleton of chart
             var wrap = container.selectAll('g.nv-wrap').data([data]);
-            wrap.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
             var wrapEnter = wrap.enter().append('g').attr('class', 'nvd3 nv-wrap');
+            wrapEnter.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
 
             var boxplots = wrapEnter.selectAll('.nv-boxplot').data(function(d) { return d });
-            boxplots
+            var boxEnter = boxplots.enter().append('g').style('stroke-opacity', 1e-6).style('fill-opacity', 1e-6);
+            boxEnter
                 .attr('class', 'nv-boxplot')
                 .attr('transform', function(d,i,j) { return 'translate(' + (xScale(getX(d,i)) + xScale.bandwidth() * 0.05) + ', 0)'; })
                 .classed('hover', function(d) { return d.hover });
-            boxplots
+            boxEnter
                 .watchTransition(renderWatch, 'nv-boxplot: boxplots')
                 .style('stroke-opacity', 1)
                 .style('fill-opacity', 0.75)
@@ -2193,7 +2194,6 @@ nv.models.boxPlot = function() {
                     return 'translate(' + (xScale(getX(d,i)) + xScale.bandwidth() * 0.05) + ', 0)';
                 });
             boxplots.exit().remove();
-            var boxEnter = boxplots.enter().append('g').style('stroke-opacity', 1e-6).style('fill-opacity', 1e-6);
 
             // ----- add the SVG elements for each boxPlot -----
 
@@ -2221,13 +2221,13 @@ nv.models.boxPlot = function() {
             [getWl, getWh].forEach(function (f) {
                 var key = (f === getWl) ? 'low' : 'high';
                 var endpoint = (f === getWl) ? getQ1 : getQ3;
-                boxplots.select('line.nv-boxplot-whisker.nv-boxplot-' + key)
+                boxEnter.select('line.nv-boxplot-whisker.nv-boxplot-' + key)
                   .watchTransition(renderWatch, 'nv-boxplot: boxplots')
                     .attr('x1', xScale.bandwidth() * 0.45 )
                     .attr('y1', function(d,i) { return yScale(f(d)); })
                     .attr('x2', xScale.bandwidth() * 0.45 )
                     .attr('y2', function(d,i) { return yScale(endpoint(d)); });
-                boxplots.select('line.nv-boxplot-tick.nv-boxplot-' + key)
+                boxEnter.select('line.nv-boxplot-tick.nv-boxplot-' + key)
                   .watchTransition(renderWatch, 'nv-boxplot: boxplots')
                     .attr('x1', box_left )
                     .attr('y1', function(d,i) { return yScale(f(d)); })
@@ -2316,7 +2316,7 @@ nv.models.boxPlot = function() {
                 .attr('y2', function(d,i) { return yScale(getQ2(d)); });
 
             // outliers
-            var outliers = boxplots.selectAll('.nv-boxplot-outlier').data(function(d) {
+            var outliers = boxEnter.selectAll('.nv-boxplot-outlier').data(function(d) {
                 return getOlItems(d) || [];
             });
             outliers.enter().append('circle')
@@ -2534,14 +2534,14 @@ nv.models.boxPlotChart = function() {
 
             barsWrap.transition().call(boxplot);
 
-            defsEnter.append('clipPath')
+            var defsRect=defsEnter.append('clipPath')
                 .attr('id', 'nv-x-label-clip-' + boxplot.id())
                 .append('rect');
 
-            gEnter.select('#nv-x-label-clip-' + boxplot.id() + ' rect')
-                .attr('width', x.range() * (staggerLabels ? 2 : 1))
+            defsRect
+                .attr('width', x.bandwidth() * (staggerLabels ? 2 : 1))
                 .attr('height', 16)
-                .attr('x', -x.range() / (staggerLabels ? 1 : 2 ));
+                .attr('x', -x.bandwidth() / (staggerLabels ? 1 : 2 ));
 
             // Setup Axes
             if (showXAxis) {
@@ -4955,11 +4955,11 @@ nv.models.discreteBarChart = function() {
             barsWrap.transition().call(discretebar);
 
 
-            defsEnter.append('clipPath')
+            var defsRect=defsEnter.append('clipPath')
                 .attr('id', 'nv-x-label-clip-' + discretebar.id())
                 .append('rect');
 
-            g.select('#nv-x-label-clip-' + discretebar.id() + ' rect')
+            defsRect
                 .attr('width', x.bandwidth() * (staggerLabels ? 2 : 1))
                 .attr('height', 16)
                 .attr('x', -x.bandwidth() / (staggerLabels ? 1 : 2 ));
@@ -6347,11 +6347,11 @@ nv.models.distroPlotChart = function() {
 
             distroWrap.transition().call(distroplot);
 
-            defsEnter.append('clipPath')
+            var defsRect=defsEnter.append('clipPath')
                 .attr('id', 'nv-x-label-clip-' + distroplot.id())
                 .append('rect');
 
-            g.select('#nv-x-label-clip-' + distroplot.id() + ' rect')
+            defsRect
                 .attr('width', x.range() * (staggerLabels ? 2 : 1))
                 .attr('height', 16)
                 .attr('x', -x.range() / (staggerLabels ? 1 : 2 ));
@@ -8645,11 +8645,11 @@ nv.models.historicalBar = function() {
                     });
                 });
 
-            defsEnter.append('clipPath')
+            var  defsRect=defsEnter.append('clipPath')
                 .attr('id', 'nv-chart-clip-path-' + id)
                 .append('rect');
 
-            wrap.select('#nv-chart-clip-path-' + id + ' rect')
+            defsRect
                 .attr('width', availableWidth)
                 .attr('height', availableHeight);
 
@@ -8659,7 +8659,7 @@ nv.models.historicalBar = function() {
                 .data(function(d) { return d }, function(d,i) {return getX(d,i)});
             bars.exit().remove();
 
-            bars.enter().append('rect')
+            var rectAppend=bars.enter().append('rect')
                 .attr('x', 0 )
                 .attr('y', function(d,i) {  return nv.utils.NaNtoZero(y(Math.max(0, getY(d,i)))) })
                 .attr('height', function(d,i) { return nv.utils.NaNtoZero(Math.abs(y(getY(d,i)) - y(0))) })
@@ -8713,15 +8713,15 @@ nv.models.historicalBar = function() {
                     d3.event.stopPropagation();
                 });
 
-            bars
+            rectAppend
                 .attr('fill', function(d,i) { return color(d, i); })
-                .attr('class', function(d,i,j) { return (getY(d,i) < 0 ? 'nv-bar negative' : 'nv-bar positive') + ' nv-bar-' + j + '-' + i })
+                .attr('class', function(d,i,j) { return (getY(d,i) < 0 ? 'nv-bar negative' : 'nv-bar positive') + ' nv-bar-' + 0 + '-' + i })
                 .watchTransition(renderWatch, 'bars')
                 .attr('transform', function(d,i) { return 'translate(' + (x(getX(d,i)) - availableWidth / data[0].values.length * .45) + ',0)'; })
                 //TODO: better width calculations that don't assume always uniform data spacing;w
                 .attr('width', (availableWidth / data[0].values.length) * .9 );
 
-            bars.watchTransition(renderWatch, 'bars')
+            rectAppend.watchTransition(renderWatch, 'bars')
                 .attr('y', function(d,i) {
                     var rval = getY(d,i) < 0 ?
                         y(0) :
@@ -9678,7 +9678,7 @@ nv.models.line = function() {
                 .height(availableHeight);
             scatterWrap.call(scatter);
 
-            defsEnter.append('clipPath')
+            var defsRect=defsEnter.append('clipPath')
                 .attr('id', 'nv-edge-clip-' + scatter.id())
                 .append('rect')
                 .attr('width', availableWidth)
@@ -11249,10 +11249,10 @@ nv.models.multiBar = function() {
             var groupsAppend=gEnter.append('g').attr('class', 'nv-groups');
             wrap.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
 
-            defsEnter.append('clipPath')
+            var defsRect=defsEnter.append('clipPath')
                 .attr('id', 'nv-edge-clip-' + id)
                 .append('rect');
-            wrap.select('#nv-edge-clip-' + id + ' rect')
+            defsRect
                 .attr('width', availableWidth)
                 .attr('height', availableHeight);
 
@@ -13586,15 +13586,15 @@ nv.models.ohlcBar = function() {
                     });
                 });
 
-            defsEnter.append('clipPath')
+            var defsRect=defsEnter.append('clipPath')
                 .attr('id', 'nv-chart-clip-path-' + id)
                 .append('rect');
 
-            wrap.select('#nv-chart-clip-path-' + id + ' rect')
+            defsRect
                 .attr('width', availableWidth)
                 .attr('height', availableHeight);
 
-            g   .attr('clip-path', clipEdge ? 'url(#nv-chart-clip-path-' + id + ')' : '');
+            gEnter   .attr('clip-path', clipEdge ? 'url(#nv-chart-clip-path-' + id + ')' : '');
 
             var ticks = ticksAppend.selectAll('.nv-tick')
                 .data(function(d) { return d });
@@ -16039,15 +16039,15 @@ nv.models.scatter = function() {
             var wrap = container.selectAll('g.nv-wrap.nv-scatter').data([data]);
             var wrapEnter = wrap.enter().append('g').attr('class', 'nvd3 nv-wrap nv-scatter nv-chart-' + id)
                 .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');;
+            wrapEnter.classed('nv-single-point', singlePoint);
             var defsEnter = wrapEnter.append('defs');
             var gEnter = wrapEnter.append('g');
 
-            wrap.classed('nv-single-point', singlePoint);
             var nvGroups = gEnter.append('g').attr('class', 'nv-groups');
             var nvPointPaths = gEnter.append('g').attr('class', 'nv-point-paths');
             var nvPointClips = wrapEnter.append('g').attr('class', 'nv-point-clips');
 
-            defsEnter.append('clipPath')
+            var defsRect=defsEnter.append('clipPath')
                 .attr('id', 'nv-edge-clip-' + id)
                 .append('rect')
                 .attr('transform', 'translate( -10, -10)')
@@ -17385,6 +17385,7 @@ nv.models.stackedArea = function() {
             // Injecting point index into each point because d3.stack().out does not give index
             data.forEach(function(aseries, i) {
                 aseries.seriesIndex = i;
+                    console.log("sa aseries "+aseries.seriesIndex);
                 aseries.values = aseries.values.map(function(d, j) {
                     d.index = j;
                     d.seriesIndex = i;
@@ -17395,7 +17396,10 @@ nv.models.stackedArea = function() {
             var dataFiltered = data.filter(function(series) {
                 return !series.disabled;
             });
-            dataFiltered.forEach(function(d) {d.display = { y: d.y, y0: d.y0 }; });
+            dataFiltered.forEach(function(d, y, y0) {
+                d.display = { y: y, y0: y0 };
+                console.log(d.display);
+            });
 
             data = d3.stack()
                 .order(order)
@@ -17609,6 +17613,8 @@ nv.models.stackedArea = function() {
             margin.left   = _.left   !== undefined ? _.left   : margin.left;
         }},
         color:  {get: function(){return color;}, set: function(_){
+                console.log("set color");
+                console.log(_);
             color = nv.utils.getColor(_);
         }},
         style: {get: function(){return style;}, set: function(_){

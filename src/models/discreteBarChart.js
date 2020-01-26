@@ -143,11 +143,11 @@ nv.models.discreteBarChart = function() {
             barsWrap.transition().call(discretebar);
 
 
-            defsEnter.append('clipPath')
+            var defsRect=defsEnter.append('clipPath')
                 .attr('id', 'nv-x-label-clip-' + discretebar.id())
                 .append('rect');
 
-            g.select('#nv-x-label-clip-' + discretebar.id() + ' rect')
+            defsRect
                 .attr('width', x.bandwidth() * (staggerLabels ? 2 : 1))
                 .attr('height', 16)
                 .attr('x', -x.bandwidth() / (staggerLabels ? 1 : 2 ));

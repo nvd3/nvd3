@@ -212,15 +212,15 @@ nv.models.scatter = function() {
             var wrap = container.selectAll('g.nv-wrap.nv-scatter').data([data]);
             var wrapEnter = wrap.enter().append('g').attr('class', 'nvd3 nv-wrap nv-scatter nv-chart-' + id)
                 .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');;
+            wrapEnter.classed('nv-single-point', singlePoint);
             var defsEnter = wrapEnter.append('defs');
             var gEnter = wrapEnter.append('g');
 
-            wrap.classed('nv-single-point', singlePoint);
             var nvGroups = gEnter.append('g').attr('class', 'nv-groups');
             var nvPointPaths = gEnter.append('g').attr('class', 'nv-point-paths');
             var nvPointClips = wrapEnter.append('g').attr('class', 'nv-point-clips');
 
-            defsEnter.append('clipPath')
+            var defsRect=defsEnter.append('clipPath')
                 .attr('id', 'nv-edge-clip-' + id)
                 .append('rect')
                 .attr('transform', 'translate( -10, -10)')

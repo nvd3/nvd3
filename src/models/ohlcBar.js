@@ -93,15 +93,15 @@ nv.models.ohlcBar = function() {
                     });
                 });
 
-            defsEnter.append('clipPath')
+            var defsRect=defsEnter.append('clipPath')
                 .attr('id', 'nv-chart-clip-path-' + id)
                 .append('rect');
 
-            wrap.select('#nv-chart-clip-path-' + id + ' rect')
+            defsRect
                 .attr('width', availableWidth)
                 .attr('height', availableHeight);
 
-            g   .attr('clip-path', clipEdge ? 'url(#nv-chart-clip-path-' + id + ')' : '');
+            gEnter   .attr('clip-path', clipEdge ? 'url(#nv-chart-clip-path-' + id + ')' : '');
 
             var ticks = ticksAppend.selectAll('.nv-tick')
                 .data(function(d) { return d });

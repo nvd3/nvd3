@@ -82,15 +82,16 @@ nv.models.boxPlot = function() {
 
             // Setup containers and skeleton of chart
             var wrap = container.selectAll('g.nv-wrap').data([data]);
-            wrap.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
             var wrapEnter = wrap.enter().append('g').attr('class', 'nvd3 nv-wrap');
+            wrapEnter.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
 
             var boxplots = wrapEnter.selectAll('.nv-boxplot').data(function(d) { return d });
-            boxplots
+            var boxEnter = boxplots.enter().append('g').style('stroke-opacity', 1e-6).style('fill-opacity', 1e-6);
+            boxEnter
                 .attr('class', 'nv-boxplot')
                 .attr('transform', function(d,i,j) { return 'translate(' + (xScale(getX(d,i)) + xScale.bandwidth() * 0.05) + ', 0)'; })
                 .classed('hover', function(d) { return d.hover });
-            boxplots
+            boxEnter
                 .watchTransition(renderWatch, 'nv-boxplot: boxplots')
                 .style('stroke-opacity', 1)
                 .style('fill-opacity', 0.75)
@@ -99,7 +100,6 @@ nv.models.boxPlot = function() {
                     return 'translate(' + (xScale(getX(d,i)) + xScale.bandwidth() * 0.05) + ', 0)';
                 });
             boxplots.exit().remove();
-            var boxEnter = boxplots.enter().append('g').style('stroke-opacity', 1e-6).style('fill-opacity', 1e-6);
 
             // ----- add the SVG elements for each boxPlot -----
 
@@ -127,13 +127,13 @@ nv.models.boxPlot = function() {
             [getWl, getWh].forEach(function (f) {
                 var key = (f === getWl) ? 'low' : 'high';
                 var endpoint = (f === getWl) ? getQ1 : getQ3;
-                boxplots.select('line.nv-boxplot-whisker.nv-boxplot-' + key)
+                boxEnter.select('line.nv-boxplot-whisker.nv-boxplot-' + key)
                   .watchTransition(renderWatch, 'nv-boxplot: boxplots')
                     .attr('x1', xScale.bandwidth() * 0.45 )
                     .attr('y1', function(d,i) { return yScale(f(d)); })
                     .attr('x2', xScale.bandwidth() * 0.45 )
                     .attr('y2', function(d,i) { return yScale(endpoint(d)); });
-                boxplots.select('line.nv-boxplot-tick.nv-boxplot-' + key)
+                boxEnter.select('line.nv-boxplot-tick.nv-boxplot-' + key)
                   .watchTransition(renderWatch, 'nv-boxplot: boxplots')
                     .attr('x1', box_left )
                     .attr('y1', function(d,i) { return yScale(f(d)); })
@@ -222,7 +222,7 @@ nv.models.boxPlot = function() {
                 .attr('y2', function(d,i) { return yScale(getQ2(d)); });
 
             // outliers
-            var outliers = boxplots.selectAll('.nv-boxplot-outlier').data(function(d) {
+            var outliers = boxEnter.selectAll('.nv-boxplot-outlier').data(function(d) {
                 return getOlItems(d) || [];
             });
             outliers.enter().append('circle')

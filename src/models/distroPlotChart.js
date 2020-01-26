@@ -185,11 +185,11 @@ nv.models.distroPlotChart = function() {
 
             distroWrap.transition().call(distroplot);
 
-            defsEnter.append('clipPath')
+            var defsRect=defsEnter.append('clipPath')
                 .attr('id', 'nv-x-label-clip-' + distroplot.id())
                 .append('rect');
 
-            g.select('#nv-x-label-clip-' + distroplot.id() + ' rect')
+            defsRect
                 .attr('width', x.range() * (staggerLabels ? 2 : 1))
                 .attr('height', 16)
                 .attr('x', -x.range() / (staggerLabels ? 1 : 2 ));

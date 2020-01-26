@@ -82,11 +82,11 @@ nv.models.historicalBar = function() {
                     });
                 });
 
-            defsEnter.append('clipPath')
+            var  defsRect=defsEnter.append('clipPath')
                 .attr('id', 'nv-chart-clip-path-' + id)
                 .append('rect');
 
-            wrap.select('#nv-chart-clip-path-' + id + ' rect')
+            defsRect
                 .attr('width', availableWidth)
                 .attr('height', availableHeight);
 
@@ -96,7 +96,7 @@ nv.models.historicalBar = function() {
                 .data(function(d) { return d }, function(d,i) {return getX(d,i)});
             bars.exit().remove();
 
-            bars.enter().append('rect')
+            var rectAppend=bars.enter().append('rect')
                 .attr('x', 0 )
                 .attr('y', function(d,i) {  return nv.utils.NaNtoZero(y(Math.max(0, getY(d,i)))) })
                 .attr('height', function(d,i) { return nv.utils.NaNtoZero(Math.abs(y(getY(d,i)) - y(0))) })
@@ -150,15 +150,15 @@ nv.models.historicalBar = function() {
                     d3.event.stopPropagation();
                 });
 
-            bars
+            rectAppend
                 .attr('fill', function(d,i) { return color(d, i); })
-                .attr('class', function(d,i,j) { return (getY(d,i) < 0 ? 'nv-bar negative' : 'nv-bar positive') + ' nv-bar-' + j + '-' + i })
+                .attr('class', function(d,i,j) { return (getY(d,i) < 0 ? 'nv-bar negative' : 'nv-bar positive') + ' nv-bar-' + 0 + '-' + i })
                 .watchTransition(renderWatch, 'bars')
                 .attr('transform', function(d,i) { return 'translate(' + (x(getX(d,i)) - availableWidth / data[0].values.length * .45) + ',0)'; })
                 //TODO: better width calculations that don't assume always uniform data spacing;w
                 .attr('width', (availableWidth / data[0].values.length) * .9 );
 
-            bars.watchTransition(renderWatch, 'bars')
+            rectAppend.watchTransition(renderWatch, 'bars')
                 .attr('y', function(d,i) {
                     var rval = getY(d,i) < 0 ?
                         y(0) :
