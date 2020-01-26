@@ -68,7 +68,7 @@ nv.models.historicalBar = function() {
             wrapEnter.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
             var defsEnter = wrapEnter.append('defs');
             var gEnter = wrapEnter.append('g');
-            var g = wrap.select('g');
+            var g = wrapEnter.select('g');
 
             var barsAppend=gEnter.append('g').attr('class', 'nv-bars');
 

@@ -38,11 +38,11 @@ nv.models.legend = function() {
                 wrapEnter.attr('transform', 'translate(' + (- margin.right) + ',' + margin.top + ')');
             else
                 wrapEnter.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
-
             var gEnter = wrapEnter.append('g');
-            var g = wrap.select('g');
+            var g = gEnter.select('g');
 
-            var series = g.selectAll('.nv-series')
+
+            var series = gEnter.selectAll('.nv-series')
                 .data(function(d) {
                     if(vers != 'furious') return d;
 
@@ -78,12 +78,12 @@ nv.models.legend = function() {
                     .attr('ry', 3);
                 seriesShape = series.select('.nv-legend-symbol');
 
-                seriesEnter.append('g')
+                var checkBoxAppend = seriesEnter.append('g')
                     .attr('class', 'nv-check-box')
                     .property('innerHTML','<path d="M0.5,5 L22.5,5 L22.5,26.5 L0.5,26.5 L0.5,5 Z" class="nv-box"></path><path d="M5.5,12.8618467 L11.9185089,19.2803556 L31,0.198864511" class="nv-check"></path>')
                     .attr('transform', 'translate(-10,-8)scale(0.5)');
 
-                var seriesCheckbox = series.select('.nv-check-box');
+                var seriesCheckbox = checkBoxAppend;
 
                 seriesCheckbox.each(function(d,i) {
                     d3.select(this).selectAll('path')
@@ -91,15 +91,15 @@ nv.models.legend = function() {
                 });
             }
 
-            seriesEnter.append('text')
+            var legendTextAppend=seriesEnter.append('text')
                 .attr('text-anchor', 'start')
                 .attr('class','nv-legend-text')
                 .attr('dy', '.32em')
                 .attr('dx', '8');
 
-            var seriesText = series.select('text.nv-legend-text');
+            var seriesText = legendTextAppend;
 
-            series
+            seriesEnter
                 .on('mouseover', function(d,i) {
                     dispatch.call('legendMouseover', d,i);  //TODO: Make consistent with other event objects
                 })
@@ -247,10 +247,10 @@ nv.models.legend = function() {
 
                 //position legend as far right as possible within the total width
                 if (rightAlign) {
-                    g.attr('transform', 'translate(' + (width - margin.right - legendWidth) + ',' + margin.top + ')');
+                    seriesEnter.attr('transform', 'translate(' + (width - margin.right - legendWidth) + ',' + margin.top + ')');
                 }
                 else {
-                    g.attr('transform', 'translate(0' + ',' + margin.top + ')');
+                    seriesEnter.attr('transform', 'translate(0' + ',' + margin.top + ')');
                 }
 
                 height = margin.top + margin.bottom + (Math.ceil(seriesWidths.length / seriesPerRow) * versPadding);
@@ -281,7 +281,7 @@ nv.models.legend = function() {
                     });
 
                 //position legend as far right as possible within the total width
-                g.attr('transform', 'translate(' + (width - margin.right - maxwidth) + ',' + margin.top + ')');
+                seriesEnter.attr('transform', 'translate(' + (width - margin.right - maxwidth) + ',' + margin.top + ')');
 
                 height = margin.top + margin.bottom + ypos + 15;
             }
@@ -303,7 +303,7 @@ nv.models.legend = function() {
                     // .attr('stroke', '#444')
                     .attr('opacity',0);
 
-                var seriesBG = g.select('.nv-legend-bg');
+                var seriesBG = gEnter.select('.nv-legend-bg');
 
                 seriesBG
                 .transition().duration(300)

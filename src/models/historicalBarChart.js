@@ -103,7 +103,7 @@ nv.models.historicalBarChart = function(bar_model) {
             wrapEnter.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
 
             var gEnter = wrapEnter.append('g');
-            var g = wrap.select('g');
+            var g = wrapEnter.select('g');
 
             var xAxisAppend=gEnter.append('g').attr('class', 'nv-x nv-axis');
             var yAxisAppend=gEnter.append('g').attr('class', 'nv-y nv-axis');

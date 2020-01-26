@@ -75,13 +75,13 @@ nv.models.ohlcBar = function() {
             // Setup containers and skeleton of chart
             var wrap = d3.select(this).selectAll('g.nv-wrap.nv-ohlcBar').data([data[0].values]);
             var wrapEnter = wrap.enter().append('g').attr('class', 'nvd3 nv-wrap nv-ohlcBar');
+            wrapEnter.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+
             var defsEnter = wrapEnter.append('defs');
             var gEnter = wrapEnter.append('g');
             var g = wrap.select('g');
 
-            gEnter.append('g').attr('class', 'nv-ticks');
-
-            wrap.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+            var ticksAppend=gEnter.append('g').attr('class', 'nv-ticks');
 
             container
                 .on('click', function(d,i) {
@@ -103,7 +103,7 @@ nv.models.ohlcBar = function() {
 
             g   .attr('clip-path', clipEdge ? 'url(#nv-chart-clip-path-' + id + ')' : '');
 
-            var ticks = wrap.select('.nv-ticks').selectAll('.nv-tick')
+            var ticks = ticksAppend.selectAll('.nv-tick')
                 .data(function(d) { return d });
             ticks.exit().remove();
 

@@ -122,12 +122,15 @@ nv.models.parallelCoordinatesChart = function () {
                 // Setup containers and skeleton of chart
 
                 var wrap = container.selectAll('g.nv-wrap.nv-parallelCoordinatesChart').data([data]);
-                var gEnter = wrap.enter().append('g').attr('class', 'nvd3 nv-wrap nv-parallelCoordinatesChart').append('g');
+                var wrapEnter=wrap.enter().append('g').attr('class', 'nvd3 nv-wrap nv-parallelCoordinatesChart');
+                wrapEnter.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
 
-                var g = wrap.select('g');
+                var gEnter = wrapEnter.append('g');
 
-                gEnter.append('g').attr('class', 'nv-parallelCoordinatesWrap');
-                gEnter.append('g').attr('class', 'nv-legendWrap');
+                var g = wrapEnter.select('g');
+
+                var parallelCoordinatesWrapAppend=gEnter.append('g').attr('class', 'nv-parallelCoordinatesWrap');
+                var legendWrapAppend=gEnter.append('g').attr('class', 'nv-legendWrap');
 
                 g.select("rect")
                     .attr("width", availableWidth)
@@ -135,12 +138,12 @@ nv.models.parallelCoordinatesChart = function () {
 
                 // Legend
                 if (!showLegend) {
-                    g.select('.nv-legendWrap').selectAll('*').remove();
+                    legendWrapAppend.selectAll('*').remove();
                 } else {
                     legend.width(availableWidth)
                         .color(function (d) { return "rgb(188,190,192)"; });
 
-                    g.select('.nv-legendWrap')
+                    legendWrapAppend
                         .datum(dimensionData.sort(function (a, b) { return a.originalPosition - b.originalPosition; }))
                         .call(legend);
 
@@ -148,11 +151,9 @@ nv.models.parallelCoordinatesChart = function () {
                         margin.top = legend.height();
                         availableHeight = nv.utils.availableHeight(height, container, margin);
                     }
-                    wrap.select('.nv-legendWrap')
+                    legendWrapAppend
                        .attr('transform', 'translate( 0 ,' + (-margin.top) + ')');
                 }
-                wrap.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
-
                 // Main Chart Component(s)
                 parallelCoordinates
                     .width(availableWidth)
@@ -160,7 +161,7 @@ nv.models.parallelCoordinatesChart = function () {
                     .dimensionData(dimensionData)
                     .displayBrush(displayBrush);
 
-		        var parallelCoordinatesWrap = g.select('.nv-parallelCoordinatesWrap ')
+		        var parallelCoordinatesWrap = parallelCoordinatesWrapAppend
                   .datum(data);
 
 		        parallelCoordinatesWrap.transition().call(parallelCoordinates);

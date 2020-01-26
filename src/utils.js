@@ -88,7 +88,7 @@ nv.utils.getColor = function(color) {
     //if passed an array, turn it into a color scale
     } else if(nv.utils.isArray(color)) {
         var domainArray = new Array();
-        //console.log("min:"+d3.min(color)+" "+color[0]);
+        console.log("min:"+d3.min(color)+" "+color[0]);
         if(d3.min(color)===color[0]){
             domainArray.push(0);
             for(var i=1;i<color.length-1;i++){
@@ -104,7 +104,8 @@ nv.utils.getColor = function(color) {
             domainArray.push(0);
             
         }
-        var color_scale = d3.scaleQuantile().domain(domainArray).range(color);
+//        var color_scale = d3.scaleQuantile().domain(domainArray).range(color);
+        var color_scale = d3.scaleOrdinal().range(color);
         return function(d, i) {
             var key = i === undefined ? d : i;
             return d.color || color_scale(key);
@@ -114,6 +115,7 @@ nv.utils.getColor = function(color) {
     //external libs, such as angularjs-nvd3-directives use this
     } else {
         //can't really help it if someone passes rubbish as color
+        console.log("rubbish color ");
         return color;
     }
 };
@@ -125,7 +127,7 @@ Default color chooser uses a color scale of 20 colors from D3
  */
 nv.utils.defaultColor = function() {
     // get range of the scale so we'll turn it into our own function.
-    return nv.utils.getColor(d3.scaleOrdinal(d3.schemeAccent).range());
+    return nv.utils.getColor(d3.scaleOrdinal(d3.schemeSet3).range());
 };
 
 

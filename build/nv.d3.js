@@ -988,7 +988,7 @@ nv.utils.getColor = function(color) {
     //if passed an array, turn it into a color scale
     } else if(nv.utils.isArray(color)) {
         var domainArray = new Array();
-        //console.log("min:"+d3.min(color)+" "+color[0]);
+        console.log("min:"+d3.min(color)+" "+color[0]);
         if(d3.min(color)===color[0]){
             domainArray.push(0);
             for(var i=1;i<color.length-1;i++){
@@ -1004,7 +1004,8 @@ nv.utils.getColor = function(color) {
             domainArray.push(0);
             
         }
-        var color_scale = d3.scaleQuantile().domain(domainArray).range(color);
+//        var color_scale = d3.scaleQuantile().domain(domainArray).range(color);
+        var color_scale = d3.scaleOrdinal().range(color);
         return function(d, i) {
             var key = i === undefined ? d : i;
             return d.color || color_scale(key);
@@ -1014,6 +1015,7 @@ nv.utils.getColor = function(color) {
     //external libs, such as angularjs-nvd3-directives use this
     } else {
         //can't really help it if someone passes rubbish as color
+        console.log("rubbish color ");
         return color;
     }
 };
@@ -1025,7 +1027,7 @@ Default color chooser uses a color scale of 20 colors from D3
  */
 nv.utils.defaultColor = function() {
     // get range of the scale so we'll turn it into our own function.
-    return nv.utils.getColor(d3.scaleOrdinal(d3.schemeAccent).range());
+    return nv.utils.getColor(d3.scaleOrdinal(d3.schemeSet3).range());
 };
 
 
@@ -8629,7 +8631,7 @@ nv.models.historicalBar = function() {
             wrapEnter.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
             var defsEnter = wrapEnter.append('defs');
             var gEnter = wrapEnter.append('g');
-            var g = wrap.select('g');
+            var g = wrapEnter.select('g');
 
             var barsAppend=gEnter.append('g').attr('class', 'nv-bars');
 
@@ -8898,7 +8900,7 @@ nv.models.historicalBarChart = function(bar_model) {
             wrapEnter.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
 
             var gEnter = wrapEnter.append('g');
-            var g = wrap.select('g');
+            var g = wrapEnter.select('g');
 
             var xAxisAppend=gEnter.append('g').attr('class', 'nv-x nv-axis');
             var yAxisAppend=gEnter.append('g').attr('class', 'nv-y nv-axis');
@@ -9245,11 +9247,11 @@ nv.models.legend = function() {
                 wrapEnter.attr('transform', 'translate(' + (- margin.right) + ',' + margin.top + ')');
             else
                 wrapEnter.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
-
             var gEnter = wrapEnter.append('g');
-            var g = wrap.select('g');
+            var g = gEnter.select('g');
 
-            var series = g.selectAll('.nv-series')
+
+            var series = gEnter.selectAll('.nv-series')
                 .data(function(d) {
                     if(vers != 'furious') return d;
 
@@ -9285,12 +9287,12 @@ nv.models.legend = function() {
                     .attr('ry', 3);
                 seriesShape = series.select('.nv-legend-symbol');
 
-                seriesEnter.append('g')
+                var checkBoxAppend = seriesEnter.append('g')
                     .attr('class', 'nv-check-box')
                     .property('innerHTML','<path d="M0.5,5 L22.5,5 L22.5,26.5 L0.5,26.5 L0.5,5 Z" class="nv-box"></path><path d="M5.5,12.8618467 L11.9185089,19.2803556 L31,0.198864511" class="nv-check"></path>')
                     .attr('transform', 'translate(-10,-8)scale(0.5)');
 
-                var seriesCheckbox = series.select('.nv-check-box');
+                var seriesCheckbox = checkBoxAppend;
 
                 seriesCheckbox.each(function(d,i) {
                     d3.select(this).selectAll('path')
@@ -9298,15 +9300,15 @@ nv.models.legend = function() {
                 });
             }
 
-            seriesEnter.append('text')
+            var legendTextAppend=seriesEnter.append('text')
                 .attr('text-anchor', 'start')
                 .attr('class','nv-legend-text')
                 .attr('dy', '.32em')
                 .attr('dx', '8');
 
-            var seriesText = series.select('text.nv-legend-text');
+            var seriesText = legendTextAppend;
 
-            series
+            seriesEnter
                 .on('mouseover', function(d,i) {
                     dispatch.call('legendMouseover', d,i);  //TODO: Make consistent with other event objects
                 })
@@ -9454,10 +9456,10 @@ nv.models.legend = function() {
 
                 //position legend as far right as possible within the total width
                 if (rightAlign) {
-                    g.attr('transform', 'translate(' + (width - margin.right - legendWidth) + ',' + margin.top + ')');
+                    seriesEnter.attr('transform', 'translate(' + (width - margin.right - legendWidth) + ',' + margin.top + ')');
                 }
                 else {
-                    g.attr('transform', 'translate(0' + ',' + margin.top + ')');
+                    seriesEnter.attr('transform', 'translate(0' + ',' + margin.top + ')');
                 }
 
                 height = margin.top + margin.bottom + (Math.ceil(seriesWidths.length / seriesPerRow) * versPadding);
@@ -9488,7 +9490,7 @@ nv.models.legend = function() {
                     });
 
                 //position legend as far right as possible within the total width
-                g.attr('transform', 'translate(' + (width - margin.right - maxwidth) + ',' + margin.top + ')');
+                seriesEnter.attr('transform', 'translate(' + (width - margin.right - maxwidth) + ',' + margin.top + ')');
 
                 height = margin.top + margin.bottom + ypos + 15;
             }
@@ -9510,7 +9512,7 @@ nv.models.legend = function() {
                     // .attr('stroke', '#444')
                     .attr('opacity',0);
 
-                var seriesBG = g.select('.nv-legend-bg');
+                var seriesBG = gEnter.select('.nv-legend-bg');
 
                 seriesBG
                 .transition().duration(300)
@@ -13566,13 +13568,13 @@ nv.models.ohlcBar = function() {
             // Setup containers and skeleton of chart
             var wrap = d3.select(this).selectAll('g.nv-wrap.nv-ohlcBar').data([data[0].values]);
             var wrapEnter = wrap.enter().append('g').attr('class', 'nvd3 nv-wrap nv-ohlcBar');
+            wrapEnter.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+
             var defsEnter = wrapEnter.append('defs');
             var gEnter = wrapEnter.append('g');
             var g = wrap.select('g');
 
-            gEnter.append('g').attr('class', 'nv-ticks');
-
-            wrap.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+            var ticksAppend=gEnter.append('g').attr('class', 'nv-ticks');
 
             container
                 .on('click', function(d,i) {
@@ -13594,7 +13596,7 @@ nv.models.ohlcBar = function() {
 
             g   .attr('clip-path', clipEdge ? 'url(#nv-chart-clip-path-' + id + ')' : '');
 
-            var ticks = wrap.select('.nv-ticks').selectAll('.nv-tick')
+            var ticks = ticksAppend.selectAll('.nv-tick')
                 .data(function(d) { return d });
             ticks.exit().remove();
 
@@ -13847,14 +13849,14 @@ nv.models.parallelCoordinates = function() {
             // Setup containers and skeleton of chart
             var wrap = container.selectAll('g.nv-wrap.nv-parallelCoordinates').data([data]);
             var wrapEnter = wrap.enter().append('g').attr('class', 'nvd3 nv-wrap nv-parallelCoordinates');
+            wrapEnter.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+
             var gEnter = wrapEnter.append('g');
-            var g = wrap.select('g');
+            var g = wrapEnter.select('g');
 
-            gEnter.append('g').attr('class', 'nv-parallelCoordinates background');
-            gEnter.append('g').attr('class', 'nv-parallelCoordinates foreground');
-            gEnter.append('g').attr('class', 'nv-parallelCoordinates missingValuesline');
-
-            wrap.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+            var backgroundAppend=gEnter.append('g').attr('class', 'nv-parallelCoordinates background');
+            var foregroundAppend=gEnter.append('g').attr('class', 'nv-parallelCoordinates foreground');
+            var missingValueslineAppend=gEnter.append('g').attr('class', 'nv-parallelCoordinates missingValuesline');
 
             line.curve(d3.curveCardinal);//@todo .tension(lineTension);
             //axis.orient('left');
@@ -13869,7 +13871,7 @@ nv.models.parallelCoordinates = function() {
             step = isNaN(step) ? x.range()[0] : step;
             if (!isNaN(step)) {
                 var lineData = [0 + step / 2, availableHeight - 12, availableWidth - step / 2, availableHeight - 12];
-                missingValuesline = wrap.select('.missingValuesline').selectAll('line').data([lineData]);
+                missingValuesline = missingValueslineAppend.selectAll('line').data([lineData]);
                 missingValuesline.enter().append('line');
                 missingValuesline.exit().remove();
                 missingValuesline.attr("x1", function(d) { return d[0]; })
@@ -13878,7 +13880,7 @@ nv.models.parallelCoordinates = function() {
                         .attr("y2", function(d) { return d[3]; });
     
                 //Add the text "undefined values" under the missing value line
-                missingValueslineText = wrap.select('.missingValuesline').selectAll('text').data([undefinedValuesLabel]);
+                missingValueslineText = missingValueslineAppend.selectAll('text').data([undefinedValuesLabel]);
                 missingValueslineText.append('text').data([undefinedValuesLabel]);
                 missingValueslineText.enter().append('text');
                 missingValueslineText.exit().remove();
@@ -13888,13 +13890,13 @@ nv.models.parallelCoordinates = function() {
                         .text(function(d) { return d; });
             }
             // Add grey background lines for context.
-            background = wrap.select('.background').selectAll('path').data(data);
+            background = backgroundAppend.selectAll('path').data(data);
             background.enter().append('path');
             background.exit().remove();
             background.attr('d', path);
             
             // Add blue foreground lines for focus.
-            foreground = wrap.select('.foreground').selectAll('path').data(data);
+            foreground = foregroundAppend.selectAll('path').data(data);
             foreground.enter().append('path')
             foreground.exit().remove();
             foreground.attr('d', path)
@@ -14335,12 +14337,15 @@ nv.models.parallelCoordinatesChart = function () {
                 // Setup containers and skeleton of chart
 
                 var wrap = container.selectAll('g.nv-wrap.nv-parallelCoordinatesChart').data([data]);
-                var gEnter = wrap.enter().append('g').attr('class', 'nvd3 nv-wrap nv-parallelCoordinatesChart').append('g');
+                var wrapEnter=wrap.enter().append('g').attr('class', 'nvd3 nv-wrap nv-parallelCoordinatesChart');
+                wrapEnter.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
 
-                var g = wrap.select('g');
+                var gEnter = wrapEnter.append('g');
 
-                gEnter.append('g').attr('class', 'nv-parallelCoordinatesWrap');
-                gEnter.append('g').attr('class', 'nv-legendWrap');
+                var g = wrapEnter.select('g');
+
+                var parallelCoordinatesWrapAppend=gEnter.append('g').attr('class', 'nv-parallelCoordinatesWrap');
+                var legendWrapAppend=gEnter.append('g').attr('class', 'nv-legendWrap');
 
                 g.select("rect")
                     .attr("width", availableWidth)
@@ -14348,12 +14353,12 @@ nv.models.parallelCoordinatesChart = function () {
 
                 // Legend
                 if (!showLegend) {
-                    g.select('.nv-legendWrap').selectAll('*').remove();
+                    legendWrapAppend.selectAll('*').remove();
                 } else {
                     legend.width(availableWidth)
                         .color(function (d) { return "rgb(188,190,192)"; });
 
-                    g.select('.nv-legendWrap')
+                    legendWrapAppend
                         .datum(dimensionData.sort(function (a, b) { return a.originalPosition - b.originalPosition; }))
                         .call(legend);
 
@@ -14361,11 +14366,9 @@ nv.models.parallelCoordinatesChart = function () {
                         margin.top = legend.height();
                         availableHeight = nv.utils.availableHeight(height, container, margin);
                     }
-                    wrap.select('.nv-legendWrap')
+                    legendWrapAppend
                        .attr('transform', 'translate( 0 ,' + (-margin.top) + ')');
                 }
-                wrap.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
-
                 // Main Chart Component(s)
                 parallelCoordinates
                     .width(availableWidth)
@@ -14373,7 +14376,7 @@ nv.models.parallelCoordinatesChart = function () {
                     .dimensionData(dimensionData)
                     .displayBrush(displayBrush);
 
-		        var parallelCoordinatesWrap = g.select('.nv-parallelCoordinatesWrap ')
+		        var parallelCoordinatesWrap = parallelCoordinatesWrapAppend
                   .datum(data);
 
 		        parallelCoordinatesWrap.transition().call(parallelCoordinates);
@@ -15102,20 +15105,22 @@ nv.models.pieChart = function() {
 
             // Setup containers and skeleton of chart
             var wrap = container.selectAll('g.nv-wrap.nv-pieChart').data([data]);
-            var gEnter = wrap.enter().append('g').attr('class', 'nvd3 nv-wrap nv-pieChart').append('g');
+            var wrapEnter = wrap.enter().append('g').attr('class', 'nvd3 nv-wrap nv-pieChart');
+            wrapEnter.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+            var gEnter = wrapEnter.append('g');
             var g = wrap.select('g');
 
-            gEnter.append('g').attr('class', 'nv-pieWrap');
-            gEnter.append('g').attr('class', 'nv-legendWrap');
+            var pieWrapAppend=gEnter.append('g').attr('class', 'nv-pieWrap');
+            var legendWrapAppend=gEnter.append('g').attr('class', 'nv-legendWrap');
 
             // Legend
             if (!showLegend) {
-                g.select('.nv-legendWrap').selectAll('*').remove();
+                legendWrapAppend.selectAll('*').remove();
             } else {
                 if (legendPosition === "top") {
                     legend.width( availableWidth ).key(pie.x());
 
-                    wrap.select('.nv-legendWrap')
+                    legendWrapAppend
                         .datum(data)
                         .call(legend);
 
@@ -15124,7 +15129,7 @@ nv.models.pieChart = function() {
                         availableHeight = nv.utils.availableHeight(height, container, margin);
                     }
 
-                    wrap.select('.nv-legendWrap')
+                    legendWrapAppend
                         .attr('transform', 'translate(0,' + (-margin.top) +')');
                 } else if (legendPosition === "right") {
                     var legendWidth = nv.models.legend().width();
@@ -15135,27 +15140,26 @@ nv.models.pieChart = function() {
                     legend.width(legendWidth);
                     availableWidth -= legend.width();
 
-                    wrap.select('.nv-legendWrap')
+                    legendWrapAppend
                         .datum(data)
                         .call(legend)
                         .attr('transform', 'translate(' + (availableWidth) +',0)');
                 } else if (legendPosition === "bottom") {
                     legend.width( availableWidth ).key(pie.x());
-                    wrap.select('.nv-legendWrap')
+                    legendWrapAppend
                         .datum(data)
                         .call(legend);
 
                     margin.bottom = legend.height();
                     availableHeight = nv.utils.availableHeight(height, container, margin);
-                    wrap.select('.nv-legendWrap')
+                    legendWrapAppend
                         .attr('transform', 'translate(0,' + availableHeight +')');
                 }
             }
-            wrap.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
 
             // Main Chart Component(s)
             pie.width(availableWidth).height(availableHeight);
-            var pieWrap = g.select('.nv-pieWrap').datum([data]);
+            var pieWrap = pieWrapAppend.datum([data]);
             //@todo come back to transition d3.transition(pieWrap).call(pie);
             pieWrap.call(pie);
 

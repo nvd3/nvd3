@@ -125,14 +125,14 @@ nv.models.parallelCoordinates = function() {
             // Setup containers and skeleton of chart
             var wrap = container.selectAll('g.nv-wrap.nv-parallelCoordinates').data([data]);
             var wrapEnter = wrap.enter().append('g').attr('class', 'nvd3 nv-wrap nv-parallelCoordinates');
+            wrapEnter.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+
             var gEnter = wrapEnter.append('g');
-            var g = wrap.select('g');
+            var g = wrapEnter.select('g');
 
-            gEnter.append('g').attr('class', 'nv-parallelCoordinates background');
-            gEnter.append('g').attr('class', 'nv-parallelCoordinates foreground');
-            gEnter.append('g').attr('class', 'nv-parallelCoordinates missingValuesline');
-
-            wrap.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+            var backgroundAppend=gEnter.append('g').attr('class', 'nv-parallelCoordinates background');
+            var foregroundAppend=gEnter.append('g').attr('class', 'nv-parallelCoordinates foreground');
+            var missingValueslineAppend=gEnter.append('g').attr('class', 'nv-parallelCoordinates missingValuesline');
 
             line.curve(d3.curveCardinal);//@todo .tension(lineTension);
             //axis.orient('left');
@@ -147,7 +147,7 @@ nv.models.parallelCoordinates = function() {
             step = isNaN(step) ? x.range()[0] : step;
             if (!isNaN(step)) {
                 var lineData = [0 + step / 2, availableHeight - 12, availableWidth - step / 2, availableHeight - 12];
-                missingValuesline = wrap.select('.missingValuesline').selectAll('line').data([lineData]);
+                missingValuesline = missingValueslineAppend.selectAll('line').data([lineData]);
                 missingValuesline.enter().append('line');
                 missingValuesline.exit().remove();
                 missingValuesline.attr("x1", function(d) { return d[0]; })
@@ -156,7 +156,7 @@ nv.models.parallelCoordinates = function() {
                         .attr("y2", function(d) { return d[3]; });
     
                 //Add the text "undefined values" under the missing value line
-                missingValueslineText = wrap.select('.missingValuesline').selectAll('text').data([undefinedValuesLabel]);
+                missingValueslineText = missingValueslineAppend.selectAll('text').data([undefinedValuesLabel]);
                 missingValueslineText.append('text').data([undefinedValuesLabel]);
                 missingValueslineText.enter().append('text');
                 missingValueslineText.exit().remove();
@@ -166,13 +166,13 @@ nv.models.parallelCoordinates = function() {
                         .text(function(d) { return d; });
             }
             // Add grey background lines for context.
-            background = wrap.select('.background').selectAll('path').data(data);
+            background = backgroundAppend.selectAll('path').data(data);
             background.enter().append('path');
             background.exit().remove();
             background.attr('d', path);
             
             // Add blue foreground lines for focus.
-            foreground = wrap.select('.foreground').selectAll('path').data(data);
+            foreground = foregroundAppend.selectAll('path').data(data);
             foreground.enter().append('path')
             foreground.exit().remove();
             foreground.attr('d', path)
