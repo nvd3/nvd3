@@ -227,7 +227,7 @@ nv.models.scatter = function() {
                 .attr('width', availableWidth + 20)
                 .attr('height', (availableHeight > 0) ? availableHeight + 20 : 0);
 
-            gEnter.attr('clip-path', clipEdge ? 'url(#nv-edge-clip-' + id + ')' : '');
+           if(clipEdge) gEnter.attr('clip-path', clipEdge ? 'url(#nv-edge-clip-' + id + ')' : '');
 
             function updateInteractiveLayer() {
                 // Always clear needs-update flag regardless of whether or not

@@ -134,7 +134,7 @@ nv.models.parallelCoordinates = function() {
             var foregroundAppend=gEnter.append('g').attr('class', 'nv-parallelCoordinates foreground');
             var missingValueslineAppend=gEnter.append('g').attr('class', 'nv-parallelCoordinates missingValuesline');
 
-            line.curve(d3.curveCardinal);//@todo .tension(lineTension);
+            line.curve(d3.curveCardinal.tension(lineTension));
             //axis.orient('left');
             var axisDrag = d3.drag()
                         .on('start', dragStart)

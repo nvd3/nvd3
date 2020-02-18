@@ -165,12 +165,12 @@ nv.models.multiBar = function() {
             // Setup containers and skeleton of chart
             var wrap = container.selectAll('g.nv-wrap.nv-multibar').data([data]);
             var wrapEnter = wrap.enter().append('g').attr('class', 'nvd3 nv-wrap nv-multibar');
+            wrapEnter.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
             var defsEnter = wrapEnter.append('defs');
             var gEnter = wrapEnter.append('g');
             var g = wrap.select('g');
 
             var groupsAppend=gEnter.append('g').attr('class', 'nv-groups');
-            wrap.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
 
             var defsRect=defsEnter.append('clipPath')
                 .attr('id', 'nv-edge-clip-' + id)

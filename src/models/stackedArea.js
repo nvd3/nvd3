@@ -13,7 +13,7 @@ nv.models.stackedArea = function() {
         , id = Math.floor(Math.random() * 100000) //Create semi-unique ID incase user doesn't selet one
         , container = null
         , getX = function(d) { return d.x } // accessor to get the x value from a data point
-        , getY = function(d) { return d.y } // accessor to get the y value from a data point
+        , getY = function(d) { return d[1] } // accessor to get the y value from a data point
         , defined = function(d,i) { return !isNaN(getY(d,i)) && getY(d,i) !== null } // allows a line to be not continuous when it is not defined
         , style = 'stack'
         , offset = d3.stackOffsetNone
@@ -24,8 +24,8 @@ nv.models.stackedArea = function() {
         , y //can be accessed via chart.yScale()
         , scatter = nv.models.scatter()
         , duration = 250
-        , transformData = function(d, y0, y) {d.display = { y: y, y0: y0 }; }
-        , areaY1 = function(d) { return y(d.display.y + d.display.y0) }
+        , transformData = function(d, i, y) {d.display = { y: d.values.map(a => a.y), y0: d.values.map(a => a.y0) }; }
+        , areaY1 = function(d) { return y(d[1]); }
         , dispatch =  d3.dispatch('areaClick', 'areaMouseover', 'areaMouseout','renderEnd', 'elementClick', 'elementMouseover', 'elementMouseout')
         ;
 
@@ -76,31 +76,51 @@ nv.models.stackedArea = function() {
             var dataFiltered = data.filter(function(series) {
                 return !series.disabled;
             });
+            var newData=[];
+            dataFiltered[0].values.forEach(function(d){
+                newData.push({x: d.x});
+            });
             dataFiltered.forEach(function(d, y, y0) {
                 d.display = { y: y, y0: y0 };
+                d.values.forEach(function(d2){
+                    newData[d2.index][d.key]=d2.y;
+                });
                 //console.log(d.display);
             });
+            var keys = dataFiltered.map(a => a.key);
 
-            data = d3.stack()
+            data = d3.stack().keys(keys)
                 .order(order)
                 .offset(offset)
-                .value(function(d) { return d.values })  //TODO: make values customizeable in EVERY model in this fashion
+                .value(function(d, key) {return d[key] })  //TODO: make values customizeable in EVERY model in this fashion
 //                .x(getX)
 //                .y(getY)
 //                .out(transformData)
-            (dataFiltered);
+            (newData);
+            var scatterData=[]; //legacy data shape to pass to scatter
+            data.forEach(function(aseries, i) {
+                aseries.seriesIndex = i;
+                aseries.x=Array.from(Array(aseries.length).keys())
+                //console.log(i+" "+aseries.length);
+                var values = [];
+                aseries.map(function(d, j) {
+                    values.push({x: j, y: d[1]-d[0], y0: d[0], series: j, seriesIndex: i, index: j, display: {y: d[1]-d[0], y0: d[0]}});
+                    return values;
+                });
+                scatterData.push({values: values, key: keys[i], seriesIndex: i});
+            });
 
             // Setup containers and skeleton of chart
             var wrap = container.selectAll('g.nv-wrap.nv-stackedarea').data([data]);
             var wrapEnter = wrap.enter().append('g').attr('class', 'nvd3 nv-wrap nv-stackedarea');
+            wrapEnter.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+
             var defsEnter = wrapEnter.append('defs');
             var gEnter = wrapEnter.append('g');
-            var g = wrap.select('g');
+            var g = wrapEnter.select('g');
 
             var areaWrapAppend=gEnter.append('g').attr('class', 'nv-areaWrap');
             var scatterWrapAppend=gEnter.append('g').attr('class', 'nv-scatterWrap');
-
-            wrapEnter.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
 
             // If the user has not specified forceY, make sure 0 is included in the domain
             // Otherwise, use user-specified values for forceY
@@ -115,13 +135,13 @@ nv.models.stackedArea = function() {
                 .y(function(d) {
                     if (d.display !== undefined) { return d.display.y + d.display.y0; }
                 })
-                .color(data.map(function(d,i) {
+                .color(scatterData.map(function(d,i) {
                     d.color = d.color || color(d, d.seriesIndex);
                     return d.color;
                 }));
 
             var scatterWrap = scatterWrapAppend
-                .datum(data);
+                .datum(scatterData);
 
             scatterWrap.call(scatter);
 
@@ -133,31 +153,29 @@ nv.models.stackedArea = function() {
                 .attr('width', availableWidth)
                 .attr('height', availableHeight);
 
-            gEnter.attr('clip-path', clipEdge ? 'url(#nv-edge-clip-' + id + ')' : '');
+            if(clipEdge)gEnter.attr('clip-path', clipEdge ? 'url(#nv-edge-clip-' + id + ')' : '');
 
             var area = d3.area()
                 .defined(defined)
-                .x(function(d,i)  { return x(getX(d,i)) })
+                .x(function(d,i)  {return x(d.data.x) })
                 .y0(function(d) {
-                    return y(d.display.y0)
+                    return y(d[0]);
                 })
                 .y1(areaY1)
                 .curve(interpolate);
 
             var zeroArea = d3.area()
                 .defined(defined)
-                .x(function(d,i)  { return x(getX(d,i)) })
-                .y0(function(d) { return y(d.display.y0) })
-                .y1(function(d) { return y(d.display.y0) });
+                .x(function(d,i)  { return x(d.data.x) })
+                .y0(function(d) { return y(d[0]) })
+                .y1(function(d) { return y(d[0]) });
 
             var path = areaWrapAppend.selectAll('path.nv-area')
                 .data(function(d) { return d });
 
             path.exit().remove();
             var pathEnter=path.enter().append('path').attr('class', function(d,i) { return 'nv-area nv-area-' + i })
-                .attr('d', function(d,i){
-                    return zeroArea(d.values, d.seriesIndex);
-                })
+                .attr('d', zeroArea)
                 .on('mouseover', function(d,i) {
                     d3.select(this).classed('hover', true);
                     dispatch.call('areaMouseover', this, {
@@ -191,10 +209,8 @@ nv.models.stackedArea = function() {
                 })
                 .style('stroke', function(d,i){ return d.color || color(d, d.seriesIndex) });
             pathEnter.watchTransition(renderWatch,'stackedArea path')
-                .attr('d', function(d,i) {
-                    return area(d.values,i)
-                });
-            //pathEnter.merge(areaWrapAppend);
+                .attr('d', area);
+            //pathEnter.merge(path);
 
             //============================================================
             // Event Handling/Dispatching (in chart's scope)
@@ -297,26 +313,27 @@ nv.models.stackedArea = function() {
         }},
         style: {get: function(){return style;}, set: function(_){
             style = _;
+            console.log(style);
             switch (style) {
                 case 'stack':
-                    chart.offset('zero');
-                    chart.order('default');
+                    chart.offset(d3.stackOffsetNone);
+                    chart.order(d3.stackOrderNone);
                     break;
                 case 'stream':
-                    chart.offset('wiggle');
-                    chart.order('inside-out');
+                    chart.offset(d3.stackOffsetWiggle);
+                    chart.order(d3.stackOrderInsideOut);
                     break;
                 case 'stream_center':
-                    chart.offset('silhouette');
-                    chart.order('inside-out');
+                    chart.offset(d3.stackOffsetSilhouette);
+                    chart.order(d3.stackOrderNone);
                     break;
                 case 'expand':
-                    chart.offset('expand');
-                    chart.order('default');
+                    chart.offset(d3.stackOffsetExpand);
+                    chart.order(d3.stackOrderNone);
                     break;
                 case 'stack_percent':
                     chart.offset(chart.d3_stackedOffset_stackPercent);
-                    chart.order('default');
+                    chart.order(d3.stackOrderNone);
                     break;
             }
         }},

@@ -158,7 +158,7 @@ nv.models.pieChart = function() {
             pie.width(availableWidth).height(availableHeight);
             var pieWrap = pieWrapAppend.datum([data]);
             //@todo come back to transition d3.transition(pieWrap).call(pie);
-            pieWrap.call(pie);
+            pieWrap.transition().call(pie);
 
             //============================================================
             // Event Handling/Dispatching (in chart's scope)

@@ -132,7 +132,7 @@ nv.models.parallelCoordinatesChart = function () {
                 var parallelCoordinatesWrapAppend=gEnter.append('g').attr('class', 'nv-parallelCoordinatesWrap');
                 var legendWrapAppend=gEnter.append('g').attr('class', 'nv-legendWrap');
 
-                g.select("rect")
+                gEnter.select("rect")
                     .attr("width", availableWidth)
                     .attr("height", (availableHeight > 0) ? availableHeight : 0);
 

@@ -174,7 +174,9 @@ nv.models.multiBarChart = function() {
 
             // Setup containers and skeleton of chart
             var wrap = container.selectAll('g.nv-wrap.nv-multiBarWithLegend').data([data]);
-            var gEnter = wrap.enter().append('g').attr('class', 'nvd3 nv-wrap nv-multiBarWithLegend').append('g');
+            var wrapEnter=wrap.enter().append('g').attr('class', 'nvd3 nv-wrap nv-multiBarWithLegend');
+            wrapEnter.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+            var gEnter = wrapEnter.append('g');
             var g = wrap.select('g');
 
             var xAxisAppend=gEnter.append('g').attr('class', 'nv-x nv-axis');
@@ -232,7 +234,6 @@ nv.models.multiBarChart = function() {
                     .call(controls);
             }
 
-            wrap.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
             if (rightAlignYAxis) {
                 yAxisAppend
                     .attr("transform", "translate(" + availableWidth + ",0)");

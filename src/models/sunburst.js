@@ -100,15 +100,15 @@ nv.models.sunburst = function() {
     }
 
     function arcTweenUpdate(d) {
-        var ipo = d3.interpolate({x: d.x0, dx: d.dx0, y: d.y0, dy: d.dy0}, d);
+        var ipo = d3.interpolate({x: d.x0, dx: d.x1-d.x0, y: d.y0, dy: d.y1-d.y0}, d);
 
         return function (t) {
             var b = ipo(t);
 
             d.x0 = b.x;
-            d.dx0 = b.dx;
+            d.x1 = b.x+b.dx;
             d.y0 = b.y;
-            d.dy0 = b.dy;
+            d.y1 = b.y+b.dy;
 
             return arc(b);
         };
@@ -130,15 +130,15 @@ nv.models.sunburst = function() {
             var pP = prevPositions[k];
             //console.log(k,n,pP);
             if( pP ){
-                n.dx0 = pP.dx;
+                n.x1 = pP.x+pP.dx;
                 n.x0 = pP.x;
-                n.dy0 = pP.dy;
+                n.y1 = pP.y+pP.dy;
                 n.y0 = pP.y;
             }
             else {
-                n.dx0 = n.dx;
+                n.x1 = n.x+n.dx;
                 n.x0 = n.x;
-                n.dy0 = n.dy;
+                n.y1 = n.y+n.dy;
                 n.y0 = n.y;
             }
             updatePrevPosition(n);
@@ -218,7 +218,7 @@ nv.models.sunburst = function() {
 
             // Setup containers and skeleton of chart
             var wrap = container.select('g.nvd3.nv-wrap.nv-sunburst');
-            if( !wrap[0][0] ) {
+            if(!wrap[0] || !wrap[0][0] ) {
                 wrap = container.append('g')
                     .attr('class', 'nvd3 nv-wrap nv-sunburst nv-chart-' + id)
                     .attr('transform', 'translate(' + ((availableWidth / 2) + margin.left + margin.right) + ',' + ((availableHeight / 2) + margin.top + margin.bottom) + ')');
