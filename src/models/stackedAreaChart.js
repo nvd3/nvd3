@@ -148,8 +148,10 @@ nv.models.stackedAreaChart = function() {
 
             // Setup containers and skeleton of chart
             var wrap = container.selectAll('g.nv-wrap.nv-stackedAreaChart').data([data]);
-            var gEnter = wrap.enter().append('g').attr('class', 'nvd3 nv-wrap nv-stackedAreaChart').append('g');
-            var g = wrap.select('g');
+            var wrapEnter = wrap.enter().append('g').attr('class', 'nvd3 nv-wrap nv-stackedAreaChart');
+            wrapEnter.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+            var gEnter = wrapEnter.append('g');
+            var g = wrapEnter.select('g');
 
             var legendWrapAppend=gEnter.append('g').attr('class', 'nv-legendWrap');
             var controlsWrapAppend=gEnter.append('g').attr('class', 'nv-controlsWrap');
@@ -253,7 +255,6 @@ nv.models.stackedAreaChart = function() {
                     .attr('transform', 'translate(0,' + (-margin.top) +')');
             }
 
-            wrap.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
 
             if (rightAlignYAxis) {
                 yAxisAppend
@@ -295,7 +296,7 @@ nv.models.stackedAreaChart = function() {
 
             if (showYAxis) {
                 var ticks;
-                if (stacked.offset() === 'wiggle') {
+                if (stacked.offset() === d3.stackOffsetWiggle) {
                     ticks = 0;
                 }
                 else {
@@ -312,7 +313,7 @@ nv.models.stackedAreaChart = function() {
             //============================================================
             function updateXAxis() {
                 if(showXAxis) {
-                    g.select('.nv-focus .nv-x.nv-axis')
+                    xAxisAppend
                         .attr('transform', 'translate(0,' + availableHeight + ')')
                         .transition().duration(duration)
                         .call(xAxis)
@@ -338,7 +339,7 @@ nv.models.stackedAreaChart = function() {
                         }
                     }
 
-                    g.select('.nv-focus .nv-y.nv-axis')
+                    yAxisAppend
                     .transition()
                     .call(yAxis);
                 }

@@ -235,7 +235,7 @@ nv.models.sunburst = function() {
                 });
             });
 
-            partition.value(modes[mode] || modes["count"]);
+            partition(modes[mode] || modes["count"]);
 
             //reverse the drawing order so that the labels of inner
             //arcs are drawn on top of the outer arcs.

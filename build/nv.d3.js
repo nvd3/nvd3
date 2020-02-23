@@ -1,4 +1,4 @@
-/* nvd3 version 1.8.6-dev (https://github.com/novus/nvd3) 2020-02-18 */
+/* nvd3 version 1.8.6-dev (https://github.com/novus/nvd3) 2020-02-22 */
 (function(){
 
 // set up main nv object
@@ -9274,21 +9274,21 @@ nv.models.legend = function() {
             }
 
             if(vers == 'classic') {
-                seriesEnter.append('circle')
+                var legendSymbolAppend=seriesEnter.append('circle')
                     .style('stroke-width', 2)
                     .attr('class','nv-legend-symbol')
                     .attr('r', 5);
 
-                seriesShape = series.select('.nv-legend-symbol');
+                seriesShape = legendSymbolAppend;//series.select('.nv-legend-symbol');
             } else if (vers == 'furious') {
-                seriesEnter.append('rect')
+                var legendSymbolAppend=seriesEnter.append('rect')
                     .style('stroke-width', 2)
                     .attr('class','nv-legend-symbol')
                     .attr('rx', 3)
                     .attr('ry', 3);
-                seriesShape = series.select('.nv-legend-symbol');
+                seriesShape = legendSymbolAppend;//series.select('.nv-legend-symbol');
 
-                var checkBoxAppend = seriesEnter.append('g')
+                var checkBoxAppend = legendSymbolAppend.append('g')
                     .attr('class', 'nv-check-box')
                     .property('innerHTML','<path d="M0.5,5 L22.5,5 L22.5,26.5 L0.5,26.5 L0.5,5 Z" class="nv-box"></path><path d="M5.5,12.8618467 L11.9185089,19.2803556 L31,0.198864511" class="nv-check"></path>')
                     .attr('transform', 'translate(-10,-8)scale(0.5)');
@@ -9319,7 +9319,7 @@ nv.models.legend = function() {
                 .on('click', function(d,i) {
                     dispatch.call('legendClick', d,i);
                     // make sure we re-get data in case it was modified
-                    var data = series.data();
+                    var data = seriesEnter.data();
                     if (updateState) {
                         if(vers =='classic') {
                             if (radioButtonMode) {
@@ -9367,7 +9367,7 @@ nv.models.legend = function() {
                         dispatch.call('legendDblclick', d, i);
                         if (updateState) {
                             // make sure we re-get data in case it was modified
-                            var data = series.data();
+                            var data = seriesEnter.data();
                             //the default behavior of NVD3 legends, when double clicking one,
                             // is to set all other series' to false, and make the double clicked series enabled.
                             data.forEach(function (series) {
@@ -9385,8 +9385,8 @@ nv.models.legend = function() {
                     }
                 });
 
-            series.classed('nv-disabled', function(d) { return d.userDisabled });
-            series.exit().remove();
+            seriesEnter.classed('nv-disabled', function(d) { return d.userDisabled });
+            seriesEnter.exit().remove();
 
             seriesText
                 .attr('fill', setTextColor)
@@ -9398,7 +9398,7 @@ nv.models.legend = function() {
             if (align) {
 
                 var seriesWidths = [];
-                series.each(function(d,i) {
+                seriesEnter.each(function(d,i) {
                     var legendText;
                     if (keyFormatter(getKey(d)) && keyFormatter(getKey(d)).length > maxKeyLength) {
                         var trimmedKey = keyFormatter(getKey(d)).substring(0, maxKeyLength);
@@ -9450,17 +9450,17 @@ nv.models.legend = function() {
                     curX += columnWidths[i];
                 }
 
-                series
+                seriesEnter
                     .attr('transform', function(d, i) {
                         return 'translate(' + xPositions[i % seriesPerRow] + ',' + (5 + Math.floor(i / seriesPerRow) * versPadding) + ')';
                     });
 
                 //position legend as far right as possible within the total width
                 if (rightAlign) {
-                    seriesEnter.attr('transform', 'translate(' + (width - margin.right - legendWidth) + ',' + margin.top + ')');
+                    gEnter.attr('transform', 'translate(' + (width - margin.right - legendWidth) + ',' + margin.top + ')');
                 }
                 else {
-                    seriesEnter.attr('transform', 'translate(0' + ',' + margin.top + ')');
+                    gEnter.attr('transform', 'translate(0' + ',' + margin.top + ')');
                 }
 
                 height = margin.top + margin.bottom + (Math.ceil(seriesWidths.length / seriesPerRow) * versPadding);
@@ -9471,7 +9471,7 @@ nv.models.legend = function() {
                     newxpos = 5,
                     maxwidth = 0,
                     xpos;
-                series
+                seriesEnter
                     .attr('transform', function(d, i) {
                         var length = d3.select(this).select('text').node().getComputedTextLength() + padding;
                         xpos = newxpos;
@@ -12095,12 +12095,13 @@ nv.models.multiBarHorizontal = function() {
             container = d3.select(this);
             nv.utils.initSVG(container);
 
-            if (stacked)
+            if (stacked){
                 data = d3.stack()
                     .offset(d3.stackOffsetNone)
                     .value(function(d){ return d.values })
                     //.y(getY)
                 (data);
+            }
 
             //add series index and key to each data point for reference
             data.forEach(function(series, i) {
@@ -15952,7 +15953,6 @@ nv.models.scatter = function() {
 
             nv.utils.initSVG(container);
 
-console.log(data);
             //add series index to each data point for reference
             data.forEach(function(series, i) {
                 series.values.forEach(function(point) {
@@ -17431,9 +17431,6 @@ nv.models.stackedArea = function() {
                 });
                 scatterData.push({values: values, key: keys[i], seriesIndex: i});
             });
-            //scatterData.forEach(transformData);
-            console.log('stacked');
-            console.log(data);
 
             // Setup containers and skeleton of chart
             var wrap = container.selectAll('g.nv-wrap.nv-stackedarea').data([data]);
@@ -17824,8 +17821,10 @@ nv.models.stackedAreaChart = function() {
 
             // Setup containers and skeleton of chart
             var wrap = container.selectAll('g.nv-wrap.nv-stackedAreaChart').data([data]);
-            var gEnter = wrap.enter().append('g').attr('class', 'nvd3 nv-wrap nv-stackedAreaChart').append('g');
-            var g = wrap.select('g');
+            var wrapEnter = wrap.enter().append('g').attr('class', 'nvd3 nv-wrap nv-stackedAreaChart');
+            wrapEnter.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+            var gEnter = wrapEnter.append('g');
+            var g = wrapEnter.select('g');
 
             var legendWrapAppend=gEnter.append('g').attr('class', 'nv-legendWrap');
             var controlsWrapAppend=gEnter.append('g').attr('class', 'nv-controlsWrap');
@@ -17929,7 +17928,6 @@ nv.models.stackedAreaChart = function() {
                     .attr('transform', 'translate(0,' + (-margin.top) +')');
             }
 
-            wrap.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
 
             if (rightAlignYAxis) {
                 yAxisAppend
@@ -17971,7 +17969,7 @@ nv.models.stackedAreaChart = function() {
 
             if (showYAxis) {
                 var ticks;
-                if (stacked.offset() === 'wiggle') {
+                if (stacked.offset() === d3.stackOffsetWiggle) {
                     ticks = 0;
                 }
                 else {
@@ -17988,7 +17986,7 @@ nv.models.stackedAreaChart = function() {
             //============================================================
             function updateXAxis() {
                 if(showXAxis) {
-                    g.select('.nv-focus .nv-x.nv-axis')
+                    xAxisAppend
                         .attr('transform', 'translate(0,' + availableHeight + ')')
                         .transition().duration(duration)
                         .call(xAxis)
@@ -18014,7 +18012,7 @@ nv.models.stackedAreaChart = function() {
                         }
                     }
 
-                    g.select('.nv-focus .nv-y.nv-axis')
+                    yAxisAppend
                     .transition()
                     .call(yAxis);
                 }
@@ -18601,7 +18599,7 @@ nv.models.sunburst = function() {
                 });
             });
 
-            partition.value(modes[mode] || modes["count"]);
+            partition(modes[mode] || modes["count"]);
 
             //reverse the drawing order so that the labels of inner
             //arcs are drawn on top of the outer arcs.

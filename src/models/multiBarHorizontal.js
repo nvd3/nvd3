@@ -52,12 +52,13 @@ nv.models.multiBarHorizontal = function() {
             container = d3.select(this);
             nv.utils.initSVG(container);
 
-            if (stacked)
+            if (stacked){
                 data = d3.stack()
                     .offset(d3.stackOffsetNone)
                     .value(function(d){ return d.values })
                     //.y(getY)
                 (data);
+            }
 
             //add series index and key to each data point for reference
             data.forEach(function(series, i) {
