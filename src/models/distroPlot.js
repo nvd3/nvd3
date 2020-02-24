@@ -463,11 +463,11 @@ nv.models.distroPlot = function() {
             // Setup containers and skeleton of chart
             var wrap = container.selectAll('g.nv-wrap').data([reformatDat]);
             var wrapEnter = wrap.enter().append('g').attr('class', 'nvd3 nv-wrap');
-            wrap.watchTransition(renderWatch, 'nv-wrap: wrap')
+            wrapEnter.watchTransition(renderWatch, 'nv-wrap: wrap')
                 .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
 
             var areaEnter,
-                distroplots = wrap.selectAll('.nv-distroplot-x-group')
+                distroplots = wrapEnter.selectAll('.nv-distroplot-x-group')
                     .data(function(d) { return d; });
 
             // rebind new data

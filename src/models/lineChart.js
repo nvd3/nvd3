@@ -231,8 +231,6 @@ nv.models.lineChart = function() {
                     .tickSizeInner( -availableWidth);
             }
 
-            //focusEnter.merge(gEnter);
-            
             //============================================================
             // Update Axes
             //============================================================
@@ -256,7 +254,6 @@ nv.models.lineChart = function() {
 
             xAxisAppend
                 .attr('transform', 'translate(0,' + availableHeight + ')');
-        //xAxisAppend.merge(gEnter);
 
             //============================================================
             // Update Focus
@@ -264,7 +261,6 @@ nv.models.lineChart = function() {
             if (!focusEnable){//@todo && focus.brush.extent() === null) {
                 console.log("in !focusEnable");
                 var s=linesWrap.transition().call(lines);
-                //s.merge(linesWrap);
                 updateXAxis();
                 updateYAxis();
             } else {
@@ -432,7 +428,6 @@ nv.models.lineChart = function() {
                         })
                 );
                 var s=focusLinesWrap.transition().duration(duration).call(lines);
-//                s.merge(focusLinesWrap);
 
                 // Update Main (Focus) Axes
                 updateXAxis();

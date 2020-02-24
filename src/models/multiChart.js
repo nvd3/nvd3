@@ -62,7 +62,6 @@ nv.models.multiChart = function() {
 
             chart.update = function() {
                 var s=container.call(chart);
-                //s.merge(container);
             };
             chart.container = this;
 

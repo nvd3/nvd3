@@ -78,30 +78,30 @@ nv.models.discreteBar = function() {
             var wrapEnter = wrap.enter().append('g').attr('class', 'nvd3 nv-wrap nv-discretebar');
             wrapEnter.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
             var gEnter = wrapEnter.append('g');
-            var g = wrap.select('g');
+            var g = gEnter.select('g');
 
             var groupsAppend=gEnter.append('g').attr('class', 'nv-groups');
 
             //TODO: by definition, the discrete bar should not have multiple groups, will modify/remove later
             var groups = groupsAppend.selectAll('.nv-group')
                 .data(function(d) { return d }, function(d) { return d.key });
-            groups.enter().append('g')
+            var gAppend=groups.enter().append('g')
                 .style('stroke-opacity', 1e-6)
                 .style('fill-opacity', 1e-6);
-            groups.exit()
+            gAppend.exit()
                 .watchTransition(renderWatch, 'discreteBar: exit groups')
                 .style('stroke-opacity', 1e-6)
                 .style('fill-opacity', 1e-6)
                 .remove();
-            groups
+            gAppend
                 .attr('class', function(d,i) { return 'nv-group nv-series-' + i })
                 .classed('hover', function(d) { return d.hover });
-            groups
+            gAppend
                 .watchTransition(renderWatch, 'discreteBar: groups')
                 .style('stroke-opacity', 1)
                 .style('fill-opacity', .75);
 
-            var bars = groups.selectAll('g.nv-bar')
+            var bars = gAppend.selectAll('g.nv-bar')
                 .data(function(d) { return d.values });
             bars.exit().remove();
 
@@ -152,16 +152,16 @@ nv.models.discreteBar = function() {
                     d3.event.stopPropagation();
                 });
 
-            barsEnter.append('rect')
+            var rectAppend=barsEnter.append('rect')
                 .attr('height', 0)
                 .attr('width', x.bandwidth() * .9 / data.length )
 
             if (showValues) {
-                barsEnter.append('text')
+                var textAppend=rectAppend.append('text')
                     .attr('text-anchor', 'middle')
                 ;
 
-                bars.select('text')
+                textAppend.select('text')
                     .text(function(d,i) { return valueFormat(getY(d,i)) })
                     .watchTransition(renderWatch, 'discreteBar: bars text')
                     .attr('x', x.bandwidth() * .9 / 2)
@@ -169,10 +169,10 @@ nv.models.discreteBar = function() {
 
                 ;
             } else {
-                bars.selectAll('text').remove();
+                rectAppend.selectAll('text').remove();
             }
 
-            bars
+            rectAppend
                 .attr('class', function(d,i) { return getY(d,i) < 0 ? 'nv-bar negative' : 'nv-bar positive' })
                 .style('fill', function(d,i) { return d.color || color(d,i) })
                 .style('stroke', function(d,i) { return d.color || color(d,i) })
@@ -181,7 +181,7 @@ nv.models.discreteBar = function() {
                 .attr('class', rectClass)
                 .watchTransition(renderWatch, 'discreteBar: bars rect')
                 .attr('width', x.bandwidth() * .9 / data.length);
-            bars.watchTransition(renderWatch, 'discreteBar: bars')
+            rectAppend.watchTransition(renderWatch, 'discreteBar: bars')
                 //.delay(function(d,i) { return i * 1200 / data[0].values.length })
                 .attr('transform', function(d,i) {
                     var left = x(getX(d,i)) + x.bandwidth() * .05,
@@ -197,7 +197,6 @@ nv.models.discreteBar = function() {
                 .attr('height', function(d,i) {
                     return  Math.max(Math.abs(y(getY(d,i)) - y(0)), 1)
                 });
-                bars.merge(bars);
 
             //store old scales for use in transitions on update
             x0 = x.copy();

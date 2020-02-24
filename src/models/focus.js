@@ -66,10 +66,11 @@ nv.models.focus = function(content) {
 
             // Setup containers and skeleton of chart
             var wrap = container.selectAll('g.nv-focus').data([data]);
-            var gEnter = wrap.enter().append('g').attr('class', 'nvd3 nv-focus').append('g');
-            var g = wrap.select('g');
+            var wrapEnter=wrap.enter().append('g').attr('class', 'nvd3 nv-focus');
+            wrapEnter.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
 
-            wrap.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+            var gEnter = wrapEnter.append('g');
+            var g = gEnter.select('g');
 
             var backgroundAppend=gEnter.append('g').attr('class', 'nv-background').append('rect');
             var xAxisAppend=gEnter.append('g').attr('class', 'nv-x nv-axis');
@@ -97,8 +98,8 @@ nv.models.focus = function(content) {
             contentWrapAppend
                 .datum(data.filter(function(d) { return !d.disabled; }));
 
-            var s=d3.transition(contentWrapAppend).call(content);
-            s.merge(gEnter);
+            var s=contentWrapAppend.transition().call(content); //@todo
+            //s.merge(gEnter);
             
             // Setup Brush
             brush
@@ -155,7 +156,7 @@ nv.models.focus = function(content) {
                     .attr('transform', 'translate(0,' + y.range()[0] + ')');
                 var xs=d3.transition(xAxisAppend)
                     .call(xAxis);
-                    xs.merge(xAxisAppend);
+                    //xs.merge(xAxisAppend);
             }
 
             if (showYAxis) {
@@ -167,7 +168,7 @@ nv.models.focus = function(content) {
 
                 var ys=yAxisAppend
                     .call(yAxis);
-                ys.merge(yAxisAppend);
+                //ys.merge(yAxisAppend);
             }
             
             xAxisAppend

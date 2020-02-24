@@ -142,7 +142,7 @@ nv.models.scatterChart = function() {
             var wrapEnter = wrap.enter().append('g').attr('class', 'nvd3 nv-wrap nv-scatterChart nv-chart-' + scatter.id());
             wrapEnter.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
             var gEnter = wrapEnter.append('g');
-            var g = wrap.select('g');
+            var g = gEnter.select('g');
 
             // background for pointer events
             gEnter.append('rect').attr('class', 'nvd3 nv-background').style("pointer-events","none");
@@ -210,12 +210,12 @@ nv.models.scatterChart = function() {
                     return [d]
                 });
 
-            regLine.enter()
+            var lineAppend=regLine.enter()
                 .append('line').attr('class', 'nv-regLine')
                 .style('stroke-opacity', 0);
 
             // don't add lines unless we have slope and intercept to use
-            regLine.filter(function(d) {
+            lineAppend.filter(function(d) {
                 return d.intercept && d.slope;
             })
                 .watchTransition(renderWatch, 'scatterPlusLineChart: regline')

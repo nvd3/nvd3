@@ -164,7 +164,7 @@ nv.models.parallelCoordinatesChart = function () {
 		        var parallelCoordinatesWrap = parallelCoordinatesWrapAppend
                   .datum(data);
 
-		        parallelCoordinatesWrap.transition().call(parallelCoordinates);
+		        parallelCoordinatesWrap.transition().duration(0).call(parallelCoordinates);
 
 				//============================================================
                 // Event Handling/Dispatching (in chart's scope)

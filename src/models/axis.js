@@ -44,7 +44,7 @@ nv.models.axis = function(axis, orientation) {
             var wrap = container.selectAll('g.nv-wrap.nv-axis').data([data]);
             var wrapEnter = wrap.enter().append('g').attr('class', 'nvd3 nv-wrap nv-axis');
             var gEnter = wrapEnter.append('g');
-            var g = wrap.select('g');
+            var g = gEnter.select('g');
             if (ticks !== null)
                 axis.ticks(ticks);
             else if (orientation === 'top' || orientation === 'bottom')
@@ -90,12 +90,13 @@ nv.models.axis = function(axis, orientation) {
                         .attr('y', -xLabelMargin)
                         .attr('x', w/2);
                     if (showMaxMin) {
-                        axisMaxMin = wrap.selectAll('g.nv-axisMaxMin')
+                        gEnter.selectAll('g.nv-axisMaxMin')
                             .data(scale.domain());
-                        axisMaxMin.exit().remove();
-                        axisMaxMin.enter().append('g').attr('class',function(d,i){
+                        axisMaxMin=gEnter.enter().append('g').attr('class',function(d,i){
                                 return ['nv-axisMaxMin','nv-axisMaxMin-x',(i == 0 ? 'nv-axisMin-x':'nv-axisMax-x')].join(' ')
-                        }).append('text').merge(axisMaxMin)
+                        }).append('text');
+                        axisMaxMin.exit().remove();
+                        axisMaxMin
                             .attr('transform', function(d,i) {
                                 return 'translate(' + nv.utils.NaNtoZero(scale(d)) + ',0)'
                             })
@@ -163,10 +164,10 @@ nv.models.axis = function(axis, orientation) {
                         .attr('x', w/2);
                     if (showMaxMin) {
                         //if (showMaxMin && !isOrdinal) {
-                        axisMaxMin = wrap.selectAll('g.nv-axisMaxMin')
+                        gEnter.selectAll('g.nv-axisMaxMin')
                             //.data(scale.domain())
                             .data([scale.domain()[0], scale.domain()[scale.domain().length - 1]]);
-                        axisMaxMin.enter().append('g').attr('class',function(d,i){
+                        axisMaxMin=gEnter.enter().append('g').attr('class',function(d,i){
                                 return ['nv-axisMaxMin','nv-axisMaxMin-x',(i == 0 ? 'nv-axisMin-x':'nv-axisMax-x')].join(' ')
                         }).append('text');
                         axisMaxMin.exit().remove();
@@ -199,9 +200,9 @@ nv.models.axis = function(axis, orientation) {
                         .attr('y', rotateYLabel ? (-Math.max(margin.right, width) + 12 - (axisLabelDistance || 0)) : -10) //TODO: consider calculating this based on largest tick width... OR at least expose this on chart
                         .attr('x', rotateYLabel ? (d3.max(scale.range()) / 2) : axis.tickPadding());
                     if (showMaxMin) {
-                        axisMaxMin = wrap.selectAll('g.nv-axisMaxMin')
+                        gEnter.selectAll('g.nv-axisMaxMin')
                             .data(scale.domain());
-                       	axisMaxMin.enter().append('g').attr('class',function(d,i){
+                       	axisMaxMin=gEnter.enter().append('g').attr('class',function(d,i){
                                 return ['nv-axisMaxMin','nv-axisMaxMin-y',(i == 0 ? 'nv-axisMin-y':'nv-axisMax-y')].join(' ')
                         }).append('text')
                             .style('opacity', 0);
@@ -244,9 +245,9 @@ nv.models.axis = function(axis, orientation) {
                         .attr('y', rotateYLabel ? (-Math.max(margin.left, width) + 25 - (axisLabelDistance || 0)) : -10)
                         .attr('x', rotateYLabel ? (-d3.max(scale.range()) / 2) : -axis.tickPadding());
                     if (showMaxMin) {
-                        axisMaxMin = wrap.selectAll('g.nv-axisMaxMin')
+                        gEnter.selectAll('g.nv-axisMaxMin')
                             .data(scale.domain());
-                        axisMaxMin.enter().append('g').attr('class',function(d,i){
+                        axisMaxMin=gEnter.enter().append('g').attr('class',function(d,i){
                                 return ['nv-axisMaxMin','nv-axisMaxMin-y',(i == 0 ? 'nv-axisMin-y':'nv-axisMax-y')].join(' ')
                         }).append('text')
                             .style('opacity', 0);
@@ -291,7 +292,7 @@ nv.models.axis = function(axis, orientation) {
 
                 //if Max and Min = 0 only show min, Issue #281
                 if (scale.domain()[0] == scale.domain()[1] && scale.domain()[0] == 0) {
-                    wrap.selectAll('g.nv-axisMaxMin').style('opacity', function (d, i) {
+                    axisMaxMin.style('opacity', function (d, i) {
                         return !i ? 1 : 0
                     });
                 }
@@ -299,7 +300,7 @@ nv.models.axis = function(axis, orientation) {
 
             if (showMaxMin && (orientation === 'top' || orientation === 'bottom')) {
                 var maxMinRange = [];
-                wrap.selectAll('g.nv-axisMaxMin')
+                axisMaxMin
                     .each(function(d,i) {
                         try {
                             if (i) // i== 1, max position

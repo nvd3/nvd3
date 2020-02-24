@@ -79,7 +79,7 @@ nv.models.ohlcBar = function() {
 
             var defsEnter = wrapEnter.append('defs');
             var gEnter = wrapEnter.append('g');
-            var g = wrap.select('g');
+            var g = gEnter.select('g');
 
             var ticksAppend=gEnter.append('g').attr('class', 'nv-ticks');
 
@@ -140,7 +140,7 @@ nv.models.ohlcBar = function() {
                 return (getOpen(d,i) > getClose(d,i) ? 'nv-tick negative' : 'nv-tick positive') + ' nv-tick-' + j + '-' + i;
             });
 
-            d3.transition(ticks)
+            ticks.transition().duration(0)//@todo
                 .attr('transform', function(d,i) { return 'translate(' + x(getX(d,i)) + ',' + y(getHigh(d,i)) + ')'; })
                 .attr('d', function(d,i) {
                     var w = (availableWidth / data[0].values.length) * .9;

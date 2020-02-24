@@ -177,7 +177,7 @@ nv.models.multiBarChart = function() {
             var wrapEnter=wrap.enter().append('g').attr('class', 'nvd3 nv-wrap nv-multiBarWithLegend');
             wrapEnter.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
             var gEnter = wrapEnter.append('g');
-            var g = wrap.select('g');
+            var g = gEnter.select('g');
 
             var xAxisAppend=gEnter.append('g').attr('class', 'nv-x nv-axis');
             var yAxisAppend=gEnter.append('g').attr('class', 'nv-y nv-axis');
@@ -267,7 +267,7 @@ nv.models.multiBarChart = function() {
                 xAxisAppend
                     .call(xAxis);
 
-                var xTicks = g.select('.nv-x.nv-axis > g').selectAll('g');
+                var xTicks = xAxisAppend.selectAll('g');
 
                 xTicks
                     .selectAll('line, text')
@@ -286,15 +286,16 @@ nv.models.multiBarChart = function() {
                             return  getTranslate(0, (j % 2 == 0 ? staggerUp : staggerDown));
                         });
 
-                    var totalInBetweenTicks = d3.selectAll(".nv-x.nv-axis .nv-wrap g g text")[0].length;
-                    g.selectAll(".nv-x.nv-axis .nv-axisMaxMin text")
+                    var s=xTicks.selectAll(".nv-x.nv-axis .nv-wrap g g text");
+                    var totalInBetweenTicks = (s.length>0) ? s[0].length : 0; //@todo
+                    xTicks.selectAll(".nv-x.nv-axis .nv-axisMaxMin text")
                         .attr("transform", function(d,i) {
                             return getTranslate(0, (i === 0 || totalInBetweenTicks % 2 !== 0) ? staggerDown : staggerUp);
                         });
                 }
 
                 if (wrapLabels) {
-                    g.selectAll('.tick text')
+                    gEnter.selectAll('.tick text')
                         .call(nv.utils.wrapTicks, chart.xAxis.bandwidth())
                 }
 

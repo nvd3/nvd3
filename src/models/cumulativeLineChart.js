@@ -195,7 +195,7 @@ nv.models.cumulativeLineChart = function() {
             wrapEnter.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
 
             var gEnter = wrapEnter.append('g');
-            var g = wrap.select('g');
+            var g = gEnter.select('g');
 
             var interactiveAppend=gEnter.append('g').attr('class', 'nv-interactive');
             var xAxisAppend=gEnter.append('g').attr('class', 'nv-x nv-axis').style("pointer-events","none");
@@ -254,9 +254,9 @@ nv.models.cumulativeLineChart = function() {
             // Show error if index point value is 0 (division by zero avoided)
             var tempDisabled = data.filter(function(d) { return d.tempDisabled });
 
-            wrap.select('.tempDisabled').remove(); //clean-up and prevent duplicates
+            wrapEnter.select('.tempDisabled').remove(); //clean-up and prevent duplicates
             if (tempDisabled.length) {
-                wrap.append('text').attr('class', 'tempDisabled')
+                wrapEnter.append('text').attr('class', 'tempDisabled')
                     .attr('x', availableWidth / 2)
                     .attr('y', '-.71em')
                     .style('text-anchor', 'end')

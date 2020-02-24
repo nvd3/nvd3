@@ -18,7 +18,7 @@ nv.models.multiBar = function() {
         , forceY = [0] // 0 is forced by default.. this makes sense for the majority of bar graphs... user can always do chart.forceY([]) to remove
         , clipEdge = true
         , stacked = false
-        , stackOffset = 'zero' // options include 'silhouette', 'wiggle', 'expand', 'zero', or a custom function
+        , stackOffset = d3.stackOffsetNone // options include 'silhouette', 'wiggle', 'expand', 'zero', or a custom function
         , color = nv.utils.defaultColor()
         , hideable = false
         , barColor = null // adding the ability to set the color for each rather than the whole group
@@ -70,28 +70,65 @@ nv.models.multiBar = function() {
                 )}];
 
             if (stacked) {
+            data.forEach(function(aseries, i) {
+                aseries.seriesIndex = i;
+                aseries.values = aseries.values.map(function(d, j) {
+                    d.index = j;
+                    d.seriesIndex = i;
+                    return d;
+                });
+            });
+
+            var dataFiltered = data.filter(function(series) {
+                return !series.disabled;
+            });
+            var newData=[];
+            dataFiltered[0].values.forEach(function(d){
+                newData.push({x: d.x});
+            });
+            dataFiltered.forEach(function(d, y, y0) {
+                d.display = { y: y, y0: y0 };
+                d.values.forEach(function(d2){
+                    newData[d2.index][d.key]=d2.y;
+                });
+                //console.log(d.display);
+            });
+            var keys = dataFiltered.map(a => a.key);
+                
                 var parsed = d3.stack()
                     .offset(stackOffset)
-                    .values(function(d){ return d.values })
-                    .y(getY)
-                (!data.length && hideable ? hideable : data);
+                    .value(function(d, key){ return d[key] })
+                    //.y(getY)
+                (!newData.length && hideable ? hideable : newData);
+                var scatterData=[]; //legacy data shape to pass to scatter
+                parsed.forEach(function(aseries, i) {
+                    aseries.seriesIndex = i;
+                    aseries.x=Array.from(Array(aseries.length).keys())
+                    //console.log(i+" "+aseries.length);
+                    var values = [];
+                    aseries.map(function(d, j) {
+                        values.push({x: j, y: d[1]-d[0], y0: d[0], series: j, seriesIndex: i, index: j, display: {y: d[1]-d[0], y0: d[0]}});
+                        return values;
+                    });
+                    scatterData.push({values: values, key: keys[i], seriesIndex: i});
+                });
 
-                parsed.forEach(function(series, i){
+                scatterData.forEach(function(series, i){
                     // if series is non-stackable, use un-parsed data
                     if (series.nonStackable) {
                         data[i].nonStackableSeries = nonStackableCount++;
-                        parsed[i] = data[i];
+                        scatterData[i] = data[i];
                     } else {
                         // don't stack this seires on top of the nonStackable seriees
-                        if (i > 0 && parsed[i - 1].nonStackable){
-                            parsed[i].values.map(function(d,j){
-                                d.y0 -= parsed[i - 1].values[j].y;
+                        if (i > 0 && scatterData[i - 1].nonStackable){
+                            scatterData[i].values.map(function(d,j){
+                                d.y0 -= scatterData[i - 1].values[j].y;
                                 d.y1 = d.y0 + d.y;
                             });
                         }
                     }
                 });
-                data = parsed;
+                data = scatterData;
             }
             //add series index and key to each data point for reference
             data.forEach(function(series, i) {

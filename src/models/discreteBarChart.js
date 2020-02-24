@@ -97,7 +97,7 @@ nv.models.discreteBarChart = function() {
 
             var gEnter = wrapEnter.append('g');
             var defsEnter = gEnter.append('defs');
-            var g = wrap.select('g');
+            var g = gEnter.select('g');
 
             var xAxisAppend=gEnter.append('g').attr('class', 'nv-x nv-axis');
             var yAxisAppend=gEnter.append('g').attr('class', 'nv-y nv-axis');

@@ -1,4 +1,4 @@
-/* nvd3 version 1.8.6-dev (https://github.com/novus/nvd3) 2020-02-22 */
+/* nvd3 version 1.8.6-dev (https://github.com/novus/nvd3) 2020-02-23 */
 (function(){
 
 // set up main nv object
@@ -391,14 +391,14 @@ nv.interactiveGuideline = function() {
                     var line = wrap.select(".nv-interactiveGuideLine")
                         .selectAll("line")
                         .data((x != null) ? [nv.utils.NaNtoZero(x)] : [], String);
-                    line.exit().remove();
                     line.enter()
                         .append("line")
                         .attr("class", "nv-guideline")
                         .attr("x1", function(d) { return d;})
                         .attr("x2", function(d) { return d;})
                         .attr("y1", availableHeight)
-                        .attr("y2",0).merge(line);
+                        .attr("y2",0);
+                    line.exit().remove();
                 });
             }
         });
@@ -1743,7 +1743,7 @@ nv.models.axis = function(axis, orientation) {
             var wrap = container.selectAll('g.nv-wrap.nv-axis').data([data]);
             var wrapEnter = wrap.enter().append('g').attr('class', 'nvd3 nv-wrap nv-axis');
             var gEnter = wrapEnter.append('g');
-            var g = wrap.select('g');
+            var g = gEnter.select('g');
             if (ticks !== null)
                 axis.ticks(ticks);
             else if (orientation === 'top' || orientation === 'bottom')
@@ -1789,12 +1789,13 @@ nv.models.axis = function(axis, orientation) {
                         .attr('y', -xLabelMargin)
                         .attr('x', w/2);
                     if (showMaxMin) {
-                        axisMaxMin = wrap.selectAll('g.nv-axisMaxMin')
+                        gEnter.selectAll('g.nv-axisMaxMin')
                             .data(scale.domain());
-                        axisMaxMin.exit().remove();
-                        axisMaxMin.enter().append('g').attr('class',function(d,i){
+                        axisMaxMin=gEnter.enter().append('g').attr('class',function(d,i){
                                 return ['nv-axisMaxMin','nv-axisMaxMin-x',(i == 0 ? 'nv-axisMin-x':'nv-axisMax-x')].join(' ')
-                        }).append('text').merge(axisMaxMin)
+                        }).append('text');
+                        axisMaxMin.exit().remove();
+                        axisMaxMin
                             .attr('transform', function(d,i) {
                                 return 'translate(' + nv.utils.NaNtoZero(scale(d)) + ',0)'
                             })
@@ -1862,10 +1863,10 @@ nv.models.axis = function(axis, orientation) {
                         .attr('x', w/2);
                     if (showMaxMin) {
                         //if (showMaxMin && !isOrdinal) {
-                        axisMaxMin = wrap.selectAll('g.nv-axisMaxMin')
+                        gEnter.selectAll('g.nv-axisMaxMin')
                             //.data(scale.domain())
                             .data([scale.domain()[0], scale.domain()[scale.domain().length - 1]]);
-                        axisMaxMin.enter().append('g').attr('class',function(d,i){
+                        axisMaxMin=gEnter.enter().append('g').attr('class',function(d,i){
                                 return ['nv-axisMaxMin','nv-axisMaxMin-x',(i == 0 ? 'nv-axisMin-x':'nv-axisMax-x')].join(' ')
                         }).append('text');
                         axisMaxMin.exit().remove();
@@ -1898,9 +1899,9 @@ nv.models.axis = function(axis, orientation) {
                         .attr('y', rotateYLabel ? (-Math.max(margin.right, width) + 12 - (axisLabelDistance || 0)) : -10) //TODO: consider calculating this based on largest tick width... OR at least expose this on chart
                         .attr('x', rotateYLabel ? (d3.max(scale.range()) / 2) : axis.tickPadding());
                     if (showMaxMin) {
-                        axisMaxMin = wrap.selectAll('g.nv-axisMaxMin')
+                        gEnter.selectAll('g.nv-axisMaxMin')
                             .data(scale.domain());
-                       	axisMaxMin.enter().append('g').attr('class',function(d,i){
+                       	axisMaxMin=gEnter.enter().append('g').attr('class',function(d,i){
                                 return ['nv-axisMaxMin','nv-axisMaxMin-y',(i == 0 ? 'nv-axisMin-y':'nv-axisMax-y')].join(' ')
                         }).append('text')
                             .style('opacity', 0);
@@ -1943,9 +1944,9 @@ nv.models.axis = function(axis, orientation) {
                         .attr('y', rotateYLabel ? (-Math.max(margin.left, width) + 25 - (axisLabelDistance || 0)) : -10)
                         .attr('x', rotateYLabel ? (-d3.max(scale.range()) / 2) : -axis.tickPadding());
                     if (showMaxMin) {
-                        axisMaxMin = wrap.selectAll('g.nv-axisMaxMin')
+                        gEnter.selectAll('g.nv-axisMaxMin')
                             .data(scale.domain());
-                        axisMaxMin.enter().append('g').attr('class',function(d,i){
+                        axisMaxMin=gEnter.enter().append('g').attr('class',function(d,i){
                                 return ['nv-axisMaxMin','nv-axisMaxMin-y',(i == 0 ? 'nv-axisMin-y':'nv-axisMax-y')].join(' ')
                         }).append('text')
                             .style('opacity', 0);
@@ -1990,7 +1991,7 @@ nv.models.axis = function(axis, orientation) {
 
                 //if Max and Min = 0 only show min, Issue #281
                 if (scale.domain()[0] == scale.domain()[1] && scale.domain()[0] == 0) {
-                    wrap.selectAll('g.nv-axisMaxMin').style('opacity', function (d, i) {
+                    axisMaxMin.style('opacity', function (d, i) {
                         return !i ? 1 : 0
                     });
                 }
@@ -1998,7 +1999,7 @@ nv.models.axis = function(axis, orientation) {
 
             if (showMaxMin && (orientation === 'top' || orientation === 'bottom')) {
                 var maxMinRange = [];
-                wrap.selectAll('g.nv-axisMaxMin')
+                axisMaxMin
                     .each(function(d,i) {
                         try {
                             if (i) // i== 1, max position
@@ -3612,7 +3613,7 @@ nv.models.cumulativeLineChart = function() {
             wrapEnter.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
 
             var gEnter = wrapEnter.append('g');
-            var g = wrap.select('g');
+            var g = gEnter.select('g');
 
             var interactiveAppend=gEnter.append('g').attr('class', 'nv-interactive');
             var xAxisAppend=gEnter.append('g').attr('class', 'nv-x nv-axis').style("pointer-events","none");
@@ -3671,9 +3672,9 @@ nv.models.cumulativeLineChart = function() {
             // Show error if index point value is 0 (division by zero avoided)
             var tempDisabled = data.filter(function(d) { return d.tempDisabled });
 
-            wrap.select('.tempDisabled').remove(); //clean-up and prevent duplicates
+            wrapEnter.select('.tempDisabled').remove(); //clean-up and prevent duplicates
             if (tempDisabled.length) {
-                wrap.append('text').attr('class', 'tempDisabled')
+                wrapEnter.append('text').attr('class', 'tempDisabled')
                     .attr('x', availableWidth / 2)
                     .attr('y', '-.71em')
                     .style('text-anchor', 'end')
@@ -4162,7 +4163,7 @@ nv.models.differenceChart = function () {
 
       chart.container = this;
 
-      multiChart.margin(margin).color(d3.scaleOrdinal(d3.schemeCategory10).range()).y(yForMultiChart).width(width).height(availableHeight).curve(interpolate).useInteractiveGuideline(true);
+      multiChart.margin(margin).color(d3.scaleOrdinal(d3.schemeCategory10).range()).y(yForMultiChart).width(width).height(availableHeight).interpolate(interpolate).useInteractiveGuideline(true);
 
       multiChart.interactiveLayer.tooltip.valueFormatter(function (value, i, datum) {
         if (datum.key === keyForActualGreaterThanPredicted || datum.key === keyForActualLessThanPredicted) {
@@ -4206,12 +4207,11 @@ nv.models.differenceChart = function () {
       focus.xScale(xScale.copy());
       focus.xAxis.tickFormat(tickFormat);
       focus.xAxis.rotateLabels(0);
-
-      container.append('g').attr('class', 'nv-focusWrap').style('display', 'initial').attr('transform', 'translate(' + margin.left + ', ' + (availableHeight + focus.margin().top) + ')').datum(processedData.filter(function (dataset) {
+      var gAppend=container.append('g').attr('class', 'nv-focusWrap').style('display', 'initial').attr('transform', 'translate(' + margin.left + ', ' + (availableHeight + focus.margin().top) + ')').datum(processedData.filter(function (dataset) {
         return dataset.type === 'line';
       })).call(focus);
 
-      container.datum(processedData).call(multiChart);
+      gAppend.datum(processedData).call(multiChart);
 
       focus.dispatch.on('brush', function (extent) {
         var filteredData = processedData.map(function (datum) {
@@ -4244,7 +4244,7 @@ nv.models.differenceChart = function () {
           });
         });
 
-        container.datum(filteredData);
+        gAppend.datum(filteredData);
 
         multiChart.xAxis.domain(extent);
 
@@ -4252,12 +4252,12 @@ nv.models.differenceChart = function () {
       });
 
       chart.update = function () {
-        container.selectAll('*').remove();
+        gAppend.selectAll('*').remove();
 
         if (duration === 0) {
-          container.call(chart);
+          gAppend.call(chart);
         } else {
-          container.transition().duration(duration).call(chart);
+          gAppend.transition().duration(duration).call(chart);
         }
       };
 
@@ -4633,30 +4633,30 @@ nv.models.discreteBar = function() {
             var wrapEnter = wrap.enter().append('g').attr('class', 'nvd3 nv-wrap nv-discretebar');
             wrapEnter.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
             var gEnter = wrapEnter.append('g');
-            var g = wrap.select('g');
+            var g = gEnter.select('g');
 
             var groupsAppend=gEnter.append('g').attr('class', 'nv-groups');
 
             //TODO: by definition, the discrete bar should not have multiple groups, will modify/remove later
             var groups = groupsAppend.selectAll('.nv-group')
                 .data(function(d) { return d }, function(d) { return d.key });
-            groups.enter().append('g')
+            var gAppend=groups.enter().append('g')
                 .style('stroke-opacity', 1e-6)
                 .style('fill-opacity', 1e-6);
-            groups.exit()
+            gAppend.exit()
                 .watchTransition(renderWatch, 'discreteBar: exit groups')
                 .style('stroke-opacity', 1e-6)
                 .style('fill-opacity', 1e-6)
                 .remove();
-            groups
+            gAppend
                 .attr('class', function(d,i) { return 'nv-group nv-series-' + i })
                 .classed('hover', function(d) { return d.hover });
-            groups
+            gAppend
                 .watchTransition(renderWatch, 'discreteBar: groups')
                 .style('stroke-opacity', 1)
                 .style('fill-opacity', .75);
 
-            var bars = groups.selectAll('g.nv-bar')
+            var bars = gAppend.selectAll('g.nv-bar')
                 .data(function(d) { return d.values });
             bars.exit().remove();
 
@@ -4707,16 +4707,16 @@ nv.models.discreteBar = function() {
                     d3.event.stopPropagation();
                 });
 
-            barsEnter.append('rect')
+            var rectAppend=barsEnter.append('rect')
                 .attr('height', 0)
                 .attr('width', x.bandwidth() * .9 / data.length )
 
             if (showValues) {
-                barsEnter.append('text')
+                var textAppend=rectAppend.append('text')
                     .attr('text-anchor', 'middle')
                 ;
 
-                bars.select('text')
+                textAppend.select('text')
                     .text(function(d,i) { return valueFormat(getY(d,i)) })
                     .watchTransition(renderWatch, 'discreteBar: bars text')
                     .attr('x', x.bandwidth() * .9 / 2)
@@ -4724,10 +4724,10 @@ nv.models.discreteBar = function() {
 
                 ;
             } else {
-                bars.selectAll('text').remove();
+                rectAppend.selectAll('text').remove();
             }
 
-            bars
+            rectAppend
                 .attr('class', function(d,i) { return getY(d,i) < 0 ? 'nv-bar negative' : 'nv-bar positive' })
                 .style('fill', function(d,i) { return d.color || color(d,i) })
                 .style('stroke', function(d,i) { return d.color || color(d,i) })
@@ -4736,7 +4736,7 @@ nv.models.discreteBar = function() {
                 .attr('class', rectClass)
                 .watchTransition(renderWatch, 'discreteBar: bars rect')
                 .attr('width', x.bandwidth() * .9 / data.length);
-            bars.watchTransition(renderWatch, 'discreteBar: bars')
+            rectAppend.watchTransition(renderWatch, 'discreteBar: bars')
                 //.delay(function(d,i) { return i * 1200 / data[0].values.length })
                 .attr('transform', function(d,i) {
                     var left = x(getX(d,i)) + x.bandwidth() * .05,
@@ -4752,7 +4752,6 @@ nv.models.discreteBar = function() {
                 .attr('height', function(d,i) {
                     return  Math.max(Math.abs(y(getY(d,i)) - y(0)), 1)
                 });
-                bars.merge(bars);
 
             //store old scales for use in transitions on update
             x0 = x.copy();
@@ -4909,7 +4908,7 @@ nv.models.discreteBarChart = function() {
 
             var gEnter = wrapEnter.append('g');
             var defsEnter = gEnter.append('defs');
-            var g = wrap.select('g');
+            var g = gEnter.select('g');
 
             var xAxisAppend=gEnter.append('g').attr('class', 'nv-x nv-axis');
             var yAxisAppend=gEnter.append('g').attr('class', 'nv-y nv-axis');
@@ -5725,11 +5724,11 @@ nv.models.distroPlot = function() {
             // Setup containers and skeleton of chart
             var wrap = container.selectAll('g.nv-wrap').data([reformatDat]);
             var wrapEnter = wrap.enter().append('g').attr('class', 'nvd3 nv-wrap');
-            wrap.watchTransition(renderWatch, 'nv-wrap: wrap')
+            wrapEnter.watchTransition(renderWatch, 'nv-wrap: wrap')
                 .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
 
             var areaEnter,
-                distroplots = wrap.selectAll('.nv-distroplot-x-group')
+                distroplots = wrapEnter.selectAll('.nv-distroplot-x-group')
                     .data(function(d) { return d; });
 
             // rebind new data
@@ -6569,10 +6568,11 @@ nv.models.focus = function(content) {
 
             // Setup containers and skeleton of chart
             var wrap = container.selectAll('g.nv-focus').data([data]);
-            var gEnter = wrap.enter().append('g').attr('class', 'nvd3 nv-focus').append('g');
-            var g = wrap.select('g');
+            var wrapEnter=wrap.enter().append('g').attr('class', 'nvd3 nv-focus');
+            wrapEnter.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
 
-            wrap.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+            var gEnter = wrapEnter.append('g');
+            var g = gEnter.select('g');
 
             var backgroundAppend=gEnter.append('g').attr('class', 'nv-background').append('rect');
             var xAxisAppend=gEnter.append('g').attr('class', 'nv-x nv-axis');
@@ -6600,8 +6600,8 @@ nv.models.focus = function(content) {
             contentWrapAppend
                 .datum(data.filter(function(d) { return !d.disabled; }));
 
-            var s=d3.transition(contentWrapAppend).call(content);
-            s.merge(gEnter);
+            var s=contentWrapAppend.transition().call(content); //@todo
+            //s.merge(gEnter);
             
             // Setup Brush
             brush
@@ -6658,7 +6658,7 @@ nv.models.focus = function(content) {
                     .attr('transform', 'translate(0,' + y.range()[0] + ')');
                 var xs=d3.transition(xAxisAppend)
                     .call(xAxis);
-                    xs.merge(xAxisAppend);
+                    //xs.merge(xAxisAppend);
             }
 
             if (showYAxis) {
@@ -6670,7 +6670,7 @@ nv.models.focus = function(content) {
 
                 var ys=yAxisAppend
                     .call(yAxis);
-                ys.merge(yAxisAppend);
+                //ys.merge(yAxisAppend);
             }
             
             xAxisAppend
@@ -7046,7 +7046,7 @@ nv.models.furiousLegend = function() {
             wrapEnter.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
 
             var gEnter = wrapEnter.append('g');
-            var g = wrap.select('g');
+            var g = gEnter.select('g');
 
             var series = g.selectAll('.nv-series')
                 .data(function(d) {
@@ -7061,27 +7061,27 @@ nv.models.furiousLegend = function() {
             var seriesShape;
 
             if(vers == 'classic') {
-                seriesEnter.append('circle')
+                var circleAppend=seriesEnter.append('circle')
                     .style('stroke-width', 2)
                     .attr('class','nv-legend-symbol')
                     .attr('r', 5);
 
-                seriesShape = series.select('circle');
+                seriesShape = circleAppend.select('circle');
             } else if (vers == 'furious') {
-                seriesEnter.append('rect')
+                var rectAppend=seriesEnter.append('rect')
                     .style('stroke-width', 2)
                     .attr('class','nv-legend-symbol')
                     .attr('rx', 3)
                     .attr('ry', 3);
 
-                seriesShape = series.select('rect');
+                seriesShape = rectAppend.select('rect');
 
-                seriesEnter.append('g')
+                var checkBoxAppend=rectAppend.append('g')
                     .attr('class', 'nv-check-box')
                     .property('innerHTML','<path d="M0.5,5 L22.5,5 L22.5,26.5 L0.5,26.5 L0.5,5 Z" class="nv-box"></path><path d="M5.5,12.8618467 L11.9185089,19.2803556 L31,0.198864511" class="nv-check"></path>')
                     .attr('transform', 'translate(-10,-8)scale(0.5)');
 
-                var seriesCheckbox = series.select('.nv-check-box');
+                //var seriesCheckbox = series.select('.nv-check-box');
 
                 seriesCheckbox.each(function(d,i) {
                     d3.select(this).selectAll('path')
@@ -7089,15 +7089,15 @@ nv.models.furiousLegend = function() {
                 });
             }
 
-            seriesEnter.append('text')
+            var seriesText=seriesEnter.append('text')
                 .attr('text-anchor', 'start')
                 .attr('class','nv-legend-text')
                 .attr('dy', '.32em')
                 .attr('dx', '8');
 
-            var seriesText = series.select('text.nv-legend-text');
+            //var seriesText = seriesEnter.select('text.nv-legend-text');
 
-            series
+            seriesEnter
                 .on('mouseover', function(d,i) {
                     dispatch.call('legendMouseover', d,i);  //TODO: Make consistent with other event objects
                 })
@@ -7107,7 +7107,7 @@ nv.models.furiousLegend = function() {
                 .on('click', function(d,i) {
                     dispatch.call('legendClick', d,i);
                     // make sure we re-get data in case it was modified
-                    var data = series.data();
+                    var data = seriesEnter.data();
                     if (updateState) {
                         if(vers =='classic') {
                             if (radioButtonMode) {
@@ -7154,7 +7154,7 @@ nv.models.furiousLegend = function() {
                     dispatch.call('legendDblclick', this, d,i);
                     if (updateState) {
                         // make sure we re-get data in case it was modified
-                        var data = series.data();
+                        var data = seriesEnter.data();
                         //the default behavior of NVD3 legends, when double clicking one,
                         // is to set all other series' to false, and make the double clicked series enabled.
                         data.forEach(function(series) {
@@ -7169,8 +7169,8 @@ nv.models.furiousLegend = function() {
                     }
                 });
 
-            series.classed('nv-disabled', function(d) { return d.userDisabled });
-            series.exit().remove();
+            seriesEnter.classed('nv-disabled', function(d) { return d.userDisabled });
+            seriesEnter.exit().remove();
 
             seriesText
                 .attr('fill', setTextColor)
@@ -7191,7 +7191,7 @@ nv.models.furiousLegend = function() {
             if (align) {
 
                 var seriesWidths = [];
-                series.each(function(d,i) {
+                seriesEnter.each(function(d,i) {
                     var legendText;
                     if (keyFormatter(getKey(d)) && keyFormatter(getKey(d)).length > maxKeyLength) {
                         var trimmedKey = keyFormatter(getKey(d)).substring(0, maxKeyLength);
@@ -7243,7 +7243,7 @@ nv.models.furiousLegend = function() {
                     curX += columnWidths[i];
                 }
 
-                series
+                seriesEnter
                     .attr('transform', function(d, i) {
                         return 'translate(' + xPositions[i % seriesPerRow] + ',' + (5 + Math.floor(i / seriesPerRow) * versPadding) + ')';
                     });
@@ -7264,7 +7264,7 @@ nv.models.furiousLegend = function() {
                     newxpos = 5,
                     maxwidth = 0,
                     xpos;
-                series
+                seriesEnter
                     .attr('transform', function(d, i) {
                         var length = d3.select(this).select('text').node().getComputedTextLength() + padding;
                         xpos = newxpos;
@@ -8829,10 +8829,7 @@ nv.models.historicalBarChart = function(bar_model) {
         , defaultState = null
         , noData = null
         , dispatch = d3.dispatch('tooltipHide', 'stateChange', 'changeState', 'renderEnd')
-        , transitionDuration = 250
-        , t = d3.transition()
-              .duration(transitionDuration)
-              .ease(d3.easeLinear);
+        , transitionDuration = 250;
 
     xAxis.tickPadding(7);
     //yAxis.orient( (rightAlignYAxis) ? 'right' : 'left');
@@ -9138,9 +9135,6 @@ nv.models.historicalBarChart = function(bar_model) {
         duration:    {get: function(){return transitionDuration;}, set: function(_){
             transitionDuration=_;
             renderWatch.reset(transitionDuration);
-            t = d3.transition()
-                  .duration(transitionDuration)
-                  .ease(d3.easeLinear);
             yAxis.duration(transitionDuration);
             xAxis.duration(transitionDuration);
         }},
@@ -9500,7 +9494,7 @@ nv.models.legend = function() {
                 // Size rectangles after text is placed
                 seriesShape
                     .attr('width', function(d,i) {
-                        return seriesText[0][i].getComputedTextLength() + 27;
+                        return seriesEnter.select('text.nv-legend-text')[0][i].getComputedTextLength() + 27;
                     })
                     .attr('height', 18)
                     .attr('y', -9)
@@ -10059,8 +10053,6 @@ nv.models.lineChart = function() {
                     .tickSizeInner( -availableWidth);
             }
 
-            //focusEnter.merge(gEnter);
-            
             //============================================================
             // Update Axes
             //============================================================
@@ -10084,7 +10076,6 @@ nv.models.lineChart = function() {
 
             xAxisAppend
                 .attr('transform', 'translate(0,' + availableHeight + ')');
-        //xAxisAppend.merge(gEnter);
 
             //============================================================
             // Update Focus
@@ -10092,7 +10083,6 @@ nv.models.lineChart = function() {
             if (!focusEnable){//@todo && focus.brush.extent() === null) {
                 console.log("in !focusEnable");
                 var s=linesWrap.transition().call(lines);
-                //s.merge(linesWrap);
                 updateXAxis();
                 updateYAxis();
             } else {
@@ -10260,7 +10250,6 @@ nv.models.lineChart = function() {
                         })
                 );
                 var s=focusLinesWrap.transition().duration(duration).call(lines);
-//                s.merge(focusLinesWrap);
 
                 // Update Main (Focus) Axes
                 updateXAxis();
@@ -10591,42 +10580,45 @@ nv.models.linePlusBarChart = function() {
 
             // Setup containers and skeleton of chart
             var wrap = container.selectAll('g.nv-wrap.nv-linePlusBar').data([data]);
-            var gEnter = wrap.enter().append('g').attr('class', 'nvd3 nv-wrap nv-linePlusBar').append('g');
-            var g = wrap.select('g');
+            var wrapEnter = wrap.enter().append('g').attr('class', 'nvd3 nv-wrap nv-linePlusBar');
+            wrapEnter.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
 
-            gEnter.append('g').attr('class', 'nv-legendWrap');
+            var gEnter = wrapEnter.append('g');
+            var g = gEnter.select('g');
+
+            var legendWrapAppend=gEnter.append('g').attr('class', 'nv-legendWrap');
 
             // this is the main chart
             var focusEnter = gEnter.append('g').attr('class', 'nv-focus');
-            focusEnter.append('g').attr('class', 'nv-x nv-axis');
-            focusEnter.append('g').attr('class', 'nv-y1 nv-axis');
-            focusEnter.append('g').attr('class', 'nv-y2 nv-axis');
-            focusEnter.append('g').attr('class', 'nv-barsWrap');
-            focusEnter.append('g').attr('class', 'nv-linesWrap');
+            var xAxisAppend=focusEnter.append('g').attr('class', 'nv-x nv-axis');
+            var y1AxisAppend=focusEnter.append('g').attr('class', 'nv-y1 nv-axis');
+            var y2AxisAppend=focusEnter.append('g').attr('class', 'nv-y2 nv-axis');
+            var barsWrapAppend=focusEnter.append('g').attr('class', 'nv-barsWrap');
+            var linesWrapAppend=focusEnter.append('g').attr('class', 'nv-linesWrap');
 
             // context chart is where you can focus in
             var contextEnter = gEnter.append('g').attr('class', 'nv-context');
-            contextEnter.append('g').attr('class', 'nv-x nv-axis');
-            contextEnter.append('g').attr('class', 'nv-y1 nv-axis');
-            contextEnter.append('g').attr('class', 'nv-y2 nv-axis');
-            contextEnter.append('g').attr('class', 'nv-barsWrap');
-            contextEnter.append('g').attr('class', 'nv-linesWrap');
-            contextEnter.append('g').attr('class', 'nv-brushBackground');
-            contextEnter.append('g').attr('class', 'nv-x nv-brush');
+            var xAxisContextAppend=contextEnter.append('g').attr('class', 'nv-x nv-axis');
+            var y1AxisContextAppend=contextEnter.append('g').attr('class', 'nv-y1 nv-axis');
+            var y2AxisContextAppend=contextEnter.append('g').attr('class', 'nv-y2 nv-axis');
+            var barsContextAppend=contextEnter.append('g').attr('class', 'nv-barsWrap');
+            var linesContextAppend=contextEnter.append('g').attr('class', 'nv-linesWrap');
+            var brushBackgroundAppend=contextEnter.append('g').attr('class', 'nv-brushBackground');
+            var xAxisBrushAppend=contextEnter.append('g').attr('class', 'nv-x nv-brush');
 
             //============================================================
             // Legend
             //------------------------------------------------------------
 
             if (!showLegend) {
-                g.select('.nv-legendWrap').selectAll('*').remove();
+                legendWrapAppend.selectAll('*').remove();
             } else {
                 var legendWidth = legend.align() ? availableWidth / 2 : availableWidth;
                 var legendXPosition = legend.align() ? legendWidth : 0;
 
                 legend.width(legendWidth);
 
-                g.select('.nv-legendWrap')
+                legendWrapAppend
                     .datum(data.map(function(series) {
                         series.originalKey = series.originalKey === undefined ? series.key : series.originalKey;
                         if(switchYAxisOrder) {
@@ -10644,18 +10636,16 @@ nv.models.linePlusBarChart = function() {
                     availableHeight1 = nv.utils.availableHeight(height, container, margin) - focusHeight;
                 }
 
-                g.select('.nv-legendWrap')
+                legendWrapAppend
                     .attr('transform', 'translate(' + legendXPosition + ',' + (-margin.top) +')');
             }
-
-            wrap.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
 
             //============================================================
             // Context chart (focus chart) components
             //------------------------------------------------------------
 
             // hide or show the focus context chart
-            g.select('.nv-context').style('display', focusEnable ? 'initial' : 'none');
+            contextEnter.style('display', focusEnable ? 'initial' : 'none');
 
             bars2
                 .width(availableWidth)
@@ -10674,18 +10664,18 @@ nv.models.linePlusBarChart = function() {
                     return !data[i].disabled && !data[i].bar
                 }));
 
-            var bars2Wrap = g.select('.nv-context .nv-barsWrap')
+            var bars2Wrap = barsContextAppend
                 .datum(dataBars.length ? dataBars : [
                     {values: []}
                 ]);
-            var lines2Wrap = g.select('.nv-context .nv-linesWrap')
+            var lines2Wrap = linesContextAppend
                 .datum(allDisabled(dataLines) ?
                        [{values: []}] :
                        dataLines.filter(function(dataLine) {
                          return !dataLine.disabled;
                        }));
 
-            g.select('.nv-context')
+            contextEnter
                 .attr('transform', 'translate(0,' + ( availableHeight1 + margin.bottom + margin2.top) + ')');
 
             bars2Wrap.transition().call(bars2);
@@ -10697,9 +10687,9 @@ nv.models.linePlusBarChart = function() {
                     ._ticks( nv.utils.calcTicksX(availableWidth / 100, data))
                 x2Axis
                     .tickSizeInner(-availableHeight2);
-                g.select('.nv-context .nv-x.nv-axis')
+                xAxisAppend
                     .attr('transform', 'translate(0,' + y3.range()[0] + ')');
-                g.select('.nv-context .nv-x.nv-axis').transition()
+                xAxisAppend.transition()
                     .call(x2Axis);
             }
 
@@ -10718,13 +10708,13 @@ nv.models.linePlusBarChart = function() {
                 g.select('.nv-context .nv-y3.nv-axis')
                     .style('opacity', dataBars.length ? 1 : 0)
                     .attr('transform', 'translate(0,' + x2.range()[0] + ')');
-                g.select('.nv-context .nv-y2.nv-axis')
+                y2AxisContextAppend
                     .style('opacity', dataLines.length ? 1 : 0)
                     .attr('transform', 'translate(' + x2.range()[1] + ',0)');
 
-                g.select('.nv-context .nv-y1.nv-axis').transition()
+                y1AxisContextAppend.transition()
                     .call(y3Axis);
-                g.select('.nv-context .nv-y2.nv-axis').transition()
+                y2AxisContextAppend.transition()
                     .call(y4Axis);
             }
 
@@ -10733,7 +10723,7 @@ nv.models.linePlusBarChart = function() {
 
             if (brushExtent) brush.extent(brushExtent);
 
-            var brushBG = g.select('.nv-brushBackground').selectAll('g')
+            var brushBG = brushBackgroundAppend.selectAll('g')
                 .data([brushExtent || brush.extent()]);
 
             var brushBGenter = brushBG.enter()
@@ -10751,7 +10741,7 @@ nv.models.linePlusBarChart = function() {
                 .attr('y', 0)
                 .attr('height', availableHeight2);
 
-            var gBrush = g.select('.nv-x.nv-brush')
+            var gBrush = xAxisBrushAppend
                 .call(brush);
             gBrush.selectAll('rect')
                 //.attr('y', -5)
@@ -10838,7 +10828,7 @@ nv.models.linePlusBarChart = function() {
                         return d.color || color(d, i);
                     }).filter(function(d,i) { return !data[i].disabled && !data[i].bar }));
 
-                var focusBarsWrap = g.select('.nv-focus .nv-barsWrap')
+                var focusBarsWrap = barsWrapAppend
                     .datum(!dataBars.length ? [{values:[]}] :
                         dataBars
                             .map(function(d,i) {
@@ -10851,7 +10841,7 @@ nv.models.linePlusBarChart = function() {
                             })
                 );
 
-                var focusLinesWrap = g.select('.nv-focus .nv-linesWrap')
+                var focusLinesWrap = linesWrapAppend
                     .datum(allDisabled(dataLines) ? [{values:[]}] :
                            dataLines
                            .filter(function(dataLine) { return !dataLine.disabled; })
@@ -10883,14 +10873,14 @@ nv.models.linePlusBarChart = function() {
 
                 xAxis.domain([Math.ceil(extent[0]), Math.floor(extent[1])]);
 
-                g.select('.nv-x.nv-axis').transition().duration(transitionDuration).call(xAxis);
+                xAxisAppend.transition().duration(transitionDuration).call(xAxis);
 
                 // Update Main (Focus) Bars and Lines
                 focusBarsWrap.transition().duration(transitionDuration).call(bars);
                 focusLinesWrap.transition().duration(transitionDuration).call(lines);
 
                 // Setup and Update Main (Focus) Y Axes
-                g.select('.nv-focus .nv-x.nv-axis')
+                xAxisContextAppend
                     .attr('transform', 'translate(0,' + y1.range()[0] + ')');
 
                 y1Axis
@@ -10916,15 +10906,15 @@ nv.models.linePlusBarChart = function() {
                 var y1Opacity = switchYAxisOrder ? linesOpacity : barsOpacity;
                 var y2Opacity = switchYAxisOrder ? barsOpacity : linesOpacity;
 
-                g.select('.nv-focus .nv-y1.nv-axis')
+                y1AxisAppend
                     .style('opacity', y1Opacity);
-                g.select('.nv-focus .nv-y2.nv-axis')
+                y2AxisAppend
                     .style('opacity', y2Opacity)
                     .attr('transform', 'translate(' + x.range()[1] + ',0)');
 
-                g.select('.nv-focus .nv-y1.nv-axis').transition().duration(transitionDuration)
+                y1AxisAppend.transition().duration(transitionDuration)
                     .call(y1Axis);
-                g.select('.nv-focus .nv-y2.nv-axis').transition().duration(transitionDuration)
+                y2AxisAppend.transition().duration(transitionDuration)
                     .call(y2Axis);
             }
 
@@ -11096,7 +11086,7 @@ nv.models.multiBar = function() {
         , forceY = [0] // 0 is forced by default.. this makes sense for the majority of bar graphs... user can always do chart.forceY([]) to remove
         , clipEdge = true
         , stacked = false
-        , stackOffset = 'zero' // options include 'silhouette', 'wiggle', 'expand', 'zero', or a custom function
+        , stackOffset = d3.stackOffsetNone // options include 'silhouette', 'wiggle', 'expand', 'zero', or a custom function
         , color = nv.utils.defaultColor()
         , hideable = false
         , barColor = null // adding the ability to set the color for each rather than the whole group
@@ -11148,28 +11138,65 @@ nv.models.multiBar = function() {
                 )}];
 
             if (stacked) {
+            data.forEach(function(aseries, i) {
+                aseries.seriesIndex = i;
+                aseries.values = aseries.values.map(function(d, j) {
+                    d.index = j;
+                    d.seriesIndex = i;
+                    return d;
+                });
+            });
+
+            var dataFiltered = data.filter(function(series) {
+                return !series.disabled;
+            });
+            var newData=[];
+            dataFiltered[0].values.forEach(function(d){
+                newData.push({x: d.x});
+            });
+            dataFiltered.forEach(function(d, y, y0) {
+                d.display = { y: y, y0: y0 };
+                d.values.forEach(function(d2){
+                    newData[d2.index][d.key]=d2.y;
+                });
+                //console.log(d.display);
+            });
+            var keys = dataFiltered.map(a => a.key);
+                
                 var parsed = d3.stack()
                     .offset(stackOffset)
-                    .values(function(d){ return d.values })
-                    .y(getY)
-                (!data.length && hideable ? hideable : data);
+                    .value(function(d, key){ return d[key] })
+                    //.y(getY)
+                (!newData.length && hideable ? hideable : newData);
+                var scatterData=[]; //legacy data shape to pass to scatter
+                parsed.forEach(function(aseries, i) {
+                    aseries.seriesIndex = i;
+                    aseries.x=Array.from(Array(aseries.length).keys())
+                    //console.log(i+" "+aseries.length);
+                    var values = [];
+                    aseries.map(function(d, j) {
+                        values.push({x: j, y: d[1]-d[0], y0: d[0], series: j, seriesIndex: i, index: j, display: {y: d[1]-d[0], y0: d[0]}});
+                        return values;
+                    });
+                    scatterData.push({values: values, key: keys[i], seriesIndex: i});
+                });
 
-                parsed.forEach(function(series, i){
+                scatterData.forEach(function(series, i){
                     // if series is non-stackable, use un-parsed data
                     if (series.nonStackable) {
                         data[i].nonStackableSeries = nonStackableCount++;
-                        parsed[i] = data[i];
+                        scatterData[i] = data[i];
                     } else {
                         // don't stack this seires on top of the nonStackable seriees
-                        if (i > 0 && parsed[i - 1].nonStackable){
-                            parsed[i].values.map(function(d,j){
-                                d.y0 -= parsed[i - 1].values[j].y;
+                        if (i > 0 && scatterData[i - 1].nonStackable){
+                            scatterData[i].values.map(function(d,j){
+                                d.y0 -= scatterData[i - 1].values[j].y;
                                 d.y1 = d.y0 + d.y;
                             });
                         }
                     }
                 });
-                data = parsed;
+                data = scatterData;
             }
             //add series index and key to each data point for reference
             data.forEach(function(series, i) {
@@ -11690,7 +11717,7 @@ nv.models.multiBarChart = function() {
             var wrapEnter=wrap.enter().append('g').attr('class', 'nvd3 nv-wrap nv-multiBarWithLegend');
             wrapEnter.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
             var gEnter = wrapEnter.append('g');
-            var g = wrap.select('g');
+            var g = gEnter.select('g');
 
             var xAxisAppend=gEnter.append('g').attr('class', 'nv-x nv-axis');
             var yAxisAppend=gEnter.append('g').attr('class', 'nv-y nv-axis');
@@ -11780,7 +11807,7 @@ nv.models.multiBarChart = function() {
                 xAxisAppend
                     .call(xAxis);
 
-                var xTicks = g.select('.nv-x.nv-axis > g').selectAll('g');
+                var xTicks = xAxisAppend.selectAll('g');
 
                 xTicks
                     .selectAll('line, text')
@@ -11799,15 +11826,16 @@ nv.models.multiBarChart = function() {
                             return  getTranslate(0, (j % 2 == 0 ? staggerUp : staggerDown));
                         });
 
-                    var totalInBetweenTicks = d3.selectAll(".nv-x.nv-axis .nv-wrap g g text")[0].length;
-                    g.selectAll(".nv-x.nv-axis .nv-axisMaxMin text")
+                    var s=xTicks.selectAll(".nv-x.nv-axis .nv-wrap g g text");
+                    var totalInBetweenTicks = (s.length>0) ? s[0].length : 0; //@todo
+                    xTicks.selectAll(".nv-x.nv-axis .nv-axisMaxMin text")
                         .attr("transform", function(d,i) {
                             return getTranslate(0, (i === 0 || totalInBetweenTicks % 2 !== 0) ? staggerDown : staggerUp);
                         });
                 }
 
                 if (wrapLabels) {
-                    g.selectAll('.tick text')
+                    gEnter.selectAll('.tick text')
                         .call(nv.utils.wrapTicks, chart.xAxis.bandwidth())
                 }
 
@@ -12868,7 +12896,6 @@ nv.models.multiChart = function() {
 
             chart.update = function() {
                 var s=container.call(chart);
-                //s.merge(container);
             };
             chart.container = this;
 
@@ -13575,7 +13602,7 @@ nv.models.ohlcBar = function() {
 
             var defsEnter = wrapEnter.append('defs');
             var gEnter = wrapEnter.append('g');
-            var g = wrap.select('g');
+            var g = gEnter.select('g');
 
             var ticksAppend=gEnter.append('g').attr('class', 'nv-ticks');
 
@@ -13636,7 +13663,7 @@ nv.models.ohlcBar = function() {
                 return (getOpen(d,i) > getClose(d,i) ? 'nv-tick negative' : 'nv-tick positive') + ' nv-tick-' + j + '-' + i;
             });
 
-            d3.transition(ticks)
+            ticks.transition().duration(0)//@todo
                 .attr('transform', function(d,i) { return 'translate(' + x(getX(d,i)) + ',' + y(getHigh(d,i)) + ')'; })
                 .attr('d', function(d,i) {
                     var w = (availableWidth / data[0].values.length) * .9;
@@ -14382,7 +14409,7 @@ nv.models.parallelCoordinatesChart = function () {
 		        var parallelCoordinatesWrap = parallelCoordinatesWrapAppend
                   .datum(data);
 
-		        parallelCoordinatesWrap.transition().call(parallelCoordinates);
+		        parallelCoordinatesWrap.transition().duration(0).call(parallelCoordinates);
 
 				//============================================================
                 // Event Handling/Dispatching (in chart's scope)
@@ -16689,7 +16716,7 @@ nv.models.scatterChart = function() {
             var wrapEnter = wrap.enter().append('g').attr('class', 'nvd3 nv-wrap nv-scatterChart nv-chart-' + scatter.id());
             wrapEnter.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
             var gEnter = wrapEnter.append('g');
-            var g = wrap.select('g');
+            var g = gEnter.select('g');
 
             // background for pointer events
             gEnter.append('rect').attr('class', 'nvd3 nv-background').style("pointer-events","none");
@@ -16757,12 +16784,12 @@ nv.models.scatterChart = function() {
                     return [d]
                 });
 
-            regLine.enter()
+            var lineAppend=regLine.enter()
                 .append('line').attr('class', 'nv-regLine')
                 .style('stroke-opacity', 0);
 
             // don't add lines unless we have slope and intercept to use
-            regLine.filter(function(d) {
+            lineAppend.filter(function(d) {
                 return d.intercept && d.slope;
             })
                 .watchTransition(renderWatch, 'scatterPlusLineChart: regline')
@@ -17439,7 +17466,7 @@ nv.models.stackedArea = function() {
 
             var defsEnter = wrapEnter.append('defs');
             var gEnter = wrapEnter.append('g');
-            var g = wrapEnter.select('g');
+            var g = gEnter.select('g');
 
             var areaWrapAppend=gEnter.append('g').attr('class', 'nv-areaWrap');
             var scatterWrapAppend=gEnter.append('g').attr('class', 'nv-scatterWrap');

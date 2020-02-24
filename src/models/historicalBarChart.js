@@ -31,10 +31,7 @@ nv.models.historicalBarChart = function(bar_model) {
         , defaultState = null
         , noData = null
         , dispatch = d3.dispatch('tooltipHide', 'stateChange', 'changeState', 'renderEnd')
-        , transitionDuration = 250
-        , t = d3.transition()
-              .duration(transitionDuration)
-              .ease(d3.easeLinear);
+        , transitionDuration = 250;
 
     xAxis.tickPadding(7);
     //yAxis.orient( (rightAlignYAxis) ? 'right' : 'left');
@@ -340,9 +337,6 @@ nv.models.historicalBarChart = function(bar_model) {
         duration:    {get: function(){return transitionDuration;}, set: function(_){
             transitionDuration=_;
             renderWatch.reset(transitionDuration);
-            t = d3.transition()
-                  .duration(transitionDuration)
-                  .ease(d3.easeLinear);
             yAxis.duration(transitionDuration);
             xAxis.duration(transitionDuration);
         }},

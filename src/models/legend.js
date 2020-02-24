@@ -290,7 +290,7 @@ nv.models.legend = function() {
                 // Size rectangles after text is placed
                 seriesShape
                     .attr('width', function(d,i) {
-                        return seriesText[0][i].getComputedTextLength() + 27;
+                        return seriesEnter.select('text.nv-legend-text')[0][i].getComputedTextLength() + 27;
                     })
                     .attr('height', 18)
                     .attr('y', -9)

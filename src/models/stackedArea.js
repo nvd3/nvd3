@@ -117,7 +117,7 @@ nv.models.stackedArea = function() {
 
             var defsEnter = wrapEnter.append('defs');
             var gEnter = wrapEnter.append('g');
-            var g = wrapEnter.select('g');
+            var g = gEnter.select('g');
 
             var areaWrapAppend=gEnter.append('g').attr('class', 'nv-areaWrap');
             var scatterWrapAppend=gEnter.append('g').attr('class', 'nv-scatterWrap');
