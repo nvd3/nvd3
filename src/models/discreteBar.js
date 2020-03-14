@@ -157,11 +157,11 @@ nv.models.discreteBar = function() {
                 .attr('width', x.bandwidth() * .9 / data.length )
 
             if (showValues) {
-                var textAppend=rectAppend.append('text')
+                var textAppend=barsEnter.append('text')
                     .attr('text-anchor', 'middle')
                 ;
 
-                textAppend.select('text')
+                textAppend
                     .text(function(d,i) { return valueFormat(getY(d,i)) })
                     .watchTransition(renderWatch, 'discreteBar: bars text')
                     .attr('x', x.bandwidth() * .9 / 2)
@@ -172,7 +172,7 @@ nv.models.discreteBar = function() {
                 rectAppend.selectAll('text').remove();
             }
 
-            rectAppend
+            barsEnter
                 .attr('class', function(d,i) { return getY(d,i) < 0 ? 'nv-bar negative' : 'nv-bar positive' })
                 .style('fill', function(d,i) { return d.color || color(d,i) })
                 .style('stroke', function(d,i) { return d.color || color(d,i) })
@@ -181,7 +181,7 @@ nv.models.discreteBar = function() {
                 .attr('class', rectClass)
                 .watchTransition(renderWatch, 'discreteBar: bars rect')
                 .attr('width', x.bandwidth() * .9 / data.length);
-            rectAppend.watchTransition(renderWatch, 'discreteBar: bars')
+            barsEnter.watchTransition(renderWatch, 'discreteBar: bars')
                 //.delay(function(d,i) { return i * 1200 / data[0].values.length })
                 .attr('transform', function(d,i) {
                     var left = x(getX(d,i)) + x.bandwidth() * .05,

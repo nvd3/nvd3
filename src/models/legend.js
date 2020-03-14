@@ -21,9 +21,7 @@ nv.models.legend = function() {
         , expanded = false
         , dispatch = d3.dispatch('legendClick', 'legendDblclick', 'legendMouseover', 'legendMouseout', 'stateChange')
         , vers = 'classic' //Options are "classic" and "furious"
-        , t = d3.transition()
-              .duration(300)
-              .ease(d3.easeLinear);
+        ;
 
     function chart(selection) {
         selection.each(function(data) {
@@ -78,7 +76,7 @@ nv.models.legend = function() {
                     .attr('ry', 3);
                 seriesShape = legendSymbolAppend;//series.select('.nv-legend-symbol');
 
-                var checkBoxAppend = legendSymbolAppend.append('g')
+                var checkBoxAppend = seriesEnter.append('g')
                     .attr('class', 'nv-check-box')
                     .property('innerHTML','<path d="M0.5,5 L22.5,5 L22.5,26.5 L0.5,26.5 L0.5,5 Z" class="nv-box"></path><path d="M5.5,12.8618467 L11.9185089,19.2803556 L31,0.198864511" class="nv-check"></path>')
                     .attr('transform', 'translate(-10,-8)scale(0.5)');
@@ -97,7 +95,7 @@ nv.models.legend = function() {
                 .attr('dy', '.32em')
                 .attr('dx', '8');
 
-            var seriesText = legendTextAppend;
+//            var seriesText = legendTextAppend;
 
             seriesEnter
                 .on('mouseover', function(d,i) {
@@ -178,7 +176,7 @@ nv.models.legend = function() {
             seriesEnter.classed('nv-disabled', function(d) { return d.userDisabled });
             seriesEnter.exit().remove();
 
-            seriesText
+            legendTextAppend
                 .attr('fill', setTextColor)
                 .text(function (d) { return keyFormatter(getKey(d)) });
 
@@ -281,7 +279,7 @@ nv.models.legend = function() {
                     });
 
                 //position legend as far right as possible within the total width
-                seriesEnter.attr('transform', 'translate(' + (width - margin.right - maxwidth) + ',' + margin.top + ')');
+                gEnter.attr('transform', 'translate(' + (width - margin.right - maxwidth) + ',' + margin.top + ')');
 
                 height = margin.top + margin.bottom + ypos + 15;
             }
@@ -290,7 +288,7 @@ nv.models.legend = function() {
                 // Size rectangles after text is placed
                 seriesShape
                     .attr('width', function(d,i) {
-                        return seriesEnter.select('text.nv-legend-text')[0][i].getComputedTextLength() + 27;
+                        return seriesEnter.select('text.nv-legend-text').nodes()[i].getComputedTextLength() + 27;
                     })
                     .attr('height', 18)
                     .attr('y', -9)

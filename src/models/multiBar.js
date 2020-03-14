@@ -205,7 +205,7 @@ nv.models.multiBar = function() {
             wrapEnter.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
             var defsEnter = wrapEnter.append('defs');
             var gEnter = wrapEnter.append('g');
-            var g = wrap.select('g');
+            var g = gEnter.select('g');
 
             var groupsAppend=gEnter.append('g').attr('class', 'nv-groups');
 
@@ -220,12 +220,12 @@ nv.models.multiBar = function() {
 
             var groups = groupsAppend.selectAll('.nv-group')
                 .data(function(d) { return d }, function(d,i) { return i });
-            groups.enter().append('g')
+            var gAppend=groups.enter().append('g')
                 .style('stroke-opacity', 1e-6)
                 .style('fill-opacity', 1e-6);
 
             var exitTransition = renderWatch
-                .transition(groups.exit().selectAll('rect.nv-bar'), 'multibarExit', Math.min(100, duration))
+                .transition(gAppend.exit().selectAll('rect.nv-bar'), 'multibarExit', Math.min(100, duration))
                 .attr('y', function(d, i, j) {
                     var yVal = y0(0) || 0;
                     if (stacked) {
@@ -242,16 +242,16 @@ nv.models.multiBar = function() {
                     var delay = i * (duration / (last_datalength + 1)) - i;
                     return delay;
                 });
-            groups
+            gAppend
                 .attr('class', function(d,i) { return 'nv-group nv-series-' + i })
                 .classed('hover', function(d) { return d.hover })
                 .style('fill', function(d,i){ return color(d, i) })
                 .style('stroke', function(d,i){ return color(d, i) });
-            groups
+            gAppend
                 .style('stroke-opacity', 1)
                 .style('fill-opacity', fillOpacity);
 
-            var bars = groups.selectAll('rect.nv-bar')
+            var bars = gAppend.selectAll('rect.nv-bar')
                 .data(function(d) { return (hideable && !data.length) ? hideable.values : d.values });
             bars.exit().remove();
 
@@ -265,7 +265,7 @@ nv.models.multiBar = function() {
                     .attr('width', function(d,i,j) { return x.bandwidth() / (stacked && !data[j].nonStackable ? 1 : data.length) })
                     .attr('transform', function(d,i) { return 'translate(' + x(getX(d,i)) + ',0)'; })
                 ;
-            bars
+            barsEnter
                 .style('fill', function(d,i,j){ return color(d, j, i);  })
                 .style('stroke', function(d,i,j){ return color(d, j, i); })
                 .on('mouseover', function(d,i,j) {
@@ -315,19 +315,19 @@ nv.models.multiBar = function() {
                     });
                     d3.event.stopPropagation();
                 });
-            bars
+            barsEnter
                 .attr('class', function(d,i) { return getY(d,i) < 0 ? 'nv-bar negative' : 'nv-bar positive'})
                 .attr('transform', function(d,i) { return 'translate(' + x(getX(d,i)) + ',0)'; })
 
             if (barColor) {
                 if (!disabled) disabled = data.map(function() { return true });
-                bars
+                barsEnter
                     .style('fill', function(d,i,j) { return d3.rgb(barColor(d,i)).darker(  disabled.map(function(d,i) { return i }).filter(function(d,i){ return !disabled[i]  })[j]   ).toString(); })
                     .style('stroke', function(d,i,j) { return d3.rgb(barColor(d,i)).darker(  disabled.map(function(d,i) { return i }).filter(function(d,i){ return !disabled[i]  })[j]   ).toString(); });
             }
 
             var barSelection =
-                bars.watchTransition(renderWatch, 'multibar', Math.min(250, duration))
+                barsEnter.watchTransition(renderWatch, 'multibar', Math.min(250, duration))
                     .delay(function(d,i) {
                         return i * duration / data[0].values.length;
                     });

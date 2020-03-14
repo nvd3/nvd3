@@ -93,9 +93,9 @@ nv.models.discreteBarChart = function() {
             // Setup containers and skeleton of chart
             var wrap = container.selectAll('g.nv-wrap.nv-discreteBarWithAxes').data([data]);
             var wrapEnter = wrap.enter().append('g').attr('class', 'nvd3 nv-wrap nv-discreteBarWithAxes');
-            wrapEnter.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
 
             var gEnter = wrapEnter.append('g');
+            gEnter.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
             var defsEnter = gEnter.append('defs');
             var g = gEnter.select('g');
 
@@ -140,7 +140,7 @@ nv.models.discreteBarChart = function() {
             var barsWrap = barsWrapAppend
                 .datum(data.filter(function(d) { return !d.disabled }));
 
-            barsWrap.transition().call(discretebar);
+            barsWrap.transition().duration(0).call(discretebar);
 
 
             var defsRect=defsEnter.append('clipPath')

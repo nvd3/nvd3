@@ -283,7 +283,7 @@ nv.models.stackedAreaChart = function() {
                     return d.color || color(d, i);
                 }).filter(function(d,i) { return !data[i].disabled; }));
 
-            var stackedWrap = stackedWrapAppend
+            stackedWrapAppend
                 .datum(data.filter(function(d) { return !d.disabled; }));
 
             // Setup Axes
@@ -349,7 +349,8 @@ nv.models.stackedAreaChart = function() {
             // Update Focus
             //============================================================
             if(!focusEnable) {
-                stackedWrap.transition().call(stacked);
+                console.log(data);
+                stackedWrapAppend.transition().call(stacked);
                 updateXAxis();
                 updateYAxis();
             } else {
@@ -460,8 +461,8 @@ nv.models.stackedAreaChart = function() {
                         //To handle situation where the stacked area chart is negative, we need to use absolute values
                         //when checking if the mouse Y value is within the stack area.
                         yValue = Math.abs(yValue);
-                        var stackedY0 = Math.abs(series.point.display.y0);
-                        var stackedY = Math.abs(series.point.display.y);
+                        var stackedY0 = Math.abs(series.point[0]);
+                        var stackedY = Math.abs(series.point[1]);
                         if ( yValue >= stackedY0 && yValue <= (stackedY + stackedY0))
                         {
                             indexToHighlight = i;
@@ -546,7 +547,7 @@ nv.models.stackedAreaChart = function() {
 
             function onBrush(extent) {
                 // Update Main (Focus)
-                var stackedWrap = g.select('.nv-focus .nv-stackedWrap')
+                stackedWrapAppend
                     .datum(
                     data.filter(function(d) { return !d.disabled; })
                         .map(function(d,i) {
@@ -561,7 +562,7 @@ nv.models.stackedAreaChart = function() {
                             };
                         })
                 );
-                stackedWrap.transition().duration(duration).call(stacked);
+                stackedWrapAppend.transition().duration(duration).call(stacked);
 
                 // Update Main (Focus) Axes
                 updateXAxis();

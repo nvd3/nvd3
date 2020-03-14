@@ -401,14 +401,14 @@ nv.models.multiBarChart = function() {
                             return !series.disabled;
                         })
                         .forEach(function(series,i) {
-                            pointIndex = x.domain().indexOf(e.pointXValue)
+                            pointIndex = x.domain().indexOf(e.pointXValue);
 
                             var point = series.values[pointIndex];
                             if (point === undefined) return;
 
                             xValue = point.x;
                             if (singlePoint === undefined) singlePoint = point;
-                            if (pointXLocation === undefined) pointXLocation = e.mouseX
+                            if (pointXLocation === undefined) pointXLocation = e.mouseX;
                             allData.push({
                                 key: series.key,
                                 value: chart.y()(point, pointIndex),
