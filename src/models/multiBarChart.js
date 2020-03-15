@@ -286,8 +286,7 @@ nv.models.multiBarChart = function() {
                             return  getTranslate(0, (j % 2 == 0 ? staggerUp : staggerDown));
                         });
 
-                    var s=xTicks.selectAll(".nv-x.nv-axis .nv-wrap g g text");
-                    var totalInBetweenTicks = (s.length>0) ? s[0].length : 0; //@todo
+                    var totalInBetweenTicks = d3.selectAll(".nv-x.nv-axis .nv-wrap g g text").nodes().length;
                     xTicks.selectAll(".nv-x.nv-axis .nv-axisMaxMin text")
                         .attr("transform", function(d,i) {
                             return getTranslate(0, (i === 0 || totalInBetweenTicks % 2 !== 0) ? staggerDown : staggerUp);

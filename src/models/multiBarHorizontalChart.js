@@ -137,30 +137,32 @@ nv.models.multiBarHorizontalChart = function() {
 
             // Setup containers and skeleton of chart
             var wrap = container.selectAll('g.nv-wrap.nv-multiBarHorizontalChart').data([data]);
-            var gEnter = wrap.enter().append('g').attr('class', 'nvd3 nv-wrap nv-multiBarHorizontalChart').append('g');
-            var g = wrap.select('g');
+            var wrapEnter=wrap.enter().append('g').attr('class', 'nvd3 nv-wrap nv-multiBarHorizontalChart');
+            wrapEnter.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+            var gEnter = wrapEnter.append('g');
+            var g = gEnter.select('g');
 
-            gEnter.append('g').attr('class', 'nv-x nv-axis');
-            gEnter.append('g').attr('class', 'nv-y nv-axis')
-                .append('g').attr('class', 'nv-zeroLine')
+            var xAxisAppend=gEnter.append('g').attr('class', 'nv-x nv-axis');
+            var yAxisAppend=gEnter.append('g').attr('class', 'nv-y nv-axis');
+            var  lineAppend=yAxisAppend.append('g').attr('class', 'nv-zeroLine')
                 .append('line');
-            gEnter.append('g').attr('class', 'nv-barsWrap');
-            gEnter.append('g').attr('class', 'nv-legendWrap');
-            gEnter.append('g').attr('class', 'nv-controlsWrap');
+            var barsWrapAppend=gEnter.append('g').attr('class', 'nv-barsWrap');
+            var legendWrapAppend=gEnter.append('g').attr('class', 'nv-legendWrap');
+            var controlsWrapAppend=gEnter.append('g').attr('class', 'nv-controlsWrap');
 
             // Legend
             if (!showLegend) {
-                g.select('.nv-legendWrap').selectAll('*').remove();
+                legendWrapAppend.selectAll('*').remove();
             } else {
                 legend.width(availableWidth - controlWidth());
 
-                g.select('.nv-legendWrap')
+                legendWrapAppend
                     .datum(data)
                     .call(legend);
                 if (legendPosition === 'bottom') {
                      margin.bottom = xAxis.height() + legend.height();
                      availableHeight = nv.utils.availableHeight(height, container, margin);
-                     g.select('.nv-legendWrap')
+                     legendWrapAppend
                          .attr('transform', 'translate(' + controlWidth() + ',' + (availableHeight + xAxis.height())  +')');
                 } else if (legendPosition === 'top') {
 
@@ -169,14 +171,14 @@ nv.models.multiBarHorizontalChart = function() {
                         availableHeight = nv.utils.availableHeight(height, container, margin);
                     }
 
-                    g.select('.nv-legendWrap')
+                    legendWrapAppend
                         .attr('transform', 'translate(' + controlWidth() + ',' + (-margin.top) +')');
                 }                    
             }
 
             // Controls
             if (!showControls) {
-                 g.select('.nv-controlsWrap').selectAll('*').remove();
+                 controlsWrapAppend.selectAll('*').remove();
             } else {
                 var controlsData = [
                     { key: controlLabels.grouped || 'Grouped', disabled: multibar.stacked() },
@@ -188,20 +190,19 @@ nv.models.multiBarHorizontalChart = function() {
                 if (controlsPosition === 'bottom') {
                      margin.bottom = xAxis.height() + legend.height();
                      availableHeight = nv.utils.availableHeight(height, container, margin);
-                    g.select('.nv-controlsWrap')
+                    controlsWrapAppend
                         .datum(controlsData)
                         .attr('transform', 'translate(0,' + (availableHeight + xAxis.height()) +')')
                         .call(controls);  
 
                 } else if (controlsPosition === 'top') {
-                    g.select('.nv-controlsWrap')
+                    controlsWrapAppend
                         .datum(controlsData)
                         .attr('transform', 'translate(0,' + (-margin.top) +')')
                         .call(controls);                        
                 }
             }
 
-            wrap.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
 
             // Main Chart Component(s)
             multibar
@@ -212,10 +213,10 @@ nv.models.multiBarHorizontalChart = function() {
                     return d.color || color(d, i);
                 }).filter(function(d,i) { return !data[i].disabled }));
 
-            var barsWrap = g.select('.nv-barsWrap')
+            barsWrapAppend
                 .datum(data.filter(function(d) { return !d.disabled }));
 
-            barsWrap.transition().call(multibar);
+            barsWrapAppend.transition().call(multibar);
 
             // Setup Axes
             if (showXAxis) {
@@ -225,9 +226,9 @@ nv.models.multiBarHorizontalChart = function() {
                 xAxis
                     .tickSizeInner(-availableWidth);
 
-                g.select('.nv-x.nv-axis').call(xAxis);
+                xAxisAppend.call(xAxis);
 
-                var xTicks = g.select('.nv-x.nv-axis').selectAll('g');
+                var xTicks = xAxisAppend.selectAll('g');
 
                 xTicks
                     .selectAll('line, text');
@@ -240,13 +241,13 @@ nv.models.multiBarHorizontalChart = function() {
                 yAxis
                     .tickSizeInner( -availableHeight);
 
-                g.select('.nv-y.nv-axis')
+                yAxisAppend
                     .attr('transform', 'translate(0,' + availableHeight + ')');
-                g.select('.nv-y.nv-axis').call(yAxis);
+                yAxisAppend.call(yAxis);
             }
 
             // Zero line
-            g.select(".nv-zeroLine line")
+            lineAppend
                 .attr("x1", y(0))
                 .attr("x2", y(0))
                 .attr("y1", 0)
@@ -260,7 +261,7 @@ nv.models.multiBarHorizontalChart = function() {
             legend.dispatch.on('stateChange', function(newState) {
                 for (var key in newState)
                     state[key] = newState[key];
-                dispatch.stateChange(state);
+                dispatch.call('stateChange', this,state);
                 chart.update();
             });
 
@@ -284,7 +285,7 @@ nv.models.multiBarHorizontalChart = function() {
                 }
 
                 state.stacked = multibar.stacked();
-                dispatch.stateChange(state);
+                dispatch.call('stateChange', this, state);
                 stacked = multibar.stacked();
 
                 chart.update();

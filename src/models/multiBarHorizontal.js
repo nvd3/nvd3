@@ -53,13 +53,48 @@ nv.models.multiBarHorizontal = function() {
             nv.utils.initSVG(container);
 
             if (stacked){
-                data = d3.stack()
+                var rawData = data;
+                data.forEach(function(aseries, i) {
+                    aseries.seriesIndex = i;
+                    aseries.values = aseries.values.map(function(d, j) {
+                        d.index = j;
+                        d.seriesIndex = i;
+                        return d;
+                    });
+                });
+                var newData=[];
+                data[0].values.forEach(function(d){
+                    newData.push({x: d.x});
+                });
+                data.forEach(function(d, y, y0) {
+                    d.display = { y: y, y0: y0 };
+                    d.values.forEach(function(d2){
+                        newData[d2.index][d.key]=d2.value;
+                    });
+                    //console.log(d.display);
+                });
+                var keys = data.map(a => a.key);
+                console.log(keys);
+                data = d3.stack().keys(keys)
                     .offset(d3.stackOffsetNone)
-                    .value(function(d){ return d.values })
+                    .value(function(d, key) {return d[key] })
                     //.y(getY)
-                (data);
+                (newData);
+            var scatterData=[]; //legacy data shape to pass to scatter
+            data.forEach(function(aseries, i) {
+                aseries.seriesIndex = i;
+                aseries.x=Array.from(Array(aseries.length).keys())
+                //console.log(i+" "+aseries.length);
+                var values = [];
+                aseries.map(function(d, j) {
+                    values.push({label: rawData[i].values[j].label, x: j, y: d[1]-d[0], y0: d[0], series: j, seriesIndex: i, index: j});
+                    return values;
+                });
+                scatterData.push({values: values, key: keys[i], seriesIndex: i});
+            });
+data=scatterData;
             }
-
+            
             //add series index and key to each data point for reference
             data.forEach(function(series, i) {
                 series.values.forEach(function(point) {
@@ -111,14 +146,14 @@ nv.models.multiBarHorizontal = function() {
             // Setup containers and skeleton of chart
             var wrap = d3.select(this).selectAll('g.nv-wrap.nv-multibarHorizontal').data([data]);
             var wrapEnter = wrap.enter().append('g').attr('class', 'nvd3 nv-wrap nv-multibarHorizontal');
+            wrapEnter.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
             var defsEnter = wrapEnter.append('defs');
             var gEnter = wrapEnter.append('g');
-            var g = wrap.select('g');
+            var g = gEnter.select('g');
 
-            gEnter.append('g').attr('class', 'nv-groups');
-            wrap.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+            var groupsAppend=gEnter.append('g').attr('class', 'nv-groups');
 
-            var groups = wrap.select('.nv-groups').selectAll('.nv-group')
+            var groups = groupsAppend.selectAll('.nv-group')
                 .data(function(d) { return d }, function(d,i) { return i });
             groups.enter().append('g')
                 .style('stroke-opacity', 1e-6)
@@ -145,7 +180,7 @@ nv.models.multiBarHorizontal = function() {
                     return 'translate(' + y0(stacked ? d.y0 : 0) + ',' + (stacked ? 0 : (j * x.bandwidth() / data.length ) + x(getX(d,i))) + ')'
                 });
 
-            barsEnter.append('rect')
+            var rectAppend=barsEnter.append('rect')
                 .attr('width', 0)
                 .attr('height', x.bandwidth() / (stacked ? 1 : data.length) )
 
@@ -201,9 +236,9 @@ nv.models.multiBarHorizontal = function() {
                 });
 
             if (getYerr(data[0],0)) {
-                barsEnter.append('polyline');
+                var polylineAppend=barsEnter.append('polyline');
 
-                bars.select('polyline')
+                polylineAppend
                     .attr('fill', 'none')
                     .attr('points', function(d,i) {
                         var xerr = getYerr(d,i)
@@ -219,10 +254,10 @@ nv.models.multiBarHorizontal = function() {
                     });
             }
 
-            barsEnter.append('text');
+            var textAppend=barsEnter.append('text');
 
             if (showValues && !stacked) {
-                bars.select('text')
+               textAppend
                     .attr('text-anchor', function(d,i) { return getY(d,i) < 0 ? 'end' : 'start' })
                     .attr('y', x.bandwidth() / (data.length * 2))
                     .attr('dy', '.32em')
@@ -239,12 +274,12 @@ nv.models.multiBarHorizontal = function() {
                     .select('text')
                     .attr('x', function(d,i) { return getY(d,i) < 0 ? -4 : y(getY(d,i)) - y(0) + 4 })
             } else {
-                bars.selectAll('text').text('');
+                textAppend.text('');
             }
 
             if (showBarLabels && !stacked) {
-                barsEnter.append('text').classed('nv-bar-label',true);
-                bars.select('text.nv-bar-label')
+                var barLabelAppend=barsEnter.append('text').classed('nv-bar-label',true);
+                barLabelAppend
                     .attr('text-anchor', function(d,i) { return getY(d,i) < 0 ? 'start' : 'end' })
                     .attr('y', x.bandwidth() / (data.length * 2))
                     .attr('dy', '.32em')

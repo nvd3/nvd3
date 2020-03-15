@@ -110,7 +110,7 @@ nv.models.focus = function(content) {
 
             brush.on('end', function () {
                 if (!syncBrushing) {
-                    dispatch.call('brush', d3.event.selection === null ? x.domain() : brush.extent());
+                    dispatch.call('brush', this, d3.event.selection === null ? x.domain() : brush.extent());
                 }
             });
 

@@ -99,13 +99,13 @@ nv.models.legend = function() {
 
             seriesEnter
                 .on('mouseover', function(d,i) {
-                    dispatch.call('legendMouseover', d,i);  //TODO: Make consistent with other event objects
+                    dispatch.call('legendMouseover', seriesEnter, d,i);  //TODO: Make consistent with other event objects
                 })
                 .on('mouseout', function(d,i) {
-                    dispatch.call('legendMouseout', d,i);
+                    dispatch.call('legendMouseout', seriesEnter, d,i);
                 })
                 .on('click', function(d,i) {
-                    dispatch.call('legendClick', d,i);
+                    dispatch.call('legendClick', seriesEnter, d,i);
                     // make sure we re-get data in case it was modified
                     var data = seriesEnter.data();
                     if (updateState) {
@@ -142,7 +142,7 @@ nv.models.legend = function() {
                                 }
                             }
                         }
-                        dispatch.call('stateChange', this, {
+                        dispatch.call('stateChange', series, {
                             disabled: data.map(function(d) { return !!d.disabled }),
                             disengaged: data.map(function(d) { return !!d.disengaged })
                         });
@@ -152,7 +152,7 @@ nv.models.legend = function() {
                 .on('dblclick', function(d,i) {
                     if (enableDoubleClick) {
                         if (vers == 'furious' && expanded) return;
-                        dispatch.call('legendDblclick', d, i);
+                        dispatch.call('legendDblclick', seriesEnter, d, i);
                         if (updateState) {
                             // make sure we re-get data in case it was modified
                             var data = seriesEnter.data();
@@ -164,7 +164,7 @@ nv.models.legend = function() {
                             });
                             d.disabled = false;
                             if (vers == 'furious') d.userDisabled = d.disabled;
-                            dispatch.call('stateChange', this, {
+                            dispatch.call('stateChange', seriesEnter, {
                                 disabled: data.map(function (d) {
                                     return !!d.disabled
                                 })
@@ -318,6 +318,11 @@ nv.models.legend = function() {
                 .style('fill', setBGColor)
                 .style('fill-opacity', setBGOpacity)
                 .style('stroke', setBGColor);
+        legendTextAppend.merge(seriesEnter);
+        seriesShape.merge(seriesEnter);
+        seriesEnter.merge(series);
+        series.merge(wrapEnter);
+        wrapEnter.merge(wrap);
         });
 
         function setTextColor(d,i) {

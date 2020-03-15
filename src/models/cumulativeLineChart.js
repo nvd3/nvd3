@@ -404,7 +404,7 @@ nv.models.cumulativeLineChart = function() {
 
                     // update state and send stateChange with new index
                     state.index = index.i;
-                    dispatch.call('stateChange', this, state);
+                    dispatch.call('stateChange', rectAppend, state);
 
                     updateZero();
                 });
@@ -415,26 +415,28 @@ nv.models.cumulativeLineChart = function() {
 
                 // update state and send stateChange with new index
                 state.index = index.i;
-                dispatch.call('stateChange', this, state);
+                dispatch.call('stateChange', lines, state);
 
                 updateZero();
             });
 
             controls.dispatch.on('legendClick', function(d,i) {
+                console.log(d);
+                console.log(i);
                 d.disabled = !d.disabled;
                 rescaleY = !d.disabled;
                 state.rescaleY = rescaleY;
                 if (!rescaleY) {
                     currentYDomain = getCurrentYDomain(data); // rescale is turned off, so set the currentYDomain
                 }
-                dispatch.call('stateChange', this, state);
+                dispatch.call('stateChange', chart, state);
                 chart.update();
             });
 
             legend.dispatch.on('stateChange', function(newState) {
                 for (var key in newState)
                     state[key] = newState[key];
-                dispatch.call('stateChange', this, state);
+                dispatch.call('stateChange', chart, state);
                 chart.update();
             });
 
