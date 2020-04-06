@@ -30,10 +30,11 @@ nv.models.furiousLegend = function() {
 
             // Setup containers and skeleton of chart
             var wrap = container.selectAll('g.nv-legend').data([data]);
-            var gEnter = wrap.enter().append('g').attr('class', 'nvd3 nv-legend').append('g');
-            var g = wrap.select('g');
+            var wrapEnter = wrap.enter().append('g').attr('class', 'nvd3 nv-legend');
+            wrapEnter.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
 
-            wrap.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+            var gEnter = wrapEnter.append('g');
+            var g = gEnter.select('g');
 
             var series = g.selectAll('.nv-series')
                 .data(function(d) {
@@ -48,27 +49,27 @@ nv.models.furiousLegend = function() {
             var seriesShape;
 
             if(vers == 'classic') {
-                seriesEnter.append('circle')
+                var circleAppend=seriesEnter.append('circle')
                     .style('stroke-width', 2)
                     .attr('class','nv-legend-symbol')
                     .attr('r', 5);
 
-                seriesShape = series.select('circle');
+                seriesShape = circleAppend.select('circle');
             } else if (vers == 'furious') {
-                seriesEnter.append('rect')
+                var rectAppend=seriesEnter.append('rect')
                     .style('stroke-width', 2)
                     .attr('class','nv-legend-symbol')
                     .attr('rx', 3)
                     .attr('ry', 3);
 
-                seriesShape = series.select('rect');
+                seriesShape = rectAppend.select('rect');
 
-                seriesEnter.append('g')
+                var checkBoxAppend=rectAppend.append('g')
                     .attr('class', 'nv-check-box')
                     .property('innerHTML','<path d="M0.5,5 L22.5,5 L22.5,26.5 L0.5,26.5 L0.5,5 Z" class="nv-box"></path><path d="M5.5,12.8618467 L11.9185089,19.2803556 L31,0.198864511" class="nv-check"></path>')
                     .attr('transform', 'translate(-10,-8)scale(0.5)');
 
-                var seriesCheckbox = series.select('.nv-check-box');
+                //var seriesCheckbox = series.select('.nv-check-box');
 
                 seriesCheckbox.each(function(d,i) {
                     d3.select(this).selectAll('path')
@@ -76,25 +77,25 @@ nv.models.furiousLegend = function() {
                 });
             }
 
-            seriesEnter.append('text')
+            var seriesText=seriesEnter.append('text')
                 .attr('text-anchor', 'start')
                 .attr('class','nv-legend-text')
                 .attr('dy', '.32em')
                 .attr('dx', '8');
 
-            var seriesText = series.select('text.nv-legend-text');
+            //var seriesText = seriesEnter.select('text.nv-legend-text');
 
-            series
+            seriesEnter
                 .on('mouseover', function(d,i) {
-                    dispatch.legendMouseover(d,i);  //TODO: Make consistent with other event objects
+                    dispatch.call('legendMouseover', d,i);  //TODO: Make consistent with other event objects
                 })
                 .on('mouseout', function(d,i) {
-                    dispatch.legendMouseout(d,i);
+                    dispatch.call('legendMouseout', d,i);
                 })
                 .on('click', function(d,i) {
-                    dispatch.legendClick(d,i);
+                    dispatch.call('legendClick', d,i);
                     // make sure we re-get data in case it was modified
-                    var data = series.data();
+                    var data = seriesEnter.data();
                     if (updateState) {
                         if(vers =='classic') {
                             if (radioButtonMode) {
@@ -129,7 +130,7 @@ nv.models.furiousLegend = function() {
                                 }
                             }
                         }
-                        dispatch.stateChange({
+                        dispatch.call('stateChange', this, {
                             disabled: data.map(function(d) { return !!d.disabled }),
                             disengaged: data.map(function(d) { return !!d.disengaged })
                         });
@@ -138,10 +139,10 @@ nv.models.furiousLegend = function() {
                 })
                 .on('dblclick', function(d,i) {
                     if(vers == 'furious' && expanded) return;
-                    dispatch.legendDblclick(d,i);
+                    dispatch.call('legendDblclick', this, d,i);
                     if (updateState) {
                         // make sure we re-get data in case it was modified
-                        var data = series.data();
+                        var data = seriesEnter.data();
                         //the default behavior of NVD3 legends, when double clicking one,
                         // is to set all other series' to false, and make the double clicked series enabled.
                         data.forEach(function(series) {
@@ -150,14 +151,14 @@ nv.models.furiousLegend = function() {
                         });
                         d.disabled = false;
                         if(vers == 'furious') d.userDisabled = d.disabled;
-                        dispatch.stateChange({
+                        dispatch.call('stateChange', this, {
                             disabled: data.map(function(d) { return !!d.disabled })
                         });
                     }
                 });
 
-            series.classed('nv-disabled', function(d) { return d.userDisabled });
-            series.exit().remove();
+            seriesEnter.classed('nv-disabled', function(d) { return d.userDisabled });
+            seriesEnter.exit().remove();
 
             seriesText
                 .attr('fill', setTextColor)
@@ -178,7 +179,7 @@ nv.models.furiousLegend = function() {
             if (align) {
 
                 var seriesWidths = [];
-                series.each(function(d,i) {
+                seriesEnter.each(function(d,i) {
                     var legendText;
                     if (keyFormatter(getKey(d)) && keyFormatter(getKey(d)).length > maxKeyLength) {
                         var trimmedKey = keyFormatter(getKey(d)).substring(0, maxKeyLength);
@@ -230,7 +231,7 @@ nv.models.furiousLegend = function() {
                     curX += columnWidths[i];
                 }
 
-                series
+                seriesEnter
                     .attr('transform', function(d, i) {
                         return 'translate(' + xPositions[i % seriesPerRow] + ',' + (5 + Math.floor(i / seriesPerRow) * versPadding) + ')';
                     });
@@ -251,7 +252,7 @@ nv.models.furiousLegend = function() {
                     newxpos = 5,
                     maxwidth = 0,
                     xpos;
-                series
+                seriesEnter
                     .attr('transform', function(d, i) {
                         var length = d3.select(this).select('text').node().getComputedTextLength() + padding;
                         xpos = newxpos;

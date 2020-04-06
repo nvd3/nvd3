@@ -31,15 +31,16 @@ nv.models.legend = function() {
 
             // Setup containers and skeleton of chart
             var wrap = container.selectAll('g.nv-legend').data([data]);
-            var gEnter = wrap.enter().append('g').attr('class', 'nvd3 nv-legend').append('g');
-            var g = wrap.select('g');
-
+            var wrapEnter = wrap.enter().append('g').attr('class', 'nvd3 nv-legend');
             if (rightAlign)
-                wrap.attr('transform', 'translate(' + (- margin.right) + ',' + margin.top + ')');
+                wrapEnter.attr('transform', 'translate(' + (- margin.right) + ',' + margin.top + ')');
             else
-                wrap.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+                wrapEnter.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+            var gEnter = wrapEnter.append('g');
+            var g = gEnter.select('g');
 
-            var series = g.selectAll('.nv-series')
+
+            var series = gEnter.selectAll('.nv-series')
                 .data(function(d) {
                     if(vers != 'furious') return d;
 
@@ -61,26 +62,26 @@ nv.models.legend = function() {
             }
 
             if(vers == 'classic') {
-                seriesEnter.append('circle')
+                var legendSymbolAppend=seriesEnter.append('circle')
                     .style('stroke-width', 2)
                     .attr('class','nv-legend-symbol')
                     .attr('r', 5);
 
-                seriesShape = series.select('.nv-legend-symbol');
+                seriesShape = legendSymbolAppend;//series.select('.nv-legend-symbol');
             } else if (vers == 'furious') {
-                seriesEnter.append('rect')
+                var legendSymbolAppend=seriesEnter.append('rect')
                     .style('stroke-width', 2)
                     .attr('class','nv-legend-symbol')
                     .attr('rx', 3)
                     .attr('ry', 3);
-                seriesShape = series.select('.nv-legend-symbol');
+                seriesShape = legendSymbolAppend;//series.select('.nv-legend-symbol');
 
-                seriesEnter.append('g')
+                var checkBoxAppend = seriesEnter.append('g')
                     .attr('class', 'nv-check-box')
                     .property('innerHTML','<path d="M0.5,5 L22.5,5 L22.5,26.5 L0.5,26.5 L0.5,5 Z" class="nv-box"></path><path d="M5.5,12.8618467 L11.9185089,19.2803556 L31,0.198864511" class="nv-check"></path>')
                     .attr('transform', 'translate(-10,-8)scale(0.5)');
 
-                var seriesCheckbox = series.select('.nv-check-box');
+                var seriesCheckbox = checkBoxAppend;
 
                 seriesCheckbox.each(function(d,i) {
                     d3.select(this).selectAll('path')
@@ -88,25 +89,25 @@ nv.models.legend = function() {
                 });
             }
 
-            seriesEnter.append('text')
+            var legendTextAppend=seriesEnter.append('text')
                 .attr('text-anchor', 'start')
                 .attr('class','nv-legend-text')
                 .attr('dy', '.32em')
                 .attr('dx', '8');
 
-            var seriesText = series.select('text.nv-legend-text');
+//            var seriesText = legendTextAppend;
 
-            series
+            seriesEnter
                 .on('mouseover', function(d,i) {
-                    dispatch.legendMouseover(d,i);  //TODO: Make consistent with other event objects
+                    dispatch.call('legendMouseover', seriesEnter, d,i);  //TODO: Make consistent with other event objects
                 })
                 .on('mouseout', function(d,i) {
-                    dispatch.legendMouseout(d,i);
+                    dispatch.call('legendMouseout', seriesEnter, d,i);
                 })
                 .on('click', function(d,i) {
-                    dispatch.legendClick(d,i);
+                    dispatch.call('legendClick', seriesEnter, d,i);
                     // make sure we re-get data in case it was modified
-                    var data = series.data();
+                    var data = seriesEnter.data();
                     if (updateState) {
                         if(vers =='classic') {
                             if (radioButtonMode) {
@@ -141,7 +142,7 @@ nv.models.legend = function() {
                                 }
                             }
                         }
-                        dispatch.stateChange({
+                        dispatch.call('stateChange', series, {
                             disabled: data.map(function(d) { return !!d.disabled }),
                             disengaged: data.map(function(d) { return !!d.disengaged })
                         });
@@ -151,10 +152,10 @@ nv.models.legend = function() {
                 .on('dblclick', function(d,i) {
                     if (enableDoubleClick) {
                         if (vers == 'furious' && expanded) return;
-                        dispatch.legendDblclick(d, i);
+                        dispatch.call('legendDblclick', seriesEnter, d, i);
                         if (updateState) {
                             // make sure we re-get data in case it was modified
-                            var data = series.data();
+                            var data = seriesEnter.data();
                             //the default behavior of NVD3 legends, when double clicking one,
                             // is to set all other series' to false, and make the double clicked series enabled.
                             data.forEach(function (series) {
@@ -163,7 +164,7 @@ nv.models.legend = function() {
                             });
                             d.disabled = false;
                             if (vers == 'furious') d.userDisabled = d.disabled;
-                            dispatch.stateChange({
+                            dispatch.call('stateChange', seriesEnter, {
                                 disabled: data.map(function (d) {
                                     return !!d.disabled
                                 })
@@ -172,10 +173,10 @@ nv.models.legend = function() {
                     }
                 });
 
-            series.classed('nv-disabled', function(d) { return d.userDisabled });
-            series.exit().remove();
+            seriesEnter.classed('nv-disabled', function(d) { return d.userDisabled });
+            seriesEnter.exit().remove();
 
-            seriesText
+            legendTextAppend
                 .attr('fill', setTextColor)
                 .text(function (d) { return keyFormatter(getKey(d)) });
 
@@ -185,7 +186,7 @@ nv.models.legend = function() {
             if (align) {
 
                 var seriesWidths = [];
-                series.each(function(d,i) {
+                seriesEnter.each(function(d,i) {
                     var legendText;
                     if (keyFormatter(getKey(d)) && keyFormatter(getKey(d)).length > maxKeyLength) {
                         var trimmedKey = keyFormatter(getKey(d)).substring(0, maxKeyLength);
@@ -237,17 +238,17 @@ nv.models.legend = function() {
                     curX += columnWidths[i];
                 }
 
-                series
+                seriesEnter
                     .attr('transform', function(d, i) {
                         return 'translate(' + xPositions[i % seriesPerRow] + ',' + (5 + Math.floor(i / seriesPerRow) * versPadding) + ')';
                     });
 
                 //position legend as far right as possible within the total width
                 if (rightAlign) {
-                    g.attr('transform', 'translate(' + (width - margin.right - legendWidth) + ',' + margin.top + ')');
+                    gEnter.attr('transform', 'translate(' + (width - margin.right - legendWidth) + ',' + margin.top + ')');
                 }
                 else {
-                    g.attr('transform', 'translate(0' + ',' + margin.top + ')');
+                    gEnter.attr('transform', 'translate(0' + ',' + margin.top + ')');
                 }
 
                 height = margin.top + margin.bottom + (Math.ceil(seriesWidths.length / seriesPerRow) * versPadding);
@@ -258,7 +259,7 @@ nv.models.legend = function() {
                     newxpos = 5,
                     maxwidth = 0,
                     xpos;
-                series
+                seriesEnter
                     .attr('transform', function(d, i) {
                         var length = d3.select(this).select('text').node().getComputedTextLength() + padding;
                         xpos = newxpos;
@@ -278,7 +279,7 @@ nv.models.legend = function() {
                     });
 
                 //position legend as far right as possible within the total width
-                g.attr('transform', 'translate(' + (width - margin.right - maxwidth) + ',' + margin.top + ')');
+                gEnter.attr('transform', 'translate(' + (width - margin.right - maxwidth) + ',' + margin.top + ')');
 
                 height = margin.top + margin.bottom + ypos + 15;
             }
@@ -287,7 +288,7 @@ nv.models.legend = function() {
                 // Size rectangles after text is placed
                 seriesShape
                     .attr('width', function(d,i) {
-                        return seriesText[0][i].getComputedTextLength() + 27;
+                        return seriesEnter.select('text.nv-legend-text').nodes()[i].getComputedTextLength() + 27;
                     })
                     .attr('height', 18)
                     .attr('y', -9)
@@ -300,7 +301,7 @@ nv.models.legend = function() {
                     // .attr('stroke', '#444')
                     .attr('opacity',0);
 
-                var seriesBG = g.select('.nv-legend-bg');
+                var seriesBG = gEnter.select('.nv-legend-bg');
 
                 seriesBG
                 .transition().duration(300)
@@ -317,6 +318,11 @@ nv.models.legend = function() {
                 .style('fill', setBGColor)
                 .style('fill-opacity', setBGOpacity)
                 .style('stroke', setBGColor);
+        legendTextAppend.merge(seriesEnter);
+        seriesShape.merge(seriesEnter);
+        seriesEnter.merge(series);
+        series.merge(wrapEnter);
+        wrapEnter.merge(wrap);
         });
 
         function setTextColor(d,i) {

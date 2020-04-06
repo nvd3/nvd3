@@ -36,7 +36,7 @@ module.exports = function(grunt) {
                     'src/tooltip.js',
                     'src/utils.js',
                     //Include all files in src/models
-                    'src/models/*.js',
+                    'src/models/*.js'
                     // example to exclude files: '!src/models/excludeMe*'
                 ],
                 dest: 'build/nv.d3.js'
@@ -93,7 +93,7 @@ module.exports = function(grunt) {
             options: {
                 processors: [
                     require('autoprefixer')({
-                        browsers: [
+                        overrideBrowserslist: [
                             'last 2 versions',
                             'last 3 iOS versions',
                             'last 2 safari versions',
@@ -126,13 +126,18 @@ module.exports = function(grunt) {
                     frameworks: [ 'mocha', 'sinon-chai' ],
                     reporters: [ 'spec', 'junit', 'coverage'],
                     singleRun: true,
+                    coverageReporter: {
+                      instrumenterOptions: {
+                        istanbul: { noCompact: true }
+                      }
+                    },
                     preprocessors: {
                         'src/*.js': ['coverage'],
                         'src/models/*.js': ['coverage'],
                         'test/mocha/*.coffee': ['coffee']
                     },
                     files: [
-                        'bower_components/d3/d3.js',
+                        'node_modules/d3/dist/d3.js',
                         'node_modules/moment/moment.js',
                         'src/*.js',
                         'src/models/*.js',
@@ -160,7 +165,7 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-contrib-watch');
     grunt.loadNpmTasks('grunt-contrib-concat');
     grunt.loadNpmTasks('grunt-contrib-jshint');
-    grunt.loadNpmTasks('grunt-contrib-uglify');
+    grunt.loadNpmTasks('grunt-contrib-uglify-es');
     grunt.loadNpmTasks('grunt-contrib-copy');
     grunt.loadNpmTasks('grunt-postcss');
     grunt.loadNpmTasks('grunt-contrib-cssmin');

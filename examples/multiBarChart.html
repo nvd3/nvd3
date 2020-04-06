@@ -2,9 +2,9 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <link href="../build/nv.d3.css" rel="stylesheet" type="text/css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.17/d3.min.js" charset="utf-8"></script>
-    <script src="../build/nv.d3.js"></script>
+    <link href="js/nv.d3.css" rel="stylesheet" type="text/css">
+    <script src="js/d3.min.js" charset="utf-8"></script>
+    <script src="js/nv.d3.js"></script>
     <script src="lib/stream_layers.js"></script>
 
     <style>
@@ -54,7 +54,7 @@
     var chart;
     nv.addGraph(function() {
         chart = nv.models.multiBarChart()
-            .barColor(d3.scale.category20().range())
+            .barColor(d3.scaleOrdinal(d3.schemePaired).range())
             .duration(300)
             .margin({bottom: 100, left: 70})
             .rotateLabels(45)

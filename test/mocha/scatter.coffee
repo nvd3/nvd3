@@ -151,7 +151,8 @@ describe 'NVD3', ->
                     ]
 
             builder.build options, sampleData4
-
+            console.log("builder.$('.nv-wrap')[0]");
+            console.log(builder.$('.nv-wrap')[0]);
             transform = builder.$('.nv-wrap')[0].getAttribute('transform')
             transform.should.equal 'translate(75,830)'
 

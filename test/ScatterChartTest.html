@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <meta charset="utf-8">
 
-<link href="../build/nv.d3.css" rel="stylesheet" type="text/css">
+<link href="../js/nv.d3.css" rel="stylesheet" type="text/css">
 <link href="teststyle.css" rel="stylesheet" type='text/css'>
-<script src="../bower_components/d3/d3.js"></script>
-<script src="../build/nv.d3.js"></script>
+<script src="../js/d3.js"></script>
+<script src="../js/nv.d3.js"></script>
 
 <body>
 <div style='position:relative;' class='with-transitions'>
@@ -145,6 +145,10 @@ defaultChartTest("test15",[
 
 defaultChartTest("test16",tinyPoints());
 
+var t = d3.transition()
+        .duration(500)
+        .ease(d3.easeLinear);
+
 function defaultChartTest(container, data, margin) {
   nv.addGraph(function() {
     var chart;
@@ -156,9 +160,9 @@ function defaultChartTest(container, data, margin) {
     if (margin) {
       chart.margin(margin);
     }
-    chart.tooltipContent(function(key) {
-        return "<h3>" + key + "</h3>";
-    });
+//    chart.tooltipContent(function(key) {
+//        return "<h3>" + key + "</h3>";
+//    });
     d3.select('#' + container + ' svg').datum(data).transition().duration(500).call(chart);
 
     nv.utils.windowResize(chart.update);
@@ -176,9 +180,9 @@ function scatterPlusLineTest(container, data) {
                   .showDistX(true).showDistY(true);
     chart.xAxis.tickFormat(d3.format('.02f'));
     chart.yAxis.tickFormat(d3.format('.02f'));
-    chart.tooltipContent(function(key) {
-        return "<h3>" + key + "</h3>";
-    });
+//    chart.tooltipContent(function(key) {
+//        return "<h3>" + key + "</h3>";
+//    });
     d3.select('#' + container + ' svg').datum(data).transition().duration(500).call(chart);
     nv.utils.windowResize(chart.update);
     return chart;
@@ -187,8 +191,8 @@ function scatterPlusLineTest(container, data) {
 
 function randomData(groups, points) { //# groups,# points per group
   var data = [],
-      shapes = ['circle', 'cross', 'triangle-up', 'triangle-down', 'diamond', 'square'],
-      random = d3.random.normal();
+      shapes = ['circle', 'cross', 'triangle-up', 'star', 'diamond', 'square'],
+      random = d3.randomNormal();
 
   for (i = 0; i < groups; i++) {
     data.push({
@@ -211,8 +215,8 @@ function randomData(groups, points) { //# groups,# points per group
 
 function randomDataSloped(slope,intercept) { //# groups,# points per group
   var data = [],
-      shapes = ['circle', 'cross', 'triangle-up', 'triangle-down', 'diamond', 'square'],
-      random = d3.random.normal();
+      shapes = ['circle', 'cross', 'triangle-up', 'star', 'diamond', 'square'],
+      random = d3.randomNormal();
 
   var groups = 2, points = 10;
   for (i = 0; i < groups; i++) {

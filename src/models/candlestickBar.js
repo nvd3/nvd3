@@ -11,8 +11,8 @@ nv.models.candlestickBar = function() {
         , height = null
         , id = Math.floor(Math.random() * 10000) //Create semi-unique ID in case user doesn't select one
         , container
-        , x = d3.scale.linear()
-        , y = d3.scale.linear()
+        , x = d3.scaleLinear()
+        , y = d3.scaleLinear()
         , getX = function(d) { return d.x }
         , getY = function(d) { return d.y }
         , getOpen = function(d) { return d.open }
@@ -75,17 +75,17 @@ nv.models.candlestickBar = function() {
             // Setup containers and skeleton of chart
             var wrap = d3.select(this).selectAll('g.nv-wrap.nv-candlestickBar').data([data[0].values]);
             var wrapEnter = wrap.enter().append('g').attr('class', 'nvd3 nv-wrap nv-candlestickBar');
+            wrapEnter.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+
             var defsEnter = wrapEnter.append('defs');
             var gEnter = wrapEnter.append('g');
             var g = wrap.select('g');
 
-            gEnter.append('g').attr('class', 'nv-ticks');
-
-            wrap.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+            var ticksAppend=gEnter.append('g').attr('class', 'nv-ticks');
 
             container
                 .on('click', function(d,i) {
-                    dispatch.chartClick({
+                    dispatch.call('chartClick', this, {
                         data: d,
                         index: i,
                         pos: d3.event,
@@ -93,24 +93,24 @@ nv.models.candlestickBar = function() {
                     });
                 });
 
-            defsEnter.append('clipPath')
+            var rectAppend=defsEnter.append('clipPath')
                 .attr('id', 'nv-chart-clip-path-' + id)
                 .append('rect');
 
-            wrap.select('#nv-chart-clip-path-' + id + ' rect')
+            rectAppend
                 .attr('width', availableWidth)
                 .attr('height', availableHeight);
 
-            g   .attr('clip-path', clipEdge ? 'url(#nv-chart-clip-path-' + id + ')' : '');
+            gEnter   .attr('clip-path', clipEdge ? 'url(#nv-chart-clip-path-' + id + ')' : '');
 
-            var ticks = wrap.select('.nv-ticks').selectAll('.nv-tick')
+            var ticks = ticksAppend.selectAll('.nv-tick')
                 .data(function(d) { return d });
             ticks.exit().remove();
 
             var tickGroups = ticks.enter().append('g');
 
             // The colors are currently controlled by CSS.
-            ticks
+            tickGroups
                 .attr('class', function(d, i, j) { return (getOpen(d, i) > getClose(d, i) ? 'nv-tick negative' : 'nv-tick positive') + ' nv-tick-' + j + '-' + i});
 
             var lines = tickGroups.append('line')
@@ -137,14 +137,14 @@ nv.models.candlestickBar = function() {
                     return open > close ? y(close) - y(open) : y(open) - y(close);
                 });
 
-            ticks.select('.nv-candlestick-lines').transition()
+            tickGroups.select('.nv-candlestick-lines').transition()
                 .attr('transform', function(d, i) { return 'translate(' + x(getX(d, i)) + ',0)'; })
                 .attr('x1', 0)
                 .attr('y1', function(d, i) { return y(getHigh(d, i)); })
                 .attr('x2', 0)
                 .attr('y2', function(d, i) { return y(getLow(d, i)); });
 
-            ticks.select('.nv-candlestick-rects').transition()
+            tickGroups.select('.nv-candlestick-rects').transition()
                 .attr('transform', function(d, i) {
                     return 'translate(' + (x(getX(d, i)) - barWidth/2) + ','
                     + (y(getY(d, i)) - (getOpen(d, i) > getClose(d, i) ? (y(getClose(d, i)) - y(getOpen(d, i))) : 0))

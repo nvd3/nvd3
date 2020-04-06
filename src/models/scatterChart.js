@@ -7,8 +7,8 @@ nv.models.scatterChart = function() {
     //------------------------------------------------------------
 
     var scatter      = nv.models.scatter()
-        , xAxis        = nv.models.axis()
-        , yAxis        = nv.models.axis()
+        , xAxis        = nv.models.axis(d3.axisBottom(d3.scaleLinear()), 'bottom')
+        , yAxis        = nv.models.axis(d3.axisLeft(d3.scaleLinear()), 'left')
         , legend       = nv.models.legend()
         , distX        = nv.models.distribution()
         , distY        = nv.models.distribution()
@@ -34,13 +34,16 @@ nv.models.scatterChart = function() {
         , dispatch = d3.dispatch('stateChange', 'changeState', 'renderEnd')
         , noData       = null
         , duration = 250
+        , t = d3.transition()
+              .duration(duration)
+              .ease(d3.easeLinear)
         , showLabels    = false
         ;
 
     scatter.xScale(x).yScale(y);
-    xAxis.orient('bottom').tickPadding(10);
+    xAxis.tickPadding(10);
     yAxis
-        .orient((rightAlignYAxis) ? 'right' : 'left')
+        //.orient((rightAlignYAxis) ? 'right' : 'left')
         .tickPadding(10)
     ;
     distX.axis('x');
@@ -137,32 +140,33 @@ nv.models.scatterChart = function() {
             // Setup containers and skeleton of chart
             var wrap = container.selectAll('g.nv-wrap.nv-scatterChart').data([data]);
             var wrapEnter = wrap.enter().append('g').attr('class', 'nvd3 nv-wrap nv-scatterChart nv-chart-' + scatter.id());
+            wrapEnter.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
             var gEnter = wrapEnter.append('g');
-            var g = wrap.select('g');
+            var g = gEnter.select('g');
 
             // background for pointer events
             gEnter.append('rect').attr('class', 'nvd3 nv-background').style("pointer-events","none");
 
-            gEnter.append('g').attr('class', 'nv-x nv-axis');
-            gEnter.append('g').attr('class', 'nv-y nv-axis');
-            gEnter.append('g').attr('class', 'nv-scatterWrap');
-            gEnter.append('g').attr('class', 'nv-regressionLinesWrap');
-            gEnter.append('g').attr('class', 'nv-distWrap');
-            gEnter.append('g').attr('class', 'nv-legendWrap');
+            var xAxisAppend=gEnter.append('g').attr('class', 'nv-x nv-axis');
+            var yAxisAppend=gEnter.append('g').attr('class', 'nv-y nv-axis');
+            var scatterWrapAppend=gEnter.append('g').attr('class', 'nv-scatterWrap');
+            var regressionLinesWrapAppend=gEnter.append('g').attr('class', 'nv-regressionLinesWrap');
+            var distWrapAppend=gEnter.append('g').attr('class', 'nv-distWrap');
+            var legendWrapAppend=gEnter.append('g').attr('class', 'nv-legendWrap');
 
             if (rightAlignYAxis) {
-                g.select(".nv-y.nv-axis")
+                yAxisAppend
                     .attr("transform", "translate(" + availableWidth + ",0)");
             }
 
             // Legend
             if (!showLegend) {
-                g.select('.nv-legendWrap').selectAll('*').remove();
+                legendWrapAppend.selectAll('*').remove();
             } else {
                 var legendWidth = availableWidth;
                 legend.width(legendWidth);
 
-                wrap.select('.nv-legendWrap')
+                var legendCall=legendWrapAppend
                     .datum(data)
                     .call(legend);
 
@@ -171,11 +175,10 @@ nv.models.scatterChart = function() {
                     availableHeight = nv.utils.availableHeight(height, container, margin);
                 }
 
-                wrap.select('.nv-legendWrap')
+                legendCall
                     .attr('transform', 'translate(0' + ',' + (-margin.top) +')');
             }
 
-            wrap.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
 
             // Main Chart Component(s)
             scatter
@@ -187,32 +190,32 @@ nv.models.scatterChart = function() {
                 }).filter(function(d,i) { return !data[i].disabled }))
                 .showLabels(showLabels);
 
-            wrap.select('.nv-scatterWrap')
+            scatterWrapAppend
                 .datum(data.filter(function(d) { return !d.disabled }))
                 .call(scatter);
 
 
-            wrap.select('.nv-regressionLinesWrap')
+            regressionLinesWrapAppend
                 .attr('clip-path', 'url(#nv-edge-clip-' + scatter.id() + ')');
 
-            var regWrap = wrap.select('.nv-regressionLinesWrap').selectAll('.nv-regLines')
+            var regWrap = regressionLinesWrapAppend.selectAll('.nv-regLines')
                 .data(function (d) {
                     return d;
                 });
 
-            regWrap.enter().append('g').attr('class', 'nv-regLines');
+            var regLinesAppend=regWrap.enter().append('g').attr('class', 'nv-regLines');
 
-            var regLine = regWrap.selectAll('.nv-regLine')
+            var regLine = regLinesAppend.selectAll('.nv-regLine')
                 .data(function (d) {
                     return [d]
                 });
 
-            regLine.enter()
+            var lineAppend=regLine.enter()
                 .append('line').attr('class', 'nv-regLine')
                 .style('stroke-opacity', 0);
 
             // don't add lines unless we have slope and intercept to use
-            regLine.filter(function(d) {
+            lineAppend.filter(function(d) {
                 return d.intercept && d.slope;
             })
                 .watchTransition(renderWatch, 'scatterPlusLineChart: regline')
@@ -236,9 +239,10 @@ nv.models.scatterChart = function() {
                 xAxis
                     .scale(x)
                     ._ticks( nv.utils.calcTicksX(availableWidth/100, data) )
-                    .tickSize( -availableHeight , 0);
+                xAxis
+                    .tickSizeInner( -availableHeight);
 
-                g.select('.nv-x.nv-axis')
+                xAxisAppend
                     .attr('transform', 'translate(0,' + y.range()[0] + ')')
                     .call(xAxis);
             }
@@ -247,9 +251,10 @@ nv.models.scatterChart = function() {
                 yAxis
                     .scale(y)
                     ._ticks( nv.utils.calcTicksY(availableHeight/36, data) )
-                    .tickSize( -availableWidth, 0);
+                yAxis
+                    .tickSizeInner( -availableWidth);
 
-                g.select('.nv-y.nv-axis')
+                yAxisAppend
                     .call(yAxis);
             }
 
@@ -261,9 +266,9 @@ nv.models.scatterChart = function() {
                 .color(data.map(function(d,i) {
                     return d.color || color(d, i);
                 }).filter(function(d,i) { return !data[i].disabled }));
-            gEnter.select('.nv-distWrap').append('g')
+            var distributionXAppend=distWrapAppend.append('g')
                 .attr('class', 'nv-distributionX');
-            g.select('.nv-distributionX')
+            distributionXAppend
                 .attr('transform', 'translate(0,' + y.range()[0] + ')')
                 .datum(data.filter(function(d) { return !d.disabled }))
                 .call(distX)
@@ -279,9 +284,9 @@ nv.models.scatterChart = function() {
                 .color(data.map(function(d,i) {
                     return d.color || color(d, i);
                 }).filter(function(d,i) { return !data[i].disabled }));
-            gEnter.select('.nv-distWrap').append('g')
+            var distributionYAppend=distWrapAppend.append('g')
                 .attr('class', 'nv-distributionY');
-            g.select('.nv-distributionY')
+            distributionYAppend
                 .attr('transform', 'translate(' + (rightAlignYAxis ? availableWidth : -distY.size() ) + ',0)')
                 .datum(data.filter(function(d) { return !d.disabled }))
                 .call(distY)
@@ -296,7 +301,7 @@ nv.models.scatterChart = function() {
             legend.dispatch.on('stateChange', function(newState) {
                 for (var key in newState)
                     state[key] = newState[key];
-                dispatch.stateChange(state);
+                dispatch.call('stateChange', that, state);
                 chart.update();
             });
 
@@ -365,7 +370,11 @@ nv.models.scatterChart = function() {
         showYAxis:  {get: function(){return showYAxis;}, set: function(_){showYAxis=_;}},
         defaultState:     {get: function(){return defaultState;}, set: function(_){defaultState=_;}},
         noData:     {get: function(){return noData;}, set: function(_){noData=_;}},
-        duration:   {get: function(){return duration;}, set: function(_){duration=_;}},
+        duration:   {get: function(){return duration;}, set: function(_){duration=_;
+            t = d3.transition()
+              .duration(duration)
+              .ease(d3.easeLinear);
+          }},
         showLabels: {get: function(){return showLabels;}, set: function(_){showLabels=_;}},
 
         // options that require extra logic in the setter
@@ -380,7 +389,7 @@ nv.models.scatterChart = function() {
         }},
         rightAlignYAxis: {get: function(){return rightAlignYAxis;}, set: function(_){
             rightAlignYAxis = _;
-            yAxis.orient( (_) ? 'right' : 'left');
+            //@todo yAxis.orient( (_) ? 'right' : 'left');
         }},
         color: {get: function(){return color;}, set: function(_){
             color = nv.utils.getColor(_);

@@ -90,7 +90,7 @@ describe 'NVD3', ->
 
         it 'formats y-Axis correctly depending on stacked style', ->
             chart = nv.models.stackedAreaChart()
-            chart.yAxis.tickFormat (d)-> "<#{d}>"
+            chart.yAxis.tickFormat (d)-> d3.format("<#{d}>")
 
             builder = new ChartBuilder chart
             builder.build options, sampleData1
@@ -102,14 +102,14 @@ describe 'NVD3', ->
                 tick.textContent.should.match /<.*?>/
 
             # Update chart to 'Expand' mode
-            chart.dispatch.changeState
+            chart.dispatch.call 'changeState', this
                 style: 'expand'
 
             chart.stacked.style().should.equal 'expand'
             newTickFormat = chart.yAxis.tickFormat()
             newTickFormat(1).should.equal '100%'
 
-            chart.dispatch.changeState
+            chart.dispatch.call 'changeState', this
                 style: 'stacked'
 
             chart.stacked.style().should.equal 'stacked'
@@ -131,7 +131,7 @@ describe 'NVD3', ->
         it 'should allow stream-center to be used', ->
             builder.model.controlOptions(['Stream_Center'])
             builder.model.update()
-            builder.model.controls.dispatch.legendClick({
+            builder.model.controls.dispatch.call('legendClick', this, {
               style: 'stream-center',
               disabled: true
             })

@@ -11,8 +11,8 @@ nv.models.sparkline = function() {
         , height = 32
         , container = null
         , animate = true
-        , x = d3.scale.linear()
-        , y = d3.scale.linear()
+        , x = d3.scaleLinear()
+        , y = d3.scaleLinear()
         , getX = function(d) { return d.x }
         , getY = function(d) { return d.y }
         , color = nv.utils.getColor(['#000'])
@@ -53,21 +53,22 @@ nv.models.sparkline = function() {
             var gEnter = wrapEnter.append('g');
             var g = wrap.select('g');
 
-            wrap.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')')
+            wrapEnter.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')')
 
-            var paths = wrap.selectAll('path')
+            var paths = wrapEnter.selectAll('path')
                 .data(function(d) { return [d] });
-            paths.enter().append('path');
             paths.exit().remove();
-            paths
+            var pathsEnter=paths.enter().append('path');
+            pathsEnter
                 .style('stroke', function(d,i) { return d.color || color(d, i) })
-                .attr('d', d3.svg.line()
+                .attr('d', d3.line()
                     .x(function(d,i) { return x(getX(d,i)) })
                     .y(function(d,i) { return y(getY(d,i)) })
             );
-
+            pathsEnter.merge(paths);
+            
             // TODO: Add CURRENT data point (Need Min, Mac, Current / Most recent)
-            var points = wrap.selectAll('circle.nv-point')
+            var points = wrapEnter.selectAll('circle.nv-point')
                 .data(function(data) {
                     var yValues = data.map(function(d, i) { return getY(d,i); });
                     function pointIndex(index) {
@@ -84,9 +85,9 @@ nv.models.sparkline = function() {
                         currentPoint = pointIndex(yValues.length - 1);
                     return [(showMinMaxPoints ? minPoint : null), (showMinMaxPoints ? maxPoint : null), (showCurrentPoint ? currentPoint : null)].filter(function (d) {return d != null;});
                 });
-            points.enter().append('circle');
             points.exit().remove();
-            points
+            var pointsEnter=points.enter().append('circle');
+            pointsEnter
                 .attr('cx', function(d,i) { return x(getX(d,d.pointIndex)) })
                 .attr('cy', function(d,i) { return y(getY(d,d.pointIndex)) })
                 .attr('r', 2)
@@ -94,6 +95,7 @@ nv.models.sparkline = function() {
                     return getX(d, d.pointIndex) == x.domain()[1] ? 'nv-point nv-currentValue' :
                             getY(d, d.pointIndex) == y.domain()[0] ? 'nv-point nv-minValue' : 'nv-point nv-maxValue'
                 });
+                pointsEnter.merge(points);
         });
         
         renderWatch.renderEnd('sparkline immediate');
@@ -121,8 +123,8 @@ nv.models.sparkline = function() {
         showCurrentPoint: {get: function(){return showCurrentPoint;}, set: function(_){showCurrentPoint=_;}},
 
         //functor options
-        x: {get: function(){return getX;}, set: function(_){getX=d3.functor(_);}},
-        y: {get: function(){return getY;}, set: function(_){getY=d3.functor(_);}},
+        x: {get: function(){return getX;}, set: function(_){getX= typeof _ === "function" ? _ : function(){return _;};}},
+        y: {get: function(){return getY;}, set: function(_){getY= typeof _ === "function" ? _ : function(){return _;};}},
 
         // options that require extra logic in the setter
         margin: {get: function(){return margin;}, set: function(_){

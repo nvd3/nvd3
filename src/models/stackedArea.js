@@ -13,19 +13,19 @@ nv.models.stackedArea = function() {
         , id = Math.floor(Math.random() * 100000) //Create semi-unique ID incase user doesn't selet one
         , container = null
         , getX = function(d) { return d.x } // accessor to get the x value from a data point
-        , getY = function(d) { return d.y } // accessor to get the y value from a data point
+        , getY = function(d) { return d[1] } // accessor to get the y value from a data point
         , defined = function(d,i) { return !isNaN(getY(d,i)) && getY(d,i) !== null } // allows a line to be not continuous when it is not defined
         , style = 'stack'
-        , offset = 'zero'
-        , order = 'default'
-        , interpolate = 'linear'  // controls the line interpolation
+        , offset = d3.stackOffsetNone
+        , order = d3.stackOrderNone
+        , interpolate = d3.curveLinear  // controls the line interpolation
         , clipEdge = false // if true, masks lines within x and y scale
         , x //can be accessed via chart.xScale()
         , y //can be accessed via chart.yScale()
         , scatter = nv.models.scatter()
         , duration = 250
-        , transformData = function(d, y0, y) { d.display = { y: y, y0: y0 }; }
-        , areaY1 = function(d) { return y(d.display.y + d.display.y0) }
+        , transformData = function(d, i, y) {d.display = { y: d.values.map(a => a.y), y0: d.values.map(a => a.y0) }; }
+        , areaY1 = function(d) { return y(d[1]); }
         , dispatch =  d3.dispatch('areaClick', 'areaMouseover', 'areaMouseout','renderEnd', 'elementClick', 'elementMouseover', 'elementMouseout')
         ;
 
@@ -63,7 +63,7 @@ nv.models.stackedArea = function() {
             y = scatter.yScale();
 
             var dataRaw = data;
-            // Injecting point index into each point because d3.layout.stack().out does not give index
+            // Injecting point index into each point because d3.stack().out does not give index
             data.forEach(function(aseries, i) {
                 aseries.seriesIndex = i;
                 aseries.values = aseries.values.map(function(d, j) {
@@ -76,27 +76,51 @@ nv.models.stackedArea = function() {
             var dataFiltered = data.filter(function(series) {
                 return !series.disabled;
             });
+            var newData=[];
+            dataFiltered[0].values.forEach(function(d){
+                newData.push({x: d.x});
+            });
+            dataFiltered.forEach(function(d, y, y0) {
+                d.display = { y: y, y0: y0 };
+                d.values.forEach(function(d2){
+                    newData[d2.index][d.key]=d2.y;
+                });
+                //console.log(d.display);
+            });
+            var keys = dataFiltered.map(a => a.key);
 
-            data = d3.layout.stack()
+            data = d3.stack().keys(keys)
                 .order(order)
                 .offset(offset)
-                .values(function(d) { return d.values })  //TODO: make values customizeable in EVERY model in this fashion
-                .x(getX)
-                .y(getY)
-                .out(transformData)
-            (dataFiltered);
+                .value(function(d, key) {return d[key] })  //TODO: make values customizeable in EVERY model in this fashion
+//                .x(getX)
+//                .y(getY)
+//                .out(transformData)
+            (newData);
+            var scatterData=[]; //legacy data shape to pass to scatter
+            data.forEach(function(aseries, i) {
+                aseries.seriesIndex = i;
+                aseries.x=Array.from(Array(aseries.length).keys())
+                //console.log(i+" "+aseries.length);
+                var values = [];
+                aseries.map(function(d, j) {
+                    values.push({x: j, y: d[1]-d[0], y0: d[0], series: j, seriesIndex: i, index: j, display: {y: d[1]-d[0], y0: d[0]}});
+                    return values;
+                });
+                scatterData.push({values: values, key: keys[i], seriesIndex: i});
+            });
 
             // Setup containers and skeleton of chart
             var wrap = container.selectAll('g.nv-wrap.nv-stackedarea').data([data]);
             var wrapEnter = wrap.enter().append('g').attr('class', 'nvd3 nv-wrap nv-stackedarea');
+            wrapEnter.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+
             var defsEnter = wrapEnter.append('defs');
             var gEnter = wrapEnter.append('g');
-            var g = wrap.select('g');
+            var g = gEnter.select('g');
 
-            gEnter.append('g').attr('class', 'nv-areaWrap');
-            gEnter.append('g').attr('class', 'nv-scatterWrap');
-
-            wrap.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+            var areaWrapAppend=gEnter.append('g').attr('class', 'nv-areaWrap');
+            var scatterWrapAppend=gEnter.append('g').attr('class', 'nv-scatterWrap');
 
             // If the user has not specified forceY, make sure 0 is included in the domain
             // Otherwise, use user-specified values for forceY
@@ -111,51 +135,50 @@ nv.models.stackedArea = function() {
                 .y(function(d) {
                     if (d.display !== undefined) { return d.display.y + d.display.y0; }
                 })
-                .color(data.map(function(d,i) {
+                .color(scatterData.map(function(d,i) {
                     d.color = d.color || color(d, d.seriesIndex);
                     return d.color;
                 }));
 
-            var scatterWrap = g.select('.nv-scatterWrap')
-                .datum(data);
+            var scatterWrap = scatterWrapAppend
+                .datum(scatterData);
 
             scatterWrap.call(scatter);
 
-            defsEnter.append('clipPath')
+            var rectAppend=defsEnter.append('clipPath')
                 .attr('id', 'nv-edge-clip-' + id)
                 .append('rect');
 
-            wrap.select('#nv-edge-clip-' + id + ' rect')
+            rectAppend
                 .attr('width', availableWidth)
                 .attr('height', availableHeight);
 
-            g.attr('clip-path', clipEdge ? 'url(#nv-edge-clip-' + id + ')' : '');
+            if(clipEdge)gEnter.attr('clip-path', clipEdge ? 'url(#nv-edge-clip-' + id + ')' : '');
 
-            var area = d3.svg.area()
+            var area = d3.area()
                 .defined(defined)
-                .x(function(d,i)  { return x(getX(d,i)) })
+                .x(function(d,i)  {return x(d.data.x) })
                 .y0(function(d) {
-                    return y(d.display.y0)
+                    return y(d[0]);
                 })
                 .y1(areaY1)
-                .interpolate(interpolate);
+                .curve(interpolate);
 
-            var zeroArea = d3.svg.area()
+            var zeroArea = d3.area()
                 .defined(defined)
-                .x(function(d,i)  { return x(getX(d,i)) })
-                .y0(function(d) { return y(d.display.y0) })
-                .y1(function(d) { return y(d.display.y0) });
+                .x(function(d,i)  { return x(d.data.x) })
+                .y0(function(d) { return y(d[0]) })
+                .y1(function(d) { return y(d[0]) });
 
-            var path = g.select('.nv-areaWrap').selectAll('path.nv-area')
+            var path = areaWrapAppend.selectAll('path.nv-area')
                 .data(function(d) { return d });
 
-            path.enter().append('path').attr('class', function(d,i) { return 'nv-area nv-area-' + i })
-                .attr('d', function(d,i){
-                    return zeroArea(d.values, d.seriesIndex);
-                })
+            path.exit().remove();
+            var pathEnter=path.enter().append('path').attr('class', function(d,i) { return 'nv-area nv-area-' + i })
+                .attr('d', zeroArea)
                 .on('mouseover', function(d,i) {
                     d3.select(this).classed('hover', true);
-                    dispatch.areaMouseover({
+                    dispatch.call('areaMouseover', this, {
                         point: d,
                         series: d.key,
                         pos: [d3.event.pageX, d3.event.pageY],
@@ -164,7 +187,7 @@ nv.models.stackedArea = function() {
                 })
                 .on('mouseout', function(d,i) {
                     d3.select(this).classed('hover', false);
-                    dispatch.areaMouseout({
+                    dispatch.call('areaMouseout', this, {
                         point: d,
                         series: d.key,
                         pos: [d3.event.pageX, d3.event.pageY],
@@ -173,7 +196,7 @@ nv.models.stackedArea = function() {
                 })
                 .on('click', function(d,i) {
                     d3.select(this).classed('hover', false);
-                    dispatch.areaClick({
+                    dispatch.call('areaClick', this, {
                         point: d,
                         series: d.key,
                         pos: [d3.event.pageX, d3.event.pageY],
@@ -181,15 +204,13 @@ nv.models.stackedArea = function() {
                     });
                 });
 
-            path.exit().remove();
-            path.style('fill', function(d,i){
+            pathEnter.style('fill', function(d,i){
                     return d.color || color(d, d.seriesIndex)
                 })
                 .style('stroke', function(d,i){ return d.color || color(d, d.seriesIndex) });
-            path.watchTransition(renderWatch,'stackedArea path')
-                .attr('d', function(d,i) {
-                    return area(d.values,i)
-                });
+            pathEnter.watchTransition(renderWatch,'stackedArea path')
+                .attr('d', area);
+            //pathEnter.merge(path);
 
             //============================================================
             // Event Handling/Dispatching (in chart's scope)
@@ -241,9 +262,9 @@ nv.models.stackedArea = function() {
     chart.dispatch = dispatch;
     chart.scatter = scatter;
 
-    scatter.dispatch.on('elementClick', function(){ dispatch.elementClick.apply(this, arguments); });
-    scatter.dispatch.on('elementMouseover', function(){ dispatch.elementMouseover.apply(this, arguments); });
-    scatter.dispatch.on('elementMouseout', function(){ dispatch.elementMouseout.apply(this, arguments); });
+    scatter.dispatch.on('elementClick', function(){ dispatch.apply('elementClick', this, arguments); });
+    scatter.dispatch.on('elementMouseover', function(){ dispatch.apply('elementMouseover', this, arguments); });
+    scatter.dispatch.on('elementMouseout', function(){ dispatch.apply('elementMouseout', this, arguments); });
 
     chart.interpolate = function(_) {
         if (!arguments.length) return interpolate;
@@ -274,11 +295,11 @@ nv.models.stackedArea = function() {
         interpolate:    {get: function(){return interpolate;}, set: function(_){interpolate=_;}},
 
         // simple functor options
-        x:     {get: function(){return getX;}, set: function(_){getX = d3.functor(_);}},
-        y:     {get: function(){return getY;}, set: function(_){getY = d3.functor(_);}},
+        x:     {get: function(){return getX;}, set: function(_){getX = typeof _ === "function" ? _ : function(){return _;};}},
+        y:     {get: function(){return getY;}, set: function(_){getY = typeof _ === "function" ? _ : function(){return _;};}},
 
-        areaY1:     {get: function(){return areaY1;}, set: function(_){ areaY1 = d3.functor(_);}},
-        transformData:     {get: function(){return transformData;}, set: function(_){ transformData = d3.functor(_);}},
+        areaY1:     {get: function(){return areaY1;}, set: function(_){ areaY1 = typeof _ === "function" ? _ : function(){return _;};}},
+        transformData:     {get: function(){return transformData;}, set: function(_){ transformData = typeof _ === "function" ? _ : function(){return _;};}},
 
         // options that require extra logic in the setter
         margin: {get: function(){return margin;}, set: function(_){
@@ -292,26 +313,27 @@ nv.models.stackedArea = function() {
         }},
         style: {get: function(){return style;}, set: function(_){
             style = _;
+            console.log(style);
             switch (style) {
                 case 'stack':
-                    chart.offset('zero');
-                    chart.order('default');
+                    chart.offset(d3.stackOffsetNone);
+                    chart.order(d3.stackOrderNone);
                     break;
                 case 'stream':
-                    chart.offset('wiggle');
-                    chart.order('inside-out');
+                    chart.offset(d3.stackOffsetWiggle);
+                    chart.order(d3.stackOrderInsideOut);
                     break;
                 case 'stream_center':
-                    chart.offset('silhouette');
-                    chart.order('inside-out');
+                    chart.offset(d3.stackOffsetSilhouette);
+                    chart.order(d3.stackOrderNone);
                     break;
                 case 'expand':
-                    chart.offset('expand');
-                    chart.order('default');
+                    chart.offset(d3.stackOffsetExpand);
+                    chart.order(d3.stackOrderNone);
                     break;
                 case 'stack_percent':
                     chart.offset(chart.d3_stackedOffset_stackPercent);
-                    chart.order('default');
+                    chart.order(d3.stackOrderNone);
                     break;
             }
         }},

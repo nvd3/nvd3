@@ -11,8 +11,8 @@ nv.models.historicalBar = function() {
         , height = null
         , id = Math.floor(Math.random() * 10000) //Create semi-unique ID in case user doesn't select one
         , container = null
-        , x = d3.scale.linear()
-        , y = d3.scale.linear()
+        , x = d3.scaleLinear()
+        , y = d3.scaleLinear()
         , getX = function(d) { return d.x }
         , getY = function(d) { return d.y }
         , forceX = []
@@ -65,16 +65,16 @@ nv.models.historicalBar = function() {
             // Setup containers and skeleton of chart
             var wrap = container.selectAll('g.nv-wrap.nv-historicalBar-' + id).data([data[0].values]);
             var wrapEnter = wrap.enter().append('g').attr('class', 'nvd3 nv-wrap nv-historicalBar-' + id);
+            wrapEnter.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
             var defsEnter = wrapEnter.append('defs');
             var gEnter = wrapEnter.append('g');
-            var g = wrap.select('g');
+            var g = wrapEnter.select('g');
 
-            gEnter.append('g').attr('class', 'nv-bars');
-            wrap.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+            var barsAppend=gEnter.append('g').attr('class', 'nv-bars');
 
             container
                 .on('click', function(d,i) {
-                    dispatch.chartClick({
+                    dispatch.call('chartClick', this, {
                         data: d,
                         index: i,
                         pos: d3.event,
@@ -82,21 +82,21 @@ nv.models.historicalBar = function() {
                     });
                 });
 
-            defsEnter.append('clipPath')
+            var  defsRect=defsEnter.append('clipPath')
                 .attr('id', 'nv-chart-clip-path-' + id)
                 .append('rect');
 
-            wrap.select('#nv-chart-clip-path-' + id + ' rect')
+            defsRect
                 .attr('width', availableWidth)
                 .attr('height', availableHeight);
 
             g.attr('clip-path', clipEdge ? 'url(#nv-chart-clip-path-' + id + ')' : '');
 
-            var bars = wrap.select('.nv-bars').selectAll('.nv-bar')
+            var bars = barsAppend.selectAll('.nv-bar')
                 .data(function(d) { return d }, function(d,i) {return getX(d,i)});
             bars.exit().remove();
 
-            bars.enter().append('rect')
+            var rectAppend=bars.enter().append('rect')
                 .attr('x', 0 )
                 .attr('y', function(d,i) {  return nv.utils.NaNtoZero(y(Math.max(0, getY(d,i)))) })
                 .attr('height', function(d,i) { return nv.utils.NaNtoZero(Math.abs(y(getY(d,i)) - y(0))) })
@@ -104,7 +104,7 @@ nv.models.historicalBar = function() {
                 .on('mouseover', function(d,i) {
                     if (!interactive) return;
                     d3.select(this).classed('hover', true);
-                    dispatch.elementMouseover({
+                    dispatch.call('elementMouseover', this, {
                         data: d,
                         index: i,
                         color: d3.select(this).style("fill")
@@ -114,7 +114,7 @@ nv.models.historicalBar = function() {
                 .on('mouseout', function(d,i) {
                     if (!interactive) return;
                     d3.select(this).classed('hover', false);
-                    dispatch.elementMouseout({
+                    dispatch.call('elementMouseout', this, {
                         data: d,
                         index: i,
                         color: d3.select(this).style("fill")
@@ -122,7 +122,7 @@ nv.models.historicalBar = function() {
                 })
                 .on('mousemove', function(d,i) {
                     if (!interactive) return;
-                    dispatch.elementMousemove({
+                    dispatch.call('elementMousemove', this, {
                         data: d,
                         index: i,
                         color: d3.select(this).style("fill")
@@ -131,7 +131,7 @@ nv.models.historicalBar = function() {
                 .on('click', function(d,i) {
                     if (!interactive) return;
                     var element = this;
-                    dispatch.elementClick({
+                    dispatch.call('elementClick', this, {
                         data: d,
                         index: i,
                         color: d3.select(this).style("fill"),
@@ -142,7 +142,7 @@ nv.models.historicalBar = function() {
                 })
                 .on('dblclick', function(d,i) {
                     if (!interactive) return;
-                    dispatch.elementDblClick({
+                    dispatch.call('elementDblClick', this, {
                         data: d,
                         index: i,
                         color: d3.select(this).style("fill")
@@ -150,15 +150,15 @@ nv.models.historicalBar = function() {
                     d3.event.stopPropagation();
                 });
 
-            bars
+            rectAppend
                 .attr('fill', function(d,i) { return color(d, i); })
-                .attr('class', function(d,i,j) { return (getY(d,i) < 0 ? 'nv-bar negative' : 'nv-bar positive') + ' nv-bar-' + j + '-' + i })
+                .attr('class', function(d,i,j) { return (getY(d,i) < 0 ? 'nv-bar negative' : 'nv-bar positive') + ' nv-bar-' + 0 + '-' + i })
                 .watchTransition(renderWatch, 'bars')
                 .attr('transform', function(d,i) { return 'translate(' + (x(getX(d,i)) - availableWidth / data[0].values.length * .45) + ',0)'; })
                 //TODO: better width calculations that don't assume always uniform data spacing;w
                 .attr('width', (availableWidth / data[0].values.length) * .9 );
 
-            bars.watchTransition(renderWatch, 'bars')
+            rectAppend.watchTransition(renderWatch, 'bars')
                 .attr('y', function(d,i) {
                     var rval = getY(d,i) < 0 ?
                         y(0) :

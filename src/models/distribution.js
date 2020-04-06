@@ -11,7 +11,7 @@ nv.models.distribution = function() {
         , axis = 'x' // 'x' or 'y'... horizontal or vertical
         , getData = function(d) { return d[axis] }  // defaults d.x or d.y
         , color = nv.utils.defaultColor()
-        , scale = d3.scale.linear()
+        , scale = d3.scaleLinear()
         , domain
         , duration = 250
         , dispatch = d3.dispatch('renderEnd')
@@ -51,19 +51,18 @@ nv.models.distribution = function() {
 
             var wrap = container.selectAll('g.nv-distribution').data([data]);
             var wrapEnter = wrap.enter().append('g').attr('class', 'nvd3 nv-distribution');
+            wrapEnter.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')')
+
             var gEnter = wrapEnter.append('g');
             var g = wrap.select('g');
-
-            wrap.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')')
 
             //------------------------------------------------------------
 
 
-            var distWrap = g.selectAll('g.nv-dist')
+            var distWrap = gEnter.selectAll('g.nv-dist')
                 .data(function(d) { return d }, function(d) { return d.key });
 
-            distWrap.enter().append('g');
-            distWrap
+            distWrap.enter().append('g')
                 .attr('class', function(d,i) { return 'nv-dist nv-series-' + i })
                 .style('stroke', function(d,i) { return color(d, i) });
 
@@ -131,7 +130,7 @@ nv.models.distribution = function() {
 
     chart.getData = function(_) {
         if (!arguments.length) return getData;
-        getData = d3.functor(_);
+        getData = typeof _ === "function" ? _ : function() {return _;};
         return chart;
     };
 

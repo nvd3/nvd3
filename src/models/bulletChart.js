@@ -50,28 +50,28 @@ nv.models.bulletChart = function() {
                 container.selectAll('.nv-noData').remove();
             }
 
-            var rangez = ranges.call(this, d, i).slice().sort(d3.descending),
+                var rangez = ranges.call(this, d, i).slice().sort(d3.descending),
                 markerz = markers.call(this, d, i).slice().sort(d3.descending),
                 measurez = measures.call(this, d, i).slice().sort(d3.descending);
 
             // Setup containers and skeleton of chart
             var wrap = container.selectAll('g.nv-wrap.nv-bulletChart').data([d]);
+            wrap.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+
             var wrapEnter = wrap.enter().append('g').attr('class', 'nvd3 nv-wrap nv-bulletChart');
             var gEnter = wrapEnter.append('g');
             var g = wrap.select('g');
 
-            gEnter.append('g').attr('class', 'nv-bulletWrap');
-            gEnter.append('g').attr('class', 'nv-titles');
-
-            wrap.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+            var bulletWrapAppend=gEnter.append('g').attr('class', 'nv-bulletWrap');
+            var titlesAppend=gEnter.append('g').attr('class', 'nv-titles');
 
             // Compute the new x-scale.
-            var x1 = d3.scale.linear()
+            var x1 = d3.scaleLinear()
                 .domain([0, Math.max(rangez[0], (markerz[0] || 0), measurez[0])])  // TODO: need to allow forceX and forceY, and xDomain, yDomain
                 .range(reverse ? [availableWidth, 0] : [0, availableWidth]);
 
             // Retrieve the old x-scale, if this is an update.
-            var x0 = this.__chart__ || d3.scale.linear()
+            var x0 = this.__chart__ || d3.scaleLinear()
                 .domain([0, Infinity])
                 .range(x1.range());
 
@@ -81,7 +81,7 @@ nv.models.bulletChart = function() {
             var w0 = function(d) { return Math.abs(x0(d) - x0(0)) }, // TODO: could optimize by precalculating x0(0) and x1(0)
                 w1 = function(d) { return Math.abs(x1(d) - x1(0)) };
 
-            var title = gEnter.select('.nv-titles').append('g')
+            var title = titlesAppend.append('g')
                 .attr('text-anchor', 'end')
                 .attr('transform', 'translate(-6,' + (height - margin.top - margin.bottom) / 2 + ')');
             title.append('text')
@@ -97,8 +97,8 @@ nv.models.bulletChart = function() {
                 .width(availableWidth)
                 .height(availableHeight);
 
-            var bulletWrap = g.select('.nv-bulletWrap');
-            d3.transition(bulletWrap).call(bullet);
+            var bulletWrap = bulletWrapAppend
+                              .transition().call(bullet);
 
             // Compute the tick format.
             var format = tickFormat || x1.tickFormat( availableWidth / 100 );
@@ -119,14 +119,14 @@ nv.models.bulletChart = function() {
                 .attr('y1', availableHeight)
                 .attr('y2', availableHeight * 7 / 6);
 
-            tickEnter.append('text')
+            var textAppend=tickEnter.append('text')
                 .attr('text-anchor', 'middle')
                 .attr('dy', '1em')
                 .attr('y', availableHeight * 7 / 6)
                 .text(format);
 
             // Transition the updating ticks to the new scale, x1.
-            var tickUpdate = d3.transition(tick)
+            var tickUpdate = tick
                 .transition()
                 .duration(bullet.duration())
                 .attr('transform', function(d) { return 'translate(' + x1(d) + ',0)' })
@@ -140,7 +140,7 @@ nv.models.bulletChart = function() {
                 .attr('y', availableHeight * 7 / 6);
 
             // Transition the exiting ticks to the new scale, x1.
-            d3.transition(tick.exit())
+            tickEnter
                 .transition()
                 .duration(bullet.duration())
                 .attr('transform', function(d) { return 'translate(' + x1(d) + ',0)' })
@@ -148,7 +148,7 @@ nv.models.bulletChart = function() {
                 .remove();
         });
 
-        d3.timer.flush();
+        d3.timerFlush();
         return chart;
     }
 

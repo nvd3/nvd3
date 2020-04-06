@@ -33,6 +33,9 @@ nv.models.tooltip = function() {
         ,   lastPosition = { left: null, top: null } // Last position the tooltip was in.
         ,   enabled = true  // True -> tooltips are rendered. False -> don't render tooltips.
         ,   duration = 100 // Tooltip movement duration, in ms.
+        , tDelay = d3.transition()
+                    .delay(hideDelay)
+                    .duration(0)
         ,   headerEnabled = true // If is to show the tooltip header.
         ,   nvPointerEventsClass = "nv-pointer-events-none" // CSS class to specify whether element should not have mouse events.
     ;
@@ -106,7 +109,7 @@ nv.models.tooltip = function() {
 
         trowEnter.selectAll("td").each(function(p) {
             if (p.highlight) {
-                var opacityScale = d3.scale.linear().domain([0,1]).range(["#fff",p.color]);
+                var opacityScale = d3.scaleLinear().domain([0,1]).range(["#fff",p.color]);
                 var opacity = 0.6;
                 d3.select(this)
                     .style("border-bottom-color", opacityScale(opacity))
@@ -227,9 +230,7 @@ nv.models.tooltip = function() {
             if (hidden) {
                 tooltip
                     .interrupt()
-                    .transition()
-                    .delay(hideDelay)
-                    .duration(0)
+                    .transition(tDelay)
                     .style('opacity', 0);
             } else {
                 // using tooltip.style('transform') returns values un-usable for tween
@@ -237,11 +238,13 @@ nv.models.tooltip = function() {
                 var new_translate = 'translate(' + Math.round(left) + 'px, ' + Math.round(top) + 'px)';
                 var translateInterpolator = d3.interpolateString(old_translate, new_translate);
                 var is_hidden = tooltip.style('opacity') < 0.1;
+                var t = d3.transition()
+                      .duration(is_hidden ? 0 : duration)
+                      .ease(d3.easeLinear);
 
                 tooltip
                     .interrupt() // cancel running transitions
-                    .transition()
-                    .duration(is_hidden ? 0 : duration)
+                    .transition(t)
                     // using tween since some versions of d3 can't auto-tween a translate on a div
                     .styleTween('transform', function (d) {
                         return translateInterpolator;
@@ -312,7 +315,11 @@ nv.models.tooltip = function() {
         snapDistance: {get: function(){return snapDistance;}, set: function(_){snapDistance=_;}},
         classes: {get: function(){return classes;}, set: function(_){classes=_;}},
         enabled: {get: function(){return enabled;}, set: function(_){enabled=_;}},
-        hideDelay: {get: function(){return hideDelay;}, set: function(_){hideDelay=_;}},
+        hideDelay: {get: function(){return hideDelay;}, set: function(_){hideDelay=_;
+            tDelay = d3.transition()
+                    .delay(hideDelay)
+                    .duration(0);
+        }},
         contentGenerator: {get: function(){return contentGenerator;}, set: function(_){contentGenerator=_;}},
         valueFormatter: {get: function(){return valueFormatter;}, set: function(_){valueFormatter=_;}},
         headerFormatter: {get: function(){return headerFormatter;}, set: function(_){headerFormatter=_;}},

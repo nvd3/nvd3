@@ -7,8 +7,8 @@ nv.models.cumulativeLineChart = function() {
     //------------------------------------------------------------
 
     var lines = nv.models.line()
-        , xAxis = nv.models.axis()
-        , yAxis = nv.models.axis()
+        , xAxis = nv.models.axis(d3.axisBottom(d3.scaleLinear()), 'bottom')
+        , yAxis = nv.models.axis(d3.axisLeft(d3.scaleLinear()), 'left')
         , legend = nv.models.legend()
         , controls = nv.models.legend()
         , interactiveLayer = nv.interactiveGuideline()
@@ -37,14 +37,17 @@ nv.models.cumulativeLineChart = function() {
         , dispatch = d3.dispatch('stateChange', 'changeState', 'renderEnd')
         , transitionDuration = 250
         , duration = 250
+        , t = d3.transition()
+              .duration(duration)
+              .ease(d3.easeLinear)
         , noErrorCheck = false  //if set to TRUE, will bypass an error check in the indexify function.
         ;
 
     state.index = 0;
     state.rescaleY = rescaleY;
 
-    xAxis.orient('bottom').tickPadding(7);
-    yAxis.orient((rightAlignYAxis) ? 'right' : 'left');
+    xAxis.tickPadding(7);
+    //yAxis.orient((rightAlignYAxis) ? 'right' : 'left');
 
     tooltip.valueFormatter(function(d, i) {
         return yAxis.tickFormat()(d, i);
@@ -58,7 +61,7 @@ nv.models.cumulativeLineChart = function() {
     // Private Variables
     //------------------------------------------------------------
 
-    var dx = d3.scale.linear()
+    var dx = d3.scaleLinear()
         , index = {i: 0, x: 0}
         , renderWatch = nv.utils.renderWatch(dispatch, duration)
         , currentYDomain
@@ -128,10 +131,10 @@ nv.models.cumulativeLineChart = function() {
                 }
             }
 
-            var indexDrag = d3.behavior.drag()
-                .on('dragstart', dragStart)
+            var indexDrag = d3.drag()
+                .on('start', dragStart)
                 .on('drag', dragMove)
-                .on('dragend', dragEnd);
+                .on('end', dragEnd);
 
 
             function dragStart(d,i) {
@@ -151,7 +154,7 @@ nv.models.cumulativeLineChart = function() {
 
                 // update state and send stateChange with new index
                 state.index = index.i;
-                dispatch.stateChange(state);
+                dispatch.call('stateChange', this, state);
             }
 
             // Display No Data message if there's nothing to show.
@@ -188,25 +191,28 @@ nv.models.cumulativeLineChart = function() {
             // Setup containers and skeleton of chart
             var interactivePointerEvents = (useInteractiveGuideline) ? "none" : "all";
             var wrap = container.selectAll('g.nv-wrap.nv-cumulativeLine').data([data]);
-            var gEnter = wrap.enter().append('g').attr('class', 'nvd3 nv-wrap nv-cumulativeLine').append('g');
-            var g = wrap.select('g');
+            var wrapEnter=wrap.enter().append('g').attr('class', 'nvd3 nv-wrap nv-cumulativeLine');
+            wrapEnter.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
 
-            gEnter.append('g').attr('class', 'nv-interactive');
-            gEnter.append('g').attr('class', 'nv-x nv-axis').style("pointer-events","none");
-            gEnter.append('g').attr('class', 'nv-y nv-axis');
-            gEnter.append('g').attr('class', 'nv-background');
-            gEnter.append('g').attr('class', 'nv-linesWrap').style("pointer-events",interactivePointerEvents);
-            gEnter.append('g').attr('class', 'nv-avgLinesWrap').style("pointer-events","none");
-            gEnter.append('g').attr('class', 'nv-legendWrap');
-            gEnter.append('g').attr('class', 'nv-controlsWrap');
+            var gEnter = wrapEnter.append('g');
+            var g = gEnter.select('g');
+
+            var interactiveAppend=gEnter.append('g').attr('class', 'nv-interactive');
+            var xAxisAppend=gEnter.append('g').attr('class', 'nv-x nv-axis').style("pointer-events","none");
+            var yAxisAppend=gEnter.append('g').attr('class', 'nv-y nv-axis');
+            var backgroundAppend=gEnter.append('g').attr('class', 'nv-background');
+            var linesWrapAppend=gEnter.append('g').attr('class', 'nv-linesWrap').style("pointer-events",interactivePointerEvents);
+            var avgLinesWrapAppend=gEnter.append('g').attr('class', 'nv-avgLinesWrap').style("pointer-events","none");
+            var legendWrapAppend=gEnter.append('g').attr('class', 'nv-legendWrap');
+            var controlsWrapAppend=gEnter.append('g').attr('class', 'nv-controlsWrap');
 
             // Legend
             if (!showLegend) {
-                g.select('.nv-legendWrap').selectAll('*').remove();
+                legendWrapAppend.selectAll('*').remove();
             } else {
                 legend.width(availableWidth);
 
-                g.select('.nv-legendWrap')
+                legendWrapAppend
                     .datum(data)
                     .call(legend);
 
@@ -215,13 +221,13 @@ nv.models.cumulativeLineChart = function() {
                     availableHeight = nv.utils.availableHeight(height, container, margin);
                 }
 
-                g.select('.nv-legendWrap')
+                legendWrapAppend
                     .attr('transform', 'translate(0,' + (-margin.top) +')')
             }
 
             // Controls
             if (!showControls) {
-                 g.select('.nv-controlsWrap').selectAll('*').remove();
+                 controlsWrapAppend.selectAll('*').remove();
             } else {
                 var controlsData = [
                     { key: 'Re-scale y-axis', disabled: !rescaleY }
@@ -234,25 +240,23 @@ nv.models.cumulativeLineChart = function() {
                     .margin({top: 5, right: 0, bottom: 5, left: 20})
                 ;
 
-                g.select('.nv-controlsWrap')
+                controlsWrapAppend
                     .datum(controlsData)
                     .attr('transform', 'translate(0,' + (-margin.top) +')')
                     .call(controls);
             }
 
-            wrap.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
-
             if (rightAlignYAxis) {
-                g.select(".nv-y.nv-axis")
+                yAxisAppend
                     .attr("transform", "translate(" + availableWidth + ",0)");
             }
 
             // Show error if index point value is 0 (division by zero avoided)
             var tempDisabled = data.filter(function(d) { return d.tempDisabled });
 
-            wrap.select('.tempDisabled').remove(); //clean-up and prevent duplicates
+            wrapEnter.select('.tempDisabled').remove(); //clean-up and prevent duplicates
             if (tempDisabled.length) {
-                wrap.append('text').attr('class', 'tempDisabled')
+                wrapEnter.append('text').attr('class', 'tempDisabled')
                     .attr('x', availableWidth / 2)
                     .attr('y', '-.71em')
                     .style('text-anchor', 'end')
@@ -267,13 +271,13 @@ nv.models.cumulativeLineChart = function() {
                     .margin({left:margin.left,top:margin.top})
                     .svgContainer(container)
                     .xScale(x);
-                wrap.select(".nv-interactive").call(interactiveLayer);
+                interactiveAppend.call(interactiveLayer);
             }
 
-            gEnter.select('.nv-background')
+            var rectAppend=backgroundAppend
                 .append('rect');
 
-            g.select('.nv-background rect')
+            rectAppend
                 .attr('width', availableWidth)
                 .attr('height', availableHeight);
 
@@ -286,7 +290,7 @@ nv.models.cumulativeLineChart = function() {
                     return d.color || color(d, i);
                 }).filter(function(d,i) { return !data[i].disabled && !data[i].tempDisabled; }));
 
-            var linesWrap = g.select('.nv-linesWrap')
+            var linesWrap = linesWrapAppend
                 .datum(data.filter(function(d) { return  !d.disabled && !d.tempDisabled }));
 
             linesWrap.call(lines);
@@ -300,7 +304,7 @@ nv.models.cumulativeLineChart = function() {
                 return !d.disabled && !!average(d);
             });
 
-            var avgLines = g.select(".nv-avgLinesWrap").selectAll("line")
+            var avgLines = avgLinesWrapAppend.selectAll("line")
                 .data(avgLineData, function(d) { return d.key; });
 
             var getAvgLineY = function(d) {
@@ -311,7 +315,9 @@ nv.models.cumulativeLineChart = function() {
                 return yVal;
             };
 
-            avgLines.enter()
+            avgLines.exit().remove();
+
+            var avgLinesEnter=avgLines.enter()
                 .append('line')
                 .style('stroke-width',2)
                 .style('stroke-dasharray','10,10')
@@ -323,7 +329,7 @@ nv.models.cumulativeLineChart = function() {
                 .attr('y1', getAvgLineY)
                 .attr('y2', getAvgLineY);
 
-            avgLines
+            avgLinesEnter
                 .style('stroke-opacity',function(d){
                     //If average lines go offscreen, make them transparent
                     var yVal = y(average(d));
@@ -333,14 +339,12 @@ nv.models.cumulativeLineChart = function() {
                 .attr('x1',0)
                 .attr('x2',availableWidth)
                 .attr('y1', getAvgLineY)
-                .attr('y2', getAvgLineY);
-
-            avgLines.exit().remove();
+                .attr('y2', getAvgLineY).merge(avgLines);
 
             //Create index line
             var indexLine = linesWrap.selectAll('.nv-indexLine')
                 .data([index]);
-            indexLine.enter().append('rect').attr('class', 'nv-indexLine')
+            var indexLineEnter=indexLine.enter().append('rect').attr('class', 'nv-indexLine')
                 .attr('width', 3)
                 .attr('x', -2)
                 .attr('fill', 'red')
@@ -348,30 +352,32 @@ nv.models.cumulativeLineChart = function() {
                 .style("pointer-events","all")
                 .call(indexDrag);
 
-            indexLine
+            indexLineEnter
                 .attr('transform', function(d) { return 'translate(' + dx(d.i) + ',0)' })
-                .attr('height', availableHeight);
+                .attr('height', availableHeight).merge(indexLine);
 
             // Setup Axes
             if (showXAxis) {
                 xAxis
                     .scale(x)
                     ._ticks( nv.utils.calcTicksX(availableWidth/70, data) )
-                    .tickSize(-availableHeight, 0);
+                xAxis
+                    .tickSizeInner(-availableHeight);
 
-                g.select('.nv-x.nv-axis')
+                xAxisAppend
                     .attr('transform', 'translate(0,' + y.range()[0] + ')');
-                g.select('.nv-x.nv-axis')
-                    .call(xAxis);
+                xAxisAppend
+                    .call(xAxis).merge(gEnter);
             }
 
             if (showYAxis) {
                 yAxis
                     .scale(y)
                     ._ticks( nv.utils.calcTicksY(availableHeight/36, data) )
-                    .tickSize( -availableWidth, 0);
+                yAxis
+                    .tickSizeInner( -availableWidth);
 
-                g.select('.nv-y.nv-axis')
+                yAxisAppend
                     .call(yAxis);
             }
 
@@ -391,14 +397,14 @@ nv.models.cumulativeLineChart = function() {
                 chart.duration(oldDuration);
             }
 
-            g.select('.nv-background rect')
+            rectAppend
                 .on('click', function() {
                     index.x = d3.mouse(this)[0];
                     index.i = Math.round(dx.invert(index.x));
 
                     // update state and send stateChange with new index
                     state.index = index.i;
-                    dispatch.stateChange(state);
+                    dispatch.call('stateChange', rectAppend, state);
 
                     updateZero();
                 });
@@ -409,26 +415,28 @@ nv.models.cumulativeLineChart = function() {
 
                 // update state and send stateChange with new index
                 state.index = index.i;
-                dispatch.stateChange(state);
+                dispatch.call('stateChange', lines, state);
 
                 updateZero();
             });
 
             controls.dispatch.on('legendClick', function(d,i) {
+                console.log(d);
+                console.log(i);
                 d.disabled = !d.disabled;
                 rescaleY = !d.disabled;
                 state.rescaleY = rescaleY;
                 if (!rescaleY) {
                     currentYDomain = getCurrentYDomain(data); // rescale is turned off, so set the currentYDomain
                 }
-                dispatch.stateChange(state);
+                dispatch.call('stateChange', chart, state);
                 chart.update();
             });
 
             legend.dispatch.on('stateChange', function(newState) {
                 for (var key in newState)
                     state[key] = newState[key];
-                dispatch.stateChange(state);
+                dispatch.call('stateChange', chart, state);
                 chart.update();
             });
 
@@ -641,7 +649,7 @@ nv.models.cumulativeLineChart = function() {
         }},
         rightAlignYAxis: {get: function(){return rightAlignYAxis;}, set: function(_){
             rightAlignYAxis = _;
-            yAxis.orient( (_) ? 'right' : 'left');
+            //@todo yAxis.orient( (_) ? 'right' : 'left');
         }},
         duration:    {get: function(){return duration;}, set: function(_){
             duration = _;
@@ -649,6 +657,9 @@ nv.models.cumulativeLineChart = function() {
             xAxis.duration(duration);
             yAxis.duration(duration);
             renderWatch.reset(duration);
+            t = d3.transition()
+                  .duration(duration)
+                  .ease(d3.easeLinear);
         }}
     });
 

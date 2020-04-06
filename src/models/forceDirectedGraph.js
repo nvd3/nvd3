@@ -14,18 +14,18 @@ nv.models.forceDirectedGraph = function() {
         , noData = null
         // Force directed graph specific parameters [default values]
         , linkStrength = 0.1
-        , friction = 0.9
+        , friction = 0.5
         , linkDist = 30
         , charge = -120
         , gravity = 0.1
         , theta = 0.8
-        , alpha = 0.1
+        , alpha = 0.3
         , radius = 5
         // These functions allow to add extra attributes to ndes and links
         ,nodeExtras = function(nodes) { /* Do nothing */ }
         ,linkExtras = function(links) { /* Do nothing */ }
-        , getX=d3.functor(0.0)
-        , getY=d3.functor(0.0)
+        , getX=function() {return 0.0;}
+        , getY=function() {return 0.0;}
         ;
 
 
@@ -67,18 +67,15 @@ nv.models.forceDirectedGraph = function() {
             });
           });
 
-          var force = d3.layout.force()
+          var force = d3.forceSimulation()
                 .nodes(data.nodes)
-                .links(data.links)
-                .size([availableWidth, availableHeight])
-                .linkStrength(linkStrength)
-                .friction(friction)
-                .linkDistance(linkDist)
-                .charge(charge)
-                .gravity(gravity)
-                .theta(theta)
-                .alpha(alpha)
-                .start();
+                .force("link", d3.forceLink(data.links).strength(linkStrength).distance(linkDist))
+                .force('center', d3.forceCenter(availableWidth / 2, availableHeight / 2))
+                .force("charge", d3.forceManyBody().strength(charge))
+                //.force("gravity", gravity);
+                //.theta(theta)
+                .alphaTarget(alpha)
+                .velocityDecay(friction);
 
           var link = container.selectAll(".link")
                 .data(data.links)
@@ -91,7 +88,22 @@ nv.models.forceDirectedGraph = function() {
                 .enter()
                 .append("g")
                 .attr("class", "nv-force-node")
-                .call(force.drag);
+                .call(d3.drag()
+                    .on("start", function(d){
+                        d3.event.sourceEvent.stopPropagation();
+                        if (!d3.event.active) force.alphaTarget(alpha).restart();
+                        d.fx = d.x;
+                        d.fy = d.y;
+                    })
+                    .on("drag", function(d){
+                        d.fx = d3.event.x;
+                        d.fy = d3.event.y;
+                    })
+                    .on("end", function(d){
+                        if (!d3.event.active) force.alphaTarget(alpha);
+                        d.fx = null;
+                        d.fy = null;
+                    }));
 
           node
             .append("circle")
@@ -162,8 +174,8 @@ nv.models.forceDirectedGraph = function() {
         radius:      {get: function(){return radius;}, set: function(_){radius=_;}},
 
         //functor options
-        x: {get: function(){return getX;}, set: function(_){getX=d3.functor(_);}},
-        y: {get: function(){return getY;}, set: function(_){getY=d3.functor(_);}},
+        x: {get: function(){return getX;}, set: function(_){getX= typeof _ === "function" ? _ : function(){return _;};}},
+        y: {get: function(){return getY;}, set: function(_){getY=typeof _ === "function" ? _ : function(){return _;};}},
 
         // options that require extra logic in the setter
         margin: {get: function(){return margin;}, set: function(_){

@@ -150,7 +150,7 @@ describe 'NVD3', ->
                 left: 75
             width: 200
             height: 200
-            color: d3.scale.category20c()
+            color: d3.scaleOrdinal(d3.schemeAccent)
             duration: 0
 
         builder = null

@@ -31,7 +31,9 @@ nv.models.bullet = function() {
         , defaultRangeLabels = ["Maximum", "Mean", "Minimum"]
         , legacyRangeClassNames = ["Max", "Avg", "Min"]
         , duration = 1000
-        ;
+        ,t = d3.transition()
+              .duration(duration)
+              .ease(d3.easeLinear);
 
     function sortLabels(labels, values){
         var lz = labels.slice();
@@ -73,12 +75,12 @@ nv.models.bullet = function() {
 
             // Setup Scales
             // Compute the new x-scale.
-            var x1 = d3.scale.linear()
+            var x1 = d3.scaleLinear()
                 .domain( d3.extent(d3.merge([forceX, rangez])) )
                 .range(reverse ? [availableWidth, 0] : [0, availableWidth]);
 
             // Retrieve the old x-scale, if this is an update.
-            var x0 = this.__chart__ || d3.scale.linear()
+            var x0 = this.__chart__ || d3.scaleLinear()
                 .domain([0, Infinity])
                 .range(x1.range());
 
@@ -117,8 +119,7 @@ nv.models.bullet = function() {
                 g.select('rect.nv-range'+i)
                     .datum(range)
                     .attr('height', availableHeight)
-                    .transition()
-                    .duration(duration)
+                    .transition().duration(1000)
                     .attr('width', w1(range))
                     .attr('x', xp1(range))
             }
@@ -128,28 +129,27 @@ nv.models.bullet = function() {
                 .attr('height', availableHeight / 3)
                 .attr('y', availableHeight / 3)
                 .on('mouseover', function() {
-                    dispatch.elementMouseover({
+                    dispatch.call('elementMouseover', this, {
                         value: measurez[0],
                         label: measureLabelz[0] || 'Current',
                         color: d3.select(this).style("fill")
                     })
                 })
                 .on('mousemove', function() {
-                    dispatch.elementMousemove({
+                    dispatch.call('elementMousemove', this, {
                         value: measurez[0],
                         label: measureLabelz[0] || 'Current',
                         color: d3.select(this).style("fill")
                     })
                 })
                 .on('mouseout', function() {
-                    dispatch.elementMouseout({
+                    dispatch.call('elementMouseout', this, {
                         value: measurez[0],
                         label: measureLabelz[0] || 'Current',
                         color: d3.select(this).style("fill")
                     })
                 })
-                .transition()
-                .duration(duration)
+                .transition().duration(1000)
                 .attr('width', measurez < 0 ?
                     x1(0) - x1(measurez[0])
                     : x1(measurez[0]) - x1(0))
@@ -168,7 +168,7 @@ nv.models.bullet = function() {
               .attr('class', 'nv-markerTriangle')
               .attr('d', 'M0,' + h3 + 'L' + h3 + ',' + (-h3) + ' ' + (-h3) + ',' + (-h3) + 'Z')
               .on('mouseover', function(d) {
-                dispatch.elementMouseover({
+                dispatch.call('elementMouseover', this, {
                   value: d.value,
                   label: d.label || 'Previous',
                   color: d3.select(this).style("fill"),
@@ -177,14 +177,14 @@ nv.models.bullet = function() {
 
               })
               .on('mousemove', function(d) {
-                  dispatch.elementMousemove({
+                  dispatch.call('elementMousemove', this, {
                       value: d.value,
                       label: d.label || 'Previous',
                       color: d3.select(this).style("fill")
                   })
               })
               .on('mouseout', function(d, i) {
-                  dispatch.elementMouseout({
+                  dispatch.call('elementMouseout', this, {
                       value: d.value,
                       label: d.label || 'Previous',
                       color: d3.select(this).style("fill")
@@ -193,8 +193,7 @@ nv.models.bullet = function() {
 
             g.selectAll("path.nv-markerTriangle")
               .data(markerData)
-              .transition()
-              .duration(duration)
+              .transition().duration(1000)
               .attr('transform', function(d) { return 'translate(' + x1(d.value) + ',' + (availableHeight / 2) + ')' });
 
             var markerLinesData = markerLinez.map( function(marker, index) {
@@ -212,7 +211,7 @@ nv.models.bullet = function() {
               .attr('x2', function(d) { return x1(d.value) })
               .attr('y2', availableHeight - 2)
               .on('mouseover', function(d) {
-                dispatch.elementMouseover({
+                dispatch.call('elementMouseover', this, {
                   value: d.value,
                   label: d.label || 'Previous',
                   color: d3.select(this).style("fill"),
@@ -221,14 +220,14 @@ nv.models.bullet = function() {
 
               })
               .on('mousemove', function(d) {
-                  dispatch.elementMousemove({
+                  dispatch.call('elementMousemove', this, {
                       value: d.value,
                       label: d.label || 'Previous',
                       color: d3.select(this).style("fill")
                   })
               })
               .on('mouseout', function(d, i) {
-                  dispatch.elementMouseout({
+                  dispatch.call('elementMouseout', this, {
                       value: d.value,
                       label: d.label || 'Previous',
                       color: d3.select(this).style("fill")
@@ -237,22 +236,21 @@ nv.models.bullet = function() {
 
             g.selectAll("line.nv-markerLine")
               .data(markerLinesData)
-              .transition()
-              .duration(duration)
+              .transition().duration(1000)
               .attr('x1', function(d) { return x1(d.value) })
               .attr('x2', function(d) { return x1(d.value) });
 
             wrap.selectAll('.nv-range')
                 .on('mouseover', function(d,i) {
                     var label = rangeLabelz[i] || defaultRangeLabels[i];
-                    dispatch.elementMouseover({
+                    dispatch.call('elementMouseover', this, {
                         value: d,
                         label: label,
                         color: d3.select(this).style("fill")
                     })
                 })
                 .on('mousemove', function() {
-                    dispatch.elementMousemove({
+                    dispatch.call('elementMousemove', this, {
                         value: measurez[0],
                         label: measureLabelz[0] || 'Previous',
                         color: d3.select(this).style("fill")
@@ -260,7 +258,7 @@ nv.models.bullet = function() {
                 })
                 .on('mouseout', function(d,i) {
                     var label = rangeLabelz[i] || defaultRangeLabels[i];
-                    dispatch.elementMouseout({
+                    dispatch.call('elementMouseout', this, {
                         value: d,
                         label: label,
                         color: d3.select(this).style("fill")
@@ -287,7 +285,11 @@ nv.models.bullet = function() {
         width:    {get: function(){return width;}, set: function(_){width=_;}},
         height:    {get: function(){return height;}, set: function(_){height=_;}},
         tickFormat:    {get: function(){return tickFormat;}, set: function(_){tickFormat=_;}},
-        duration:    {get: function(){return duration;}, set: function(_){duration=_;}},
+        duration:    {get: function(){return duration;}, set: function(_){duration=_;
+            t = d3.transition()
+              .duration(duration)
+              .ease(d3.easeLinear);
+        }},
 
         // options that require extra logic in the setter
         margin: {get: function(){return margin;}, set: function(_){

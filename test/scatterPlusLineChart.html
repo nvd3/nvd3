@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <meta charset="utf-8">
 
-<link href="../src/nv.d3.css" rel="stylesheet" type="text/css">
+<link href="../js/nv.d3.css" rel="stylesheet" type="text/css">
 
 <style>
 
@@ -67,7 +67,7 @@ nv.addGraph(function() {
                 .showDistX(true)
                 .showDistY(true)
                 .transitionDuration(300)
-                .color(d3.scale.category10().range());
+                .color(d3.scaleOrdinal(d3.schemeCategory10).range());
 
   chart.dispatch.on('renderEnd', function(){
     console.log('render complete');
@@ -91,7 +91,7 @@ nv.addGraph(function() {
 function randomData(groups, points) { //# groups,# points per group
   var data = [],
       shapes = ['circle', 'cross', 'triangle-up', 'triangle-down', 'diamond', 'square'],
-      random = d3.random.normal();
+      random = d3.randomNormal();
 
   for (i = 0; i < groups; i++) {
     data.push({

@@ -17,6 +17,9 @@ nv.models.sunburstChart = function() {
         , defaultState = null
         , noData = null
         , duration = 250
+        , t = d3.transition()
+              .duration(duration)
+              .ease(d3.easeLinear)
         , dispatch = d3.dispatch('stateChange', 'changeState','renderEnd');
 
 
@@ -123,6 +126,9 @@ nv.models.sunburstChart = function() {
         duration: {get: function(){return duration;}, set: function(_){
             duration = _;
             renderWatch.reset(duration);
+            t = d3.transition()
+                  .duration(duration)
+                  .ease(d3.easeLinear);
             sunburst.duration(duration);
         }},
         margin: {get: function(){return margin;}, set: function(_){

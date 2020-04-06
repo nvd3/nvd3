@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <meta charset="utf-8">
-<link href="../build/nv.d3.css" rel="stylesheet" type="text/css">
+<link href="../js/nv.d3.css" rel="stylesheet" type="text/css">
 <link href="teststyle.css" rel="stylesheet" type='text/css'>
-<script src="../bower_components/d3/d3.js"></script>
-<script src="../build/nv.d3.js"></script>
+<script src="../js/d3.js"></script>
+<script src="../js/nv.d3.js"></script>
 <body class='with-3d-shadow with-transitions'>
   <h3>Multibar chart test cases - feel free to add more tests</h3>
   <div class='chart third' id="chart1">
@@ -158,7 +158,7 @@ function dataFactoryWithCustomNonStackablePosition(seriesNum, perSeries, color,
 
 
 defaultChartConfig("chart1", negative_test_data, {
-  barColor: d3.scale.category20().range(),
+  barColor: d3.scaleOrdinal(d3.schemeAccent).range(),
   delay: 1200,
   groupSpacing: 0.1,
   reduceXTicks: false,
@@ -243,7 +243,7 @@ function defaultChartConfig(containerId, data, chartOptions) {
       chart.xAxis
           .axisLabel("Current Index")
           .showMaxMin(true)
-          .tickFormat(d3.format(',0f'));
+          .tickFormat(d3.format(',.0f'));
 
       chart.yAxis
           .tickFormat(d3.format(',.1f'));

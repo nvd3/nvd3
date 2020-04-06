@@ -2,9 +2,9 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <link href="../build/nv.d3.css" rel="stylesheet" type="text/css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.17/d3.min.js" charset="utf-8"></script>
-    <script src="../build/nv.d3.js"></script>
+    <link href="js/nv.d3.css" rel="stylesheet" type="text/css">
+    <script src="js/d3.min.js" charset="utf-8"></script>
+    <script src="js/nv.d3.js"></script>
 
     <style>
         text {
@@ -50,7 +50,7 @@
             .axisLabel("x axis")
             .tickFormat(d3.format('0.2f'));
 
-        chart.yScale( d3.scale.log());
+        chart.yScale( d3.scaleLog());
         chart.yAxis
             .axisLabel("Log axis")
             .tickFormat( d3.format('.4e'));

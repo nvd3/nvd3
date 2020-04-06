@@ -102,20 +102,22 @@ nv.models.pieChart = function() {
 
             // Setup containers and skeleton of chart
             var wrap = container.selectAll('g.nv-wrap.nv-pieChart').data([data]);
-            var gEnter = wrap.enter().append('g').attr('class', 'nvd3 nv-wrap nv-pieChart').append('g');
+            var wrapEnter = wrap.enter().append('g').attr('class', 'nvd3 nv-wrap nv-pieChart');
+            wrapEnter.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+            var gEnter = wrapEnter.append('g');
             var g = wrap.select('g');
 
-            gEnter.append('g').attr('class', 'nv-pieWrap');
-            gEnter.append('g').attr('class', 'nv-legendWrap');
+            var pieWrapAppend=gEnter.append('g').attr('class', 'nv-pieWrap');
+            var legendWrapAppend=gEnter.append('g').attr('class', 'nv-legendWrap');
 
             // Legend
             if (!showLegend) {
-                g.select('.nv-legendWrap').selectAll('*').remove();
+                legendWrapAppend.selectAll('*').remove();
             } else {
                 if (legendPosition === "top") {
                     legend.width( availableWidth ).key(pie.x());
 
-                    wrap.select('.nv-legendWrap')
+                    legendWrapAppend
                         .datum(data)
                         .call(legend);
 
@@ -124,7 +126,7 @@ nv.models.pieChart = function() {
                         availableHeight = nv.utils.availableHeight(height, container, margin);
                     }
 
-                    wrap.select('.nv-legendWrap')
+                    legendWrapAppend
                         .attr('transform', 'translate(0,' + (-margin.top) +')');
                 } else if (legendPosition === "right") {
                     var legendWidth = nv.models.legend().width();
@@ -135,28 +137,28 @@ nv.models.pieChart = function() {
                     legend.width(legendWidth);
                     availableWidth -= legend.width();
 
-                    wrap.select('.nv-legendWrap')
+                    legendWrapAppend
                         .datum(data)
                         .call(legend)
                         .attr('transform', 'translate(' + (availableWidth) +',0)');
                 } else if (legendPosition === "bottom") {
                     legend.width( availableWidth ).key(pie.x());
-                    wrap.select('.nv-legendWrap')
+                    legendWrapAppend
                         .datum(data)
                         .call(legend);
 
                     margin.bottom = legend.height();
                     availableHeight = nv.utils.availableHeight(height, container, margin);
-                    wrap.select('.nv-legendWrap')
+                    legendWrapAppend
                         .attr('transform', 'translate(0,' + availableHeight +')');
                 }
             }
-            wrap.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
 
             // Main Chart Component(s)
             pie.width(availableWidth).height(availableHeight);
-            var pieWrap = g.select('.nv-pieWrap').datum([data]);
-            d3.transition(pieWrap).call(pie);
+            var pieWrap = pieWrapAppend.datum([data]);
+            //@todo come back to transition d3.transition(pieWrap).call(pie);
+            pieWrap.transition().call(pie);
 
             //============================================================
             // Event Handling/Dispatching (in chart's scope)
@@ -166,7 +168,7 @@ nv.models.pieChart = function() {
                 for (var key in newState) {
                     state[key] = newState[key];
                 }
-                dispatch.stateChange(state);
+                dispatch.call('stateChange', this, state);
                 chart.update();
             });
 

@@ -21,7 +21,7 @@ nv.models.parallelCoordinatesChart = function () {
         , defaultState = null
         , noData = null
         , nanValue = "undefined"
-        , dispatch = d3.dispatch('dimensionsOrder', 'brushEnd', 'stateChange', 'changeState', 'renderEnd')
+        , dispatch = d3.dispatch('dimensionsOrder', 'end', 'stateChange', 'changeState', 'renderEnd')
         , controlWidth = function () { return showControls ? 180 : 0 }
         ;
 
@@ -122,25 +122,28 @@ nv.models.parallelCoordinatesChart = function () {
                 // Setup containers and skeleton of chart
 
                 var wrap = container.selectAll('g.nv-wrap.nv-parallelCoordinatesChart').data([data]);
-                var gEnter = wrap.enter().append('g').attr('class', 'nvd3 nv-wrap nv-parallelCoordinatesChart').append('g');
+                var wrapEnter=wrap.enter().append('g').attr('class', 'nvd3 nv-wrap nv-parallelCoordinatesChart');
+                wrapEnter.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
 
-                var g = wrap.select('g');
+                var gEnter = wrapEnter.append('g');
 
-                gEnter.append('g').attr('class', 'nv-parallelCoordinatesWrap');
-                gEnter.append('g').attr('class', 'nv-legendWrap');
+                var g = wrapEnter.select('g');
 
-                g.select("rect")
+                var parallelCoordinatesWrapAppend=gEnter.append('g').attr('class', 'nv-parallelCoordinatesWrap');
+                var legendWrapAppend=gEnter.append('g').attr('class', 'nv-legendWrap');
+
+                gEnter.select("rect")
                     .attr("width", availableWidth)
                     .attr("height", (availableHeight > 0) ? availableHeight : 0);
 
                 // Legend
                 if (!showLegend) {
-                    g.select('.nv-legendWrap').selectAll('*').remove();
+                    legendWrapAppend.selectAll('*').remove();
                 } else {
                     legend.width(availableWidth)
                         .color(function (d) { return "rgb(188,190,192)"; });
 
-                    g.select('.nv-legendWrap')
+                    legendWrapAppend
                         .datum(dimensionData.sort(function (a, b) { return a.originalPosition - b.originalPosition; }))
                         .call(legend);
 
@@ -148,11 +151,9 @@ nv.models.parallelCoordinatesChart = function () {
                         margin.top = legend.height();
                         availableHeight = nv.utils.availableHeight(height, container, margin);
                     }
-                    wrap.select('.nv-legendWrap')
+                    legendWrapAppend
                        .attr('transform', 'translate( 0 ,' + (-margin.top) + ')');
                 }
-                wrap.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
-
                 // Main Chart Component(s)
                 parallelCoordinates
                     .width(availableWidth)
@@ -160,19 +161,19 @@ nv.models.parallelCoordinatesChart = function () {
                     .dimensionData(dimensionData)
                     .displayBrush(displayBrush);
 
-		        var parallelCoordinatesWrap = g.select('.nv-parallelCoordinatesWrap ')
+		        var parallelCoordinatesWrap = parallelCoordinatesWrapAppend
                   .datum(data);
 
-		        parallelCoordinatesWrap.transition().call(parallelCoordinates);
+		        parallelCoordinatesWrap.transition().duration(0).call(parallelCoordinates);
 
 				//============================================================
                 // Event Handling/Dispatching (in chart's scope)
                 //------------------------------------------------------------
                 //Display reset brush button
-		        parallelCoordinates.dispatch.on('brushEnd', function (active, hasActiveBrush) {
+		        parallelCoordinates.dispatch.on('end', function (active, hasActiveBrush) {
 		            if (hasActiveBrush) {
 		                displayBrush = true;
-		                dispatch.brushEnd(active);
+		                dispatch.call('end', this, active);
 		            } else {
 
 		                displayBrush = false;
@@ -183,7 +184,7 @@ nv.models.parallelCoordinatesChart = function () {
 		            for(var key in newState) {
 		                state[key] = newState[key];
 		            }
-		            dispatch.stateChange(state);
+		            dispatch.call('stateChange', that, state);
 		            chart.update();
 		        });
 
@@ -196,7 +197,7 @@ nv.models.parallelCoordinatesChart = function () {
 		                if (d.currentPosition !== d.originalPosition)
 		                    isSorted = true;
 		            });
-		            dispatch.dimensionsOrder(dimensionData, isSorted);
+		            dispatch.call('dimensionsOrder', dimensionData, isSorted);
 		        });
 
 				// Update chart from a state object passed to event handler

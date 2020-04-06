@@ -12,7 +12,7 @@ nv.interactiveGuideline = function() {
     var margin = { left: 0, top: 0 } //Pass the chart's top and left magins. Used to calculate the mouseX/Y.
         ,   width = null
         ,   height = null
-        ,   xScale = d3.scale.linear()
+        ,   xScale = d3.scaleLinear()
         ,   dispatch = d3.dispatch('elementMousemove', 'elementMouseout', 'elementClick', 'elementDblclick', 'elementMouseDown', 'elementMouseUp')
         ,   showGuideLine = true
         ,   svgContainer = null // Must pass the chart's svg, we'll use its mousemove event.
@@ -99,7 +99,7 @@ nv.interactiveGuideline = function() {
                             return;
                         }
                     }
-                    dispatch.elementMouseout({
+                    dispatch.call('elementMouseout', this, {
                         mouseX: mouseX,
                         mouseY: mouseY
                     });
@@ -122,7 +122,7 @@ nv.interactiveGuideline = function() {
                         pointXValue = xScale.domain()[d3.bisect(xScale.range(), mouseX) - 1];
                     }
                     else {
-                        dispatch.elementMouseout({
+                        dispatch.call('elementMouseout', this, {
                             mouseX: mouseX,
                             mouseY: mouseY
                         });
@@ -135,7 +135,7 @@ nv.interactiveGuideline = function() {
                     pointXValue = xScale.invert(mouseX);
                 }
 
-                dispatch.elementMousemove({
+                dispatch.call('elementMousemove', this, {
                     mouseX: mouseX,
                     mouseY: mouseY,
                     pointXValue: pointXValue
@@ -143,7 +143,7 @@ nv.interactiveGuideline = function() {
 
                 //If user double clicks the layer, fire a elementDblclick
                 if (d3.event.type === "dblclick") {
-                    dispatch.elementDblclick({
+                    dispatch.call('elementDblclick', this, {
                         mouseX: mouseX,
                         mouseY: mouseY,
                         pointXValue: pointXValue
@@ -152,7 +152,7 @@ nv.interactiveGuideline = function() {
 
                 // if user single clicks the layer, fire elementClick
                 if (d3.event.type === 'click') {
-                    dispatch.elementClick({
+                    dispatch.call('elementClick', this, {
                         mouseX: mouseX,
                         mouseY: mouseY,
                         pointXValue: pointXValue
@@ -161,7 +161,7 @@ nv.interactiveGuideline = function() {
 
                 // if user presses mouse down the layer, fire elementMouseDown
                 if (d3.event.type === 'mousedown') {
-                	dispatch.elementMouseDown({
+                	dispatch.call('elementMouseDown', this, {
                 		mouseX: mouseX,
                 		mouseY: mouseY,
                 		pointXValue: pointXValue
@@ -170,7 +170,7 @@ nv.interactiveGuideline = function() {
 
                 // if user presses mouse down the layer, fire elementMouseUp
                 if (d3.event.type === 'mouseup') {
-                	dispatch.elementMouseUp({
+                	dispatch.call('elementMouseUp', this, {
                 		mouseX: mouseX,
                 		mouseY: mouseY,
                 		pointXValue: pointXValue
@@ -197,14 +197,14 @@ nv.interactiveGuideline = function() {
                     var line = wrap.select(".nv-interactiveGuideLine")
                         .selectAll("line")
                         .data((x != null) ? [nv.utils.NaNtoZero(x)] : [], String);
-                    line.enter()
+                    var lineAppend=line.enter()
                         .append("line")
                         .attr("class", "nv-guideline")
                         .attr("x1", function(d) { return d;})
                         .attr("x2", function(d) { return d;})
                         .attr("y1", availableHeight)
                         .attr("y2",0);
-                    line.exit().remove();
+                    lineAppend.exit().remove();
                 });
             }
         });

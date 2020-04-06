@@ -2,10 +2,10 @@
 <html>
 <head>
 <meta charset="utf-8">
-<link href="../build/nv.d3.css" rel="stylesheet" type="text/css">
+<link href="../js/nv.d3.css" rel="stylesheet" type="text/css">
 <link href="teststyle.css" rel="stylesheet" type="text/css">
-<script src="../bower_components/d3/d3.js" charset="utf-8"></script>
-<script src="../build/nv.d3.js"></script>
+<script src="../js/d3.js" charset="utf-8"></script>
+<script src="../js/nv.d3.js"></script>
 <style>
 #chart13, #chart14 {
   overflow: scroll;
@@ -144,6 +144,10 @@ d3.select("body").on("keydown",function() {
      alert("keydowned");
   }
 });
+var t = d3.transition()
+        .duration(500)
+        .ease(d3.easeLinear);
+
 //------------ CHART 1
 defaultChartConfig("chart1", dummyStocks(),true, true, {forceY:false});
 
@@ -223,7 +227,7 @@ function defaultChartConfig(containerid, data, guideline, useDates, auxOptions) 
         formatter = function(d,i) {
                 var now = (new Date()).getTime() - 86400 * 1000 * 365;
                 now = new Date(now + d * 86400 * 1000);
-                return d3.time.format('%b %d %Y')(now );
+                return d3.timeFormat('%b %d %Y')(now );
         }
     }
     else {

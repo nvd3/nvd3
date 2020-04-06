@@ -6,9 +6,9 @@ nv.models.focus = function(content) {
     //------------------------------------------------------------
 
     var content = content || nv.models.line()
-        , xAxis = nv.models.axis()
-        , yAxis = nv.models.axis()
-        , brush = d3.svg.brush()
+        , xAxis = nv.models.axis(d3.axisBottom(d3.scaleLinear()), 'bottom')
+        , yAxis = nv.models.axis(d3.axisLeft(d3.scaleLinear()), 'left')
+        , brush = d3.brush()
         ;
 
     var margin = {top: 10, right: 0, bottom: 30, left: 0}
@@ -23,6 +23,9 @@ nv.models.focus = function(content) {
         , y
         , brushExtent = null
         , duration = 250
+        , t = d3.transition()
+              .duration(duration)
+              .ease(d3.easeLinear)
         , dispatch = d3.dispatch('brush', 'onBrush', 'renderEnd')
         , syncBrushing = true
         ;
@@ -63,24 +66,25 @@ nv.models.focus = function(content) {
 
             // Setup containers and skeleton of chart
             var wrap = container.selectAll('g.nv-focus').data([data]);
-            var gEnter = wrap.enter().append('g').attr('class', 'nvd3 nv-focus').append('g');
-            var g = wrap.select('g');
+            var wrapEnter=wrap.enter().append('g').attr('class', 'nvd3 nv-focus');
+            wrapEnter.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
 
-            wrap.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+            var gEnter = wrapEnter.append('g');
+            var g = gEnter.select('g');
 
-            gEnter.append('g').attr('class', 'nv-background').append('rect');
-            gEnter.append('g').attr('class', 'nv-x nv-axis');
-            gEnter.append('g').attr('class', 'nv-y nv-axis');
-            gEnter.append('g').attr('class', 'nv-contentWrap');
-            gEnter.append('g').attr('class', 'nv-brushBackground');
-            gEnter.append('g').attr('class', 'nv-x nv-brush');
+            var backgroundAppend=gEnter.append('g').attr('class', 'nv-background').append('rect');
+            var xAxisAppend=gEnter.append('g').attr('class', 'nv-x nv-axis');
+            var yAxisAppend=gEnter.append('g').attr('class', 'nv-y nv-axis');
+            var contentWrapAppend=gEnter.append('g').attr('class', 'nv-contentWrap');
+            var brushBackgroundAppend=gEnter.append('g').attr('class', 'nv-brushBackground');
+            var xBrushAppend=gEnter.append('g').attr('class', 'nv-x nv-brush');
 
             if (rightAlignYAxis) {
-                g.select(".nv-y.nv-axis")
+                yAxisAppend
                     .attr("transform", "translate(" + availableWidth + ",0)");
             }
 
-            g.select('.nv-background rect')
+            backgroundAppend
                 .attr('width', availableWidth)
                 .attr('height', availableHeight);
                 
@@ -91,27 +95,28 @@ nv.models.focus = function(content) {
                     return d.color || color(d, i);
                 }).filter(function(d,i) { return !data[i].disabled; }));
 
-            var contentWrap = g.select('.nv-contentWrap')
+            contentWrapAppend
                 .datum(data.filter(function(d) { return !d.disabled; }));
 
-            d3.transition(contentWrap).call(content);
+            var s=contentWrapAppend.transition().call(content); //@todo
+            //s.merge(gEnter);
             
             // Setup Brush
             brush
-                .x(x)
+                //@todo .x(x)
                 .on('brush', function() {
                     onBrush(syncBrushing);
                 });
 
-            brush.on('brushend', function () {
+            brush.on('end', function () {
                 if (!syncBrushing) {
-                    dispatch.onBrush(brush.empty() ? x.domain() : brush.extent());
+                    dispatch.call('brush', this, d3.event.selection === null ? x.domain() : brush.extent());
                 }
             });
 
             if (brushExtent) brush.extent(brushExtent);
 
-            var brushBG = g.select('.nv-brushBackground').selectAll('g')
+            var brushBG = brushBackgroundAppend.selectAll('g')
                 .data([brushExtent || brush.extent()]);
     
             var brushBGenter = brushBG.enter()
@@ -127,43 +132,48 @@ nv.models.focus = function(content) {
                 .attr('class', 'right')
                 .attr('x', 0)
                 .attr('y', 0)
-                .attr('height', availableHeight);
+                .attr('height', availableHeight).merge(gEnter);
 
-            var gBrush = g.select('.nv-x.nv-brush')
+            var gBrush = xBrushAppend
                 .call(brush);
             gBrush.selectAll('rect')
                 .attr('height', availableHeight);
-            gBrush.selectAll('.resize').append('path').attr('d', resizePath);
+            gBrush.selectAll('.resize').append('path').attr('d', resizePath).merge(gEnter);
 
             onBrush(true);
 
-            g.select('.nv-background rect')
+            backgroundAppend
                 .attr('width', availableWidth)
-                .attr('height', availableHeight);
+                .attr('height', availableHeight).merge(gEnter);
 
             if (showXAxis) {
                 xAxis.scale(x)
                     ._ticks( nv.utils.calcTicksX(availableWidth/100, data) )
-                    .tickSize(-availableHeight, 0);
+                xAxis
+                    .tickSizeInner(-availableHeight);
   
-                g.select('.nv-x.nv-axis')
+                xAxisAppend
                     .attr('transform', 'translate(0,' + y.range()[0] + ')');
-                d3.transition(g.select('.nv-x.nv-axis'))
+                var xs=d3.transition(xAxisAppend)
                     .call(xAxis);
+                    //xs.merge(xAxisAppend);
             }
 
             if (showYAxis) {
                 yAxis
                     .scale(y)
                     ._ticks( nv.utils.calcTicksY(availableHeight/36, data) )
-                    .tickSize( -availableWidth, 0);
+                yAxis
+                    .tickSizeInner( -availableWidth);
 
-                d3.transition(g.select('.nv-y.nv-axis'))
+                var ys=yAxisAppend
                     .call(yAxis);
+                //ys.merge(yAxisAppend);
             }
             
-            g.select('.nv-x.nv-axis')
-                .attr('transform', 'translate(0,' + y.range()[0] + ')');
+            xAxisAppend
+                .attr('transform', 'translate(0,' + y.range()[0] + ')').merge(gEnter);
+            //gEnter.merge(wrap);
 
             //============================================================
             // Event Handling/Dispatching (in chart's scope)
@@ -191,9 +201,9 @@ nv.models.focus = function(content) {
     
     
             function updateBrushBG() {
-                if (!brush.empty()) brush.extent(brushExtent);
+                if (brushExtent != null) brush.extent(brushExtent);
                 brushBG
-                    .data([brush.empty() ? x.domain() : brushExtent])
+                    .data([brushExtent === null ? x.domain() : brushExtent])
                     .each(function(d,i) {
                         var leftWidth = x(d[0]) - x.range()[0],
                             rightWidth = availableWidth - x(d[1]);
@@ -208,12 +218,12 @@ nv.models.focus = function(content) {
 
 
             function onBrush(shouldDispatch) {
-                brushExtent = brush.empty() ? null : brush.extent();
-                var extent = brush.empty() ? x.domain() : brush.extent();
-                dispatch.brush({extent: extent, brush: brush});
+                brushExtent = d3.event === null || d3.event.selection === null ? null : brush.extent();
+                var extent = d3.event === null || d3.event.selection === null ? x.domain() : brush.extent();
+                dispatch.call('brush', this, {extent: extent, brush: brush});
                 updateBrushBG();
                 if (shouldDispatch) {
-                    dispatch.onBrush(extent);
+                    dispatch.call('brush', this, extent);
                 }
             }
         });
@@ -258,6 +268,9 @@ nv.models.focus = function(content) {
         duration: {get: function(){return duration;}, set: function(_){
             duration = _;
             renderWatch.reset(duration);
+            t = d3.transition()
+                  .duration(duration)
+                  .ease(d3.easeLinear);
             content.duration(duration);
             xAxis.duration(duration);
             yAxis.duration(duration);

@@ -27,21 +27,24 @@ nv.models.sunburst = function() {
         }
         , groupColorByParent = true
         , duration = 500
+        , t = d3.transition()
+              .duration(duration)
+              .ease(d3.easeLinear)
         , dispatch = d3.dispatch('chartClick', 'elementClick', 'elementDblClick', 'elementMousemove', 'elementMouseover', 'elementMouseout', 'renderEnd');
 
     //============================================================
     // aux functions and setup
     //------------------------------------------------------------
 
-    var x = d3.scale.linear().range([0, 2 * Math.PI]);
-    var y = d3.scale.sqrt();
+    var x = d3.scaleLinear().range([0, 2 * Math.PI]);
+    var y = d3.scaleSqrt();
 
-    var partition = d3.layout.partition().sort(sort);
+    var partition = d3.partition();//@todo .sort(sort);
 
     var node, availableWidth, availableHeight, radius;
     var prevPositions = {};
 
-    var arc = d3.svg.arc()
+    var arc = d3.arc()
         .startAngle(function(d) {return Math.max(0, Math.min(2 * Math.PI, x(d.x))) })
         .endAngle(function(d) {return Math.max(0, Math.min(2 * Math.PI, x(d.x + d.dx))) })
         .innerRadius(function(d) {return Math.max(0, y(d.y)) })
@@ -97,15 +100,15 @@ nv.models.sunburst = function() {
     }
 
     function arcTweenUpdate(d) {
-        var ipo = d3.interpolate({x: d.x0, dx: d.dx0, y: d.y0, dy: d.dy0}, d);
+        var ipo = d3.interpolate({x: d.x0, dx: d.x1-d.x0, y: d.y0, dy: d.y1-d.y0}, d);
 
         return function (t) {
             var b = ipo(t);
 
             d.x0 = b.x;
-            d.dx0 = b.dx;
+            d.x1 = b.x+b.dx;
             d.y0 = b.y;
-            d.dy0 = b.dy;
+            d.y1 = b.y+b.dy;
 
             return arc(b);
         };
@@ -127,15 +130,15 @@ nv.models.sunburst = function() {
             var pP = prevPositions[k];
             //console.log(k,n,pP);
             if( pP ){
-                n.dx0 = pP.dx;
+                n.x1 = pP.x+pP.dx;
                 n.x0 = pP.x;
-                n.dy0 = pP.dy;
+                n.y1 = pP.y+pP.dy;
                 n.y0 = pP.y;
             }
             else {
-                n.dx0 = n.dx;
+                n.x1 = n.x+n.dx;
                 n.x0 = n.x;
-                n.dy0 = n.dy;
+                n.y1 = n.y+n.dy;
                 n.y0 = n.y;
             }
             updatePrevPosition(n);
@@ -152,8 +155,7 @@ nv.models.sunburst = function() {
         // to allow reference to the new center node
         node = d;
 
-        path.transition()
-            .duration(duration)
+        path.transition().duration(duration)
             .attrTween("d", arcTweenZoom)
             .each('end', function(e) {
                 // partially taken from here: http://bl.ocks.org/metmajer/5480307
@@ -216,7 +218,7 @@ nv.models.sunburst = function() {
 
             // Setup containers and skeleton of chart
             var wrap = container.select('g.nvd3.nv-wrap.nv-sunburst');
-            if( !wrap[0][0] ) {
+            if(!wrap[0] || !wrap[0][0] ) {
                 wrap = container.append('g')
                     .attr('class', 'nvd3 nv-wrap nv-sunburst nv-chart-' + id)
                     .attr('transform', 'translate(' + ((availableWidth / 2) + margin.left + margin.right) + ',' + ((availableHeight / 2) + margin.top + margin.bottom) + ')');
@@ -225,7 +227,7 @@ nv.models.sunburst = function() {
             }
 
             container.on('click', function (d, i) {
-                dispatch.chartClick({
+                dispatch.call('chartClick', this, {
                     data: d,
                     index: i,
                     pos: d3.event,
@@ -233,7 +235,7 @@ nv.models.sunburst = function() {
                 });
             });
 
-            partition.value(modes[mode] || modes["count"]);
+            partition(modes[mode] || modes["count"]);
 
             //reverse the drawing order so that the labels of inner
             //arcs are drawn on top of the outer arcs.
@@ -247,7 +249,7 @@ nv.models.sunburst = function() {
                 .append("g")
                 .attr("class",'arc-container')
 
-            cGE.append("path")
+            var pathAppend=cGE.append("path")
                 .attr("d", arc)
                 .style("fill", function (d) {
                     if (d.color) {
@@ -263,14 +265,14 @@ nv.models.sunburst = function() {
                 .style("stroke", "#FFF")
                 .on("click", function(d,i){
                     zoomClick(d);
-                    dispatch.elementClick({
+                    dispatch.call('elementClick', this, {
                         data: d,
                         index: i
                     })
                 })
                 .on('mouseover', function(d,i){
                     d3.select(this).classed('hover', true).style('opacity', 0.8);
-                    dispatch.elementMouseover({
+                    dispatch.call('elementMouseover', this, {
                         data: d,
                         color: d3.select(this).style("fill"),
                         percent: computeNodePercentage(d)
@@ -278,12 +280,12 @@ nv.models.sunburst = function() {
                 })
                 .on('mouseout', function(d,i){
                     d3.select(this).classed('hover', false).style('opacity', 1);
-                    dispatch.elementMouseout({
+                    dispatch.call('elementMouseout', this, {
                         data: d
                     });
                 })
                 .on('mousemove', function(d,i){
-                    dispatch.elementMousemove({
+                    dispatch.call('elementMousemove', this, {
                         data: d
                     });
                 });
@@ -293,8 +295,7 @@ nv.models.sunburst = function() {
             ///Without iteration the data (in the element) didn't update.
             cG.each(function(d){
                 d3.select(this).select('path')
-                    .transition()
-                    .duration(duration)
+                    .transition().duration(duration)
                     .attrTween('d', arcTweenUpdate);
             });
 
@@ -305,8 +306,7 @@ nv.models.sunburst = function() {
                 //this way labels are on top of newly added arcs
                 cG.append('text')
                     .text( function(e){ return labelFormat(e)})
-                    .transition()
-                    .duration(duration)
+                    .transition().duration(duration)
                     .attr("opacity", function(d){
                         if(labelThresholdMatched(d)) {
                             return 1;
@@ -339,8 +339,7 @@ nv.models.sunburst = function() {
 
             //remove unmatched elements ...
             cG.exit()
-                .transition()
-                .duration(duration)
+                .transition().duration(duration)
                 .attr('opacity',0)
                 .each('end',function(d){
                     var k = key(d);
@@ -367,7 +366,11 @@ nv.models.sunburst = function() {
         height:     {get: function(){return height;}, set: function(_){height=_;}},
         mode:       {get: function(){return mode;}, set: function(_){mode=_;}},
         id:         {get: function(){return id;}, set: function(_){id=_;}},
-        duration:   {get: function(){return duration;}, set: function(_){duration=_;}},
+        duration:   {get: function(){return duration;}, set: function(_){duration=_;
+            t = d3.transition()
+              .duration(duration)
+              .ease(d3.easeLinear);
+          }},
         groupColorByParent: {get: function(){return groupColorByParent;}, set: function(_){groupColorByParent=!!_;}},
         showLabels: {get: function(){return showLabels;}, set: function(_){showLabels=!!_}},
         labelFormat: {get: function(){return labelFormat;}, set: function(_){labelFormat=_}},

@@ -82,12 +82,30 @@ to take two arguments and use the index to keep backward compatibility
 */
 nv.utils.getColor = function(color) {
     //if you pass in nothing, get default colors back
-    if (color === undefined) {
+    if (color === undefined || (nv.utils.isArray(color) && color.length===0)) {
         return nv.utils.defaultColor();
 
     //if passed an array, turn it into a color scale
     } else if(nv.utils.isArray(color)) {
-        var color_scale = d3.scalePoint().range(color);
+        var domainArray = new Array();
+        //console.log("min:"+d3.min(color)+" "+color[0]);
+        if(d3.min(color)===color[0]){
+            domainArray.push(0);
+            for(var i=1;i<color.length-1;i++){
+                domainArray.push(i);
+            }
+            domainArray.push(color.length-1);
+        }
+        else{
+            domainArray.push(color.length-1);
+            for(var i=color.length-2;i>0;i--){
+                domainArray.push(i);
+            }
+            domainArray.push(0);
+            
+        }
+//        var color_scale = d3.scaleQuantile().domain(domainArray).range(color);
+        var color_scale = d3.scaleOrdinal().range(color);
         return function(d, i) {
             var key = i === undefined ? d : i;
             return d.color || color_scale(key);
@@ -97,6 +115,7 @@ nv.utils.getColor = function(color) {
     //external libs, such as angularjs-nvd3-directives use this
     } else {
         //can't really help it if someone passes rubbish as color
+        console.log("rubbish color ");
         return color;
     }
 };
@@ -108,7 +127,7 @@ Default color chooser uses a color scale of 20 colors from D3
  */
 nv.utils.defaultColor = function() {
     // get range of the scale so we'll turn it into our own function.
-    return nv.utils.getColor(d3.scaleOrdinal(d3.schemeCategory20).range());
+    return nv.utils.getColor(d3.scaleOrdinal(d3.schemeSet3).range());
 };
 
 
@@ -119,7 +138,7 @@ looks for a corresponding color from the dictionary
 nv.utils.customTheme = function(dictionary, getKey, defaultColors) {
     // use default series.key if getKey is undefined
     getKey = getKey || function(series) { return series.key };
-    defaultColors = defaultColors || d3.scale.category20().range();
+    defaultColors = defaultColors || d3.scaleOrdinal(d3.schemeAccent).range();
 
     // start at end of default color list and walk back to index 0
     var defIndex = defaultColors.length;
@@ -258,6 +277,9 @@ nv.utils.renderWatch = function(dispatch, duration) {
         } else {
             duration = _duration !== undefined ? _duration : 250;
         }
+        this.t = d3.transition()
+              .duration(duration)
+              .ease(d3.easeLinear);
         selection.__rendered = false;
 
         if (renderStack.indexOf(selection) < 0) {
@@ -272,7 +294,7 @@ nv.utils.renderWatch = function(dispatch, duration) {
         } else {
             if (selection.length === 0) {
                 selection.__rendered = true;
-            } else if (selection.filter( function(d){ return !d.length; } )) {
+            } else if (selection.filter( function(d, i){ return (d === undefined) ? false : !d.length; } )) {//@todo
                 selection.__rendered = true;
             } else {
                 selection.__rendered = false;
@@ -280,8 +302,7 @@ nv.utils.renderWatch = function(dispatch, duration) {
 
             var n = 0;
             return selection
-                .transition()
-                .duration(duration)
+                .transition(this.t)
                 .each(function(){ ++n; })
                 .on('end', function(d, i) {
                     if (--n === 0) {
@@ -391,7 +412,7 @@ nv.utils.state = function(){
             init = null;
         }
         if (_set.call(this)) {
-            this.dispatch.change(state);
+            this.dispatch.call('change', this, state);
         }
     };
 
@@ -411,7 +432,7 @@ chart.options = nv.utils.optionsFunc.bind(chart);
 */
 nv.utils.optionsFunc = function(args) {
     if (args) {
-        d3.map(args).forEach((function(key,value) {
+        d3.map(args).each(((key,value) => {
             if (nv.utils.isFunction(this[key])) {
                 this[key](value);
             }
@@ -527,7 +548,7 @@ nv.utils.initOptions = function(chart) {
 
 /*
 Inherit options from a D3 object
-d3.rebind makes calling the function on target actually call it on source
+d3_rebind makes calling the function on target actually call it on source
 Also use _d3options so we can track what we inherit for documentation and chained inheritance
 */
 nv.utils.inheritOptionsD3 = function(target, d3_source, oplist) {
@@ -536,7 +557,7 @@ nv.utils.inheritOptionsD3 = function(target, d3_source, oplist) {
     target._d3options = (target._d3options || []).filter(function(item, i, ar){ return ar.indexOf(item) === i; });
     oplist.unshift(d3_source);
     oplist.unshift(target);
-    d3.rebind.apply(this, oplist);
+    nv.utils.rebind.apply(this, oplist);
 };
 
 
@@ -551,15 +572,24 @@ nv.utils.arrayUnique = function(a) {
 
 
 /*
-Keeps a list of custom symbols to draw from in addition to d3.svg.symbol
+Keeps a list of custom symbols to draw from in addition to d3.symbol
 Necessary since d3 doesn't let you extend its list -_-
 Add new symbols by doing nv.utils.symbols.set('name', function(size){...});
 */
 nv.utils.symbolMap = d3.map();
 
+nv.utils.typeMap =  d3.map()
+    .set('circle', d3.symbolCircle)
+    .set("cross", d3.symbolCross)
+    .set("diamond", d3.symbolDiamond)
+    .set("square", d3.symbolSquare)
+    .set("star", d3.symbolStar)
+    .set("triangle-up", d3.symbolTriangle)
+    .set("wye", d3.symbolWye);
+
 
 /*
-Replaces d3.svg.symbol so that we can look both there and our own map
+Replaces d3.symbol so that we can look both there and our own map
  */
 nv.utils.symbol = function() {
     var type,
@@ -570,19 +600,19 @@ nv.utils.symbol = function() {
         // TODO: Not sure if symbol('circle') would return a d3.symbolCircle. In v4 symbols are enums and not strings
 
         if (nv.utils.symbolMap.get(t) === undefined) {
-            return d3.symbol(t)(s);
+            return d3.symbol().type(nv.utils.typeMap.get(t)).size(s)();
         } else {
             return nv.utils.symbolMap.get(t)(s);
         }
     }
     symbol.type = function(_) {
         if (!arguments.length) return type;
-        type = d3.functor(_);
+        type = typeof _ === "function" ? _ : function(){return _;};
         return symbol;
     };
     symbol.size = function(_) {
         if (!arguments.length) return size;
-        size = d3.functor(_);
+        size = typeof _ === "function" ? _ : function(){return _;};
         return symbol;
     };
     return symbol;
@@ -591,7 +621,7 @@ nv.utils.symbol = function() {
 
 /*
 Inherit option getter/setter functions from source to target
-d3.rebind makes calling the function on target actually call it on source
+d3_rebind makes calling the function on target actually call it on source
 Also track via _inherited and _d3options so we can track what we inherit
 for documentation generation purposes and chained inheritance
 */
@@ -604,13 +634,26 @@ nv.utils.inheritOptions = function(target, source) {
     var args = ops.concat(calls).concat(inherited).concat(d3ops);
     args.unshift(source);
     args.unshift(target);
-    d3.rebind.apply(this, args);
+    nv.utils.rebind.apply(this, args);
     // pass along the lists to keep track of them, don't allow duplicates
     target._inherited = nv.utils.arrayUnique(ops.concat(calls).concat(inherited).concat(ops).concat(target._inherited || []));
     target._d3options = nv.utils.arrayUnique(d3ops.concat(target._d3options || []));
 };
 
+nv.utils.rebind = function(target, source) {
+  var i = 1,
+    n = arguments.length,
+    method;
+  while (++i < n) target[method = arguments[i]] = nv.utils.d3_rebind(target, source, source[method]);
+  return target;
+};
 
+nv.utils.d3_rebind = function(target, source, method) {
+  return function() {
+    var value = method.apply(source, arguments);
+    return value === source ? target : value;
+  };
+}
 /*
 Runs common initialize code on the svg before the chart builds
 */

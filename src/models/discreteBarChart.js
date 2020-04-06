@@ -7,8 +7,8 @@ nv.models.discreteBarChart = function() {
     //------------------------------------------------------------
 
     var discretebar = nv.models.discreteBar()
-        , xAxis = nv.models.axis()
-        , yAxis = nv.models.axis()
+        , xAxis = nv.models.axis(d3.axisBottom(d3.scaleLinear()), 'bottom')
+        , yAxis = nv.models.axis(d3.axisLeft(d3.scaleLinear()), 'left')
 	, legend = nv.models.legend()
         , tooltip = nv.models.tooltip()
         ;
@@ -30,15 +30,16 @@ nv.models.discreteBarChart = function() {
         , noData = null
         , dispatch = d3.dispatch('beforeUpdate','renderEnd')
         , duration = 250
-        ;
+        , t = d3.transition()
+              .duration(duration)
+              .ease(d3.easeLinear);
 
+    xAxis.showMaxMin(false)
     xAxis
-        .orient('bottom')
-        .showMaxMin(false)
         .tickFormat(function(d) { return d })
     ;
     yAxis
-        .orient((rightAlignYAxis) ? 'right' : 'left')
+        //.orient((rightAlignYAxis) ? 'right' : 'left')
         .tickFormat(d3.format(',.1f'))
     ;
 
@@ -72,7 +73,7 @@ nv.models.discreteBarChart = function() {
                 availableHeight = nv.utils.availableHeight(height, container, margin);
 
             chart.update = function() {
-                dispatch.beforeUpdate();
+                dispatch.call('beforeUpdate', that);
                 container.transition().duration(duration).call(chart);
             };
             chart.container = this;
@@ -91,27 +92,29 @@ nv.models.discreteBarChart = function() {
 
             // Setup containers and skeleton of chart
             var wrap = container.selectAll('g.nv-wrap.nv-discreteBarWithAxes').data([data]);
-            var gEnter = wrap.enter().append('g').attr('class', 'nvd3 nv-wrap nv-discreteBarWithAxes').append('g');
-            var defsEnter = gEnter.append('defs');
-            var g = wrap.select('g');
+            var wrapEnter = wrap.enter().append('g').attr('class', 'nvd3 nv-wrap nv-discreteBarWithAxes');
 
-            gEnter.append('g').attr('class', 'nv-x nv-axis');
-            gEnter.append('g').attr('class', 'nv-y nv-axis')
+            var gEnter = wrapEnter.append('g');
+            gEnter.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+            var defsEnter = gEnter.append('defs');
+            var g = gEnter.select('g');
+
+            var xAxisAppend=gEnter.append('g').attr('class', 'nv-x nv-axis');
+            var yAxisAppend=gEnter.append('g').attr('class', 'nv-y nv-axis');
+            var lineAppend=yAxisAppend
                 .append('g').attr('class', 'nv-zeroLine')
                 .append('line');
 
-            gEnter.append('g').attr('class', 'nv-barsWrap');
-	    gEnter.append('g').attr('class', 'nv-legendWrap');
-
-            g.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+            var barsWrapAppend=gEnter.append('g').attr('class', 'nv-barsWrap');
+	    var legendWrapAppend=gEnter.append('g').attr('class', 'nv-legendWrap');
 
             // Legend
             if (!showLegend) {
-                g.select('.nv-legendWrap').selectAll('*').remove();
+                legendWrapAppend.selectAll('*').remove();
             } else {
                 legend.width(availableWidth);
 
-                g.select('.nv-legendWrap')
+                legendWrapAppend
                     .datum(data)
                     .call(legend);
 
@@ -120,12 +123,12 @@ nv.models.discreteBarChart = function() {
                     availableHeight = nv.utils.availableHeight(height, container, margin);
                 }
 
-                wrap.select('.nv-legendWrap')
+                legendWrapAppend
                     .attr('transform', 'translate(0,' + (-margin.top) +')')
             }
 
             if (rightAlignYAxis) {
-                g.select(".nv-y.nv-axis")
+                yAxisAppend
                     .attr("transform", "translate(" + availableWidth + ",0)");
             }
 
@@ -134,33 +137,34 @@ nv.models.discreteBarChart = function() {
                 .width(availableWidth)
                 .height(availableHeight);
 
-            var barsWrap = g.select('.nv-barsWrap')
+            var barsWrap = barsWrapAppend
                 .datum(data.filter(function(d) { return !d.disabled }));
 
-            barsWrap.transition().call(discretebar);
+            barsWrap.transition().duration(0).call(discretebar);
 
 
-            defsEnter.append('clipPath')
+            var defsRect=defsEnter.append('clipPath')
                 .attr('id', 'nv-x-label-clip-' + discretebar.id())
                 .append('rect');
 
-            g.select('#nv-x-label-clip-' + discretebar.id() + ' rect')
-                .attr('width', x.rangeBand() * (staggerLabels ? 2 : 1))
+            defsRect
+                .attr('width', x.bandwidth() * (staggerLabels ? 2 : 1))
                 .attr('height', 16)
-                .attr('x', -x.rangeBand() / (staggerLabels ? 1 : 2 ));
+                .attr('x', -x.bandwidth() / (staggerLabels ? 1 : 2 ));
 
             // Setup Axes
             if (showXAxis) {
                 xAxis
                     .scale(x)
                     ._ticks( nv.utils.calcTicksX(availableWidth/100, data) )
-                    .tickSize(-availableHeight, 0);
+                xAxis
+                    .tickSizeInner(-availableHeight);
 
-                g.select('.nv-x.nv-axis')
+                xAxisAppend
                     .attr('transform', 'translate(0,' + (y.range()[0] + ((discretebar.showValues() && y.domain()[0] < 0) ? 16 : 0)) + ')');
-                g.select('.nv-x.nv-axis').call(xAxis);
+                xAxisAppend.call(xAxis);
 
-                var xTicks = g.select('.nv-x.nv-axis').selectAll('g');
+                var xTicks = xAxisAppend.selectAll('g');
                 if (staggerLabels) {
                     xTicks
                         .selectAll('text')
@@ -176,7 +180,7 @@ nv.models.discreteBarChart = function() {
 
                 if (wrapLabels) {
                     g.selectAll('.tick text')
-                        .call(nv.utils.wrapTicks, chart.xAxis.rangeBand())
+                        .call(nv.utils.wrapTicks, chart.xAxis.bandwidth())
                 }
             }
 
@@ -184,13 +188,14 @@ nv.models.discreteBarChart = function() {
                 yAxis
                     .scale(y)
                     ._ticks( nv.utils.calcTicksY(availableHeight/36, data, discretebar.y()) )
-                    .tickSize( -availableWidth, 0);
+                yAxis
+                    .tickSizeInner( -availableWidth);
 
-                g.select('.nv-y.nv-axis').call(yAxis);
+                yAxisAppend.call(yAxis);
             }
 
             // Zero line
-            g.select(".nv-zeroLine line")
+            lineAppend
                 .attr("x1",0)
                 .attr("x2",(rightAlignYAxis) ? -availableWidth : availableWidth)
                 .attr("y1", y(0))
@@ -261,6 +266,9 @@ nv.models.discreteBarChart = function() {
         duration: {get: function(){return duration;}, set: function(_){
             duration = _;
             renderWatch.reset(duration);
+            t = d3.transition()
+                  .duration(duration)
+                  .ease(d3.easeLinear);
             discretebar.duration(duration);
             xAxis.duration(duration);
             yAxis.duration(duration);

@@ -2,9 +2,9 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <link href="../build/nv.d3.css" rel="stylesheet" type="text/css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.17/d3.min.js" charset="utf-8"></script>
-    <script src="../build/nv.d3.js"></script>
+    <link href="js/nv.d3.css" rel="stylesheet" type="text/css">
+    <script src="js/d3.min.js" charset="utf-8"></script>
+    <script src="js/nv.d3.js"></script>
 
     <style>
         text {
@@ -13,7 +13,7 @@
         svg {
             display: block;
         }
-        html, body, #test1, svg {
+        html, body, #chart1, #test1, svg {
             margin: 0px;
             padding: 0px;
             height: 100%;
@@ -23,8 +23,8 @@
 </head>
 <body class='with-3d-shadow with-transitions'>
 
-<div id="test1" class="chartWrap">
-    <svg></svg>
+<div id="chart1" class="chartWrap">
+    <svg id="test1"></svg>
 </div>
 
 <script>
@@ -35,7 +35,7 @@
             .showDistX(true)
             .showDistY(true)
             .duration(300)
-            .color(d3.scale.category10().range());
+            .color(d3.scaleOrdinal(d3.schemeCategory10).range());
 
         chart.dispatch.on('renderEnd', function(){
             console.log('render complete');
@@ -44,7 +44,7 @@
         chart.xAxis.tickFormat(d3.format('.02f'));
         chart.yAxis.tickFormat(d3.format('.02f'));
 
-        d3.select('#test1 svg')
+        d3.select('#test1')
             .datum(nv.log(randomData(4,40)))
             .call(chart);
 
@@ -57,7 +57,7 @@
     function randomData(groups, points) { //# groups,# points per group
         var data = [],
             shapes = ['circle'],
-            random = d3.random.normal();
+            random = d3.randomNormal();
 
         for (i = 0; i < groups; i++) {
             data.push({

@@ -11,8 +11,8 @@ nv.models.multiBarHorizontal = function() {
         , height = 500
         , id = Math.floor(Math.random() * 10000) //Create semi-unique ID in case user doesn't select one
         , container = null
-        , x = d3.scale.ordinal()
-        , y = d3.scale.linear()
+        , x = d3.scaleBand()
+        , y = d3.scaleLinear()
         , getX = function(d) { return d.x }
         , getY = function(d) { return d.y }
         , getYerr = function(d) { return d.yErr }
@@ -52,13 +52,49 @@ nv.models.multiBarHorizontal = function() {
             container = d3.select(this);
             nv.utils.initSVG(container);
 
-            if (stacked)
-                data = d3.layout.stack()
-                    .offset('zero')
-                    .values(function(d){ return d.values })
-                    .y(getY)
-                (data);
-
+            if (stacked){
+                var rawData = data;
+                data.forEach(function(aseries, i) {
+                    aseries.seriesIndex = i;
+                    aseries.values = aseries.values.map(function(d, j) {
+                        d.index = j;
+                        d.seriesIndex = i;
+                        return d;
+                    });
+                });
+                var newData=[];
+                data[0].values.forEach(function(d){
+                    newData.push({x: d.x});
+                });
+                data.forEach(function(d, y, y0) {
+                    d.display = { y: y, y0: y0 };
+                    d.values.forEach(function(d2){
+                        newData[d2.index][d.key]=d2.value;
+                    });
+                    //console.log(d.display);
+                });
+                var keys = data.map(a => a.key);
+                console.log(keys);
+                data = d3.stack().keys(keys)
+                    .offset(d3.stackOffsetNone)
+                    .value(function(d, key) {return d[key] })
+                    //.y(getY)
+                (newData);
+            var scatterData=[]; //legacy data shape to pass to scatter
+            data.forEach(function(aseries, i) {
+                aseries.seriesIndex = i;
+                aseries.x=Array.from(Array(aseries.length).keys())
+                //console.log(i+" "+aseries.length);
+                var values = [];
+                aseries.map(function(d, j) {
+                    values.push({label: rawData[i].values[j].label, x: j, y: d[1]-d[0], y0: d[0], series: j, seriesIndex: i, index: j});
+                    return values;
+                });
+                scatterData.push({values: values, key: keys[i], seriesIndex: i});
+            });
+data=scatterData;
+            }
+            
             //add series index and key to each data point for reference
             data.forEach(function(series, i) {
                 series.values.forEach(function(point) {
@@ -95,7 +131,7 @@ nv.models.multiBarHorizontal = function() {
                 });
 
             x.domain(xDomain || d3.merge(seriesData).map(function(d) { return d.x }))
-                .rangeBands(xRange || [0, availableHeight], groupSpacing);
+                .range(xRange || [0, availableHeight], groupSpacing);
 
             y.domain(yDomain || d3.extent(d3.merge(seriesData).map(function(d) { return stacked ? (d.y > 0 ? d.y1 + d.y : d.y1 ) : d.y }).concat(forceY)))
 
@@ -105,19 +141,19 @@ nv.models.multiBarHorizontal = function() {
                 y.range(yRange || [0, availableWidth]);
 
             x0 = x0 || x;
-            y0 = y0 || d3.scale.linear().domain(y.domain()).range([y(0),y(0)]);
+            y0 = y0 || d3.scaleLinear().domain(y.domain()).range([y(0),y(0)]);
 
             // Setup containers and skeleton of chart
             var wrap = d3.select(this).selectAll('g.nv-wrap.nv-multibarHorizontal').data([data]);
             var wrapEnter = wrap.enter().append('g').attr('class', 'nvd3 nv-wrap nv-multibarHorizontal');
+            wrapEnter.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
             var defsEnter = wrapEnter.append('defs');
             var gEnter = wrapEnter.append('g');
-            var g = wrap.select('g');
+            var g = gEnter.select('g');
 
-            gEnter.append('g').attr('class', 'nv-groups');
-            wrap.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+            var groupsAppend=gEnter.append('g').attr('class', 'nv-groups');
 
-            var groups = wrap.select('.nv-groups').selectAll('.nv-group')
+            var groups = groupsAppend.selectAll('.nv-group')
                 .data(function(d) { return d }, function(d,i) { return i });
             groups.enter().append('g')
                 .style('stroke-opacity', 1e-6)
@@ -141,17 +177,17 @@ nv.models.multiBarHorizontal = function() {
 
             var barsEnter = bars.enter().append('g')
                 .attr('transform', function(d,i,j) {
-                    return 'translate(' + y0(stacked ? d.y0 : 0) + ',' + (stacked ? 0 : (j * x.rangeBand() / data.length ) + x(getX(d,i))) + ')'
+                    return 'translate(' + y0(stacked ? d.y0 : 0) + ',' + (stacked ? 0 : (j * x.bandwidth() / data.length ) + x(getX(d,i))) + ')'
                 });
 
-            barsEnter.append('rect')
+            var rectAppend=barsEnter.append('rect')
                 .attr('width', 0)
-                .attr('height', x.rangeBand() / (stacked ? 1 : data.length) )
+                .attr('height', x.bandwidth() / (stacked ? 1 : data.length) )
 
             bars
                 .on('mouseover', function(d,i) { //TODO: figure out why j works above, but not here
                     d3.select(this).classed('hover', true);
-                    dispatch.elementMouseover({
+                    dispatch.call('elementMouseover', this, {
                         data: d,
                         index: i,
                         color: d3.select(this).style("fill")
@@ -159,21 +195,21 @@ nv.models.multiBarHorizontal = function() {
                 })
                 .on('mouseout', function(d,i) {
                     d3.select(this).classed('hover', false);
-                    dispatch.elementMouseout({
+                    dispatch.call('elementMouseout', this, {
                         data: d,
                         index: i,
                         color: d3.select(this).style("fill")
                     });
                 })
                 .on('mouseout', function(d,i) {
-                    dispatch.elementMouseout({
+                    dispatch.call('elementMouseout', this, {
                         data: d,
                         index: i,
                         color: d3.select(this).style("fill")
                     });
                 })
                 .on('mousemove', function(d,i) {
-                    dispatch.elementMousemove({
+                    dispatch.call('elementMousemove', this, {
                         data: d,
                         index: i,
                         color: d3.select(this).style("fill")
@@ -181,7 +217,7 @@ nv.models.multiBarHorizontal = function() {
                 })
                 .on('click', function(d,i) {
                     var element = this;
-                    dispatch.elementClick({
+                    dispatch.call('elementClick', this, {
                         data: d,
                         index: i,
                         color: d3.select(this).style("fill"),
@@ -191,7 +227,7 @@ nv.models.multiBarHorizontal = function() {
                     d3.event.stopPropagation();
                 })
                 .on('dblclick', function(d,i) {
-                    dispatch.elementDblClick({
+                    dispatch.call('elementDblClick', this, {
                         data: d,
                         index: i,
                         color: d3.select(this).style("fill")
@@ -200,30 +236,30 @@ nv.models.multiBarHorizontal = function() {
                 });
 
             if (getYerr(data[0],0)) {
-                barsEnter.append('polyline');
+                var polylineAppend=barsEnter.append('polyline');
 
-                bars.select('polyline')
+                polylineAppend
                     .attr('fill', 'none')
                     .attr('points', function(d,i) {
                         var xerr = getYerr(d,i)
-                            , mid = 0.8 * x.rangeBand() / ((stacked ? 1 : data.length) * 2);
+                            , mid = 0.8 * x.bandwidth() / ((stacked ? 1 : data.length) * 2);
                         xerr = xerr.length ? xerr : [-Math.abs(xerr), Math.abs(xerr)];
                         xerr = xerr.map(function(e) { return y(e + ((getY(d,i) < 0) ? 0 : getY(d,i))) - y(0); });
                         var a = [[xerr[0],-mid], [xerr[0],mid], [xerr[0],0], [xerr[1],0], [xerr[1],-mid], [xerr[1],mid]];
                         return a.map(function (path) { return path.join(',') }).join(' ');
                     })
                     .attr('transform', function(d,i) {
-                        var mid = x.rangeBand() / ((stacked ? 1 : data.length) * 2);
+                        var mid = x.bandwidth() / ((stacked ? 1 : data.length) * 2);
                         return 'translate(0, ' + mid + ')';
                     });
             }
 
-            barsEnter.append('text');
+            var textAppend=barsEnter.append('text');
 
             if (showValues && !stacked) {
-                bars.select('text')
+               textAppend
                     .attr('text-anchor', function(d,i) { return getY(d,i) < 0 ? 'end' : 'start' })
-                    .attr('y', x.rangeBand() / (data.length * 2))
+                    .attr('y', x.bandwidth() / (data.length * 2))
                     .attr('dy', '.32em')
                     .text(function(d,i) {
                         var t = valueFormat(getY(d,i))
@@ -238,14 +274,14 @@ nv.models.multiBarHorizontal = function() {
                     .select('text')
                     .attr('x', function(d,i) { return getY(d,i) < 0 ? -4 : y(getY(d,i)) - y(0) + 4 })
             } else {
-                bars.selectAll('text').text('');
+                textAppend.text('');
             }
 
             if (showBarLabels && !stacked) {
-                barsEnter.append('text').classed('nv-bar-label',true);
-                bars.select('text.nv-bar-label')
+                var barLabelAppend=barsEnter.append('text').classed('nv-bar-label',true);
+                barLabelAppend
                     .attr('text-anchor', function(d,i) { return getY(d,i) < 0 ? 'start' : 'end' })
-                    .attr('y', x.rangeBand() / (data.length * 2))
+                    .attr('y', x.bandwidth() / (data.length * 2))
                     .attr('dy', '.32em')
                     .text(function(d,i) { return getX(d,i) });
                 bars.watchTransition(renderWatch, 'multibarhorizontal: bars')
@@ -275,7 +311,7 @@ nv.models.multiBarHorizontal = function() {
                     .attr('width', function(d,i) {
                         return Math.abs(y(getY(d,i) + d.y0) - y(d.y0)) || 0
                     })
-                    .attr('height', x.rangeBand() );
+                    .attr('height', x.bandwidth() );
             else
                 bars.watchTransition(renderWatch, 'multibarhorizontal: bars')
                     .attr('transform', function(d,i) {
@@ -283,13 +319,13 @@ nv.models.multiBarHorizontal = function() {
                         return 'translate(' +
                             (getY(d,i) < 0 ? y(getY(d,i)) : y(0))
                             + ',' +
-                            (d.series * x.rangeBand() / data.length
+                            (d.series * x.bandwidth() / data.length
                                 +
                                 x(getX(d,i)) )
                             + ')'
                     })
                     .select('rect')
-                    .attr('height', x.rangeBand() / data.length )
+                    .attr('height', x.bandwidth() / data.length )
                     .attr('width', function(d,i) {
                         return Math.max(Math.abs(y(getY(d,i)) - y(0)),1) || 0
                     });

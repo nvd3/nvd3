@@ -7,8 +7,8 @@ nv.models.historicalBarChart = function(bar_model) {
     //------------------------------------------------------------
 
     var bars = bar_model || nv.models.historicalBar()
-        , xAxis = nv.models.axis()
-        , yAxis = nv.models.axis()
+        , xAxis = nv.models.axis(d3.axisBottom(d3.scaleLinear()), 'bottom')
+        , yAxis = nv.models.axis(d3.axisLeft(d3.scaleLinear()), 'left')
         , legend = nv.models.legend()
         , interactiveLayer = nv.interactiveGuideline()
         , tooltip = nv.models.tooltip()
@@ -31,11 +31,10 @@ nv.models.historicalBarChart = function(bar_model) {
         , defaultState = null
         , noData = null
         , dispatch = d3.dispatch('tooltipHide', 'stateChange', 'changeState', 'renderEnd')
-        , transitionDuration = 250
-        ;
+        , transitionDuration = 250;
 
-    xAxis.orient('bottom').tickPadding(7);
-    yAxis.orient( (rightAlignYAxis) ? 'right' : 'left');
+    xAxis.tickPadding(7);
+    //yAxis.orient( (rightAlignYAxis) ? 'right' : 'left');
     tooltip
         .duration(0)
         .headerEnabled(false)
@@ -97,22 +96,25 @@ nv.models.historicalBarChart = function(bar_model) {
 
             // Setup containers and skeleton of chart
             var wrap = container.selectAll('g.nv-wrap.nv-historicalBarChart').data([data]);
-            var gEnter = wrap.enter().append('g').attr('class', 'nvd3 nv-wrap nv-historicalBarChart').append('g');
-            var g = wrap.select('g');
+            var wrapEnter=wrap.enter().append('g').attr('class', 'nvd3 nv-wrap nv-historicalBarChart');
+            wrapEnter.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
 
-            gEnter.append('g').attr('class', 'nv-x nv-axis');
-            gEnter.append('g').attr('class', 'nv-y nv-axis');
-            gEnter.append('g').attr('class', 'nv-barsWrap');
-            gEnter.append('g').attr('class', 'nv-legendWrap');
-            gEnter.append('g').attr('class', 'nv-interactive');
+            var gEnter = wrapEnter.append('g');
+            var g = wrapEnter.select('g');
+
+            var xAxisAppend=gEnter.append('g').attr('class', 'nv-x nv-axis');
+            var yAxisAppend=gEnter.append('g').attr('class', 'nv-y nv-axis');
+            var barsWrapAppend=gEnter.append('g').attr('class', 'nv-barsWrap');
+            var legendWrapAppend=gEnter.append('g').attr('class', 'nv-legendWrap');
+            var interactiveAppend=gEnter.append('g').attr('class', 'nv-interactive');
 
             // Legend
             if (!showLegend) {
-                g.select('.nv-legendWrap').selectAll('*').remove();
+                legendWrapAppend.selectAll('*').remove();
             } else {
                 legend.width(availableWidth);
 
-                g.select('.nv-legendWrap')
+                legendWrapAppend
                     .datum(data)
                     .call(legend);
 
@@ -121,13 +123,11 @@ nv.models.historicalBarChart = function(bar_model) {
                     availableHeight = nv.utils.availableHeight(height, container, margin);
                 }
 
-                wrap.select('.nv-legendWrap')
+                legendWrapAppend
                     .attr('transform', 'translate(0,' + (-margin.top) +')')
             }
-            wrap.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
-
             if (rightAlignYAxis) {
-                g.select(".nv-y.nv-axis")
+                yAxisAppend
                     .attr("transform", "translate(" + availableWidth + ",0)");
             }
 
@@ -139,7 +139,7 @@ nv.models.historicalBarChart = function(bar_model) {
                     .margin({left:margin.left, top:margin.top})
                     .svgContainer(container)
                     .xScale(x);
-                wrap.select(".nv-interactive").call(interactiveLayer);
+                interactiveAppend.call(interactiveLayer);
             }
             bars
                 .width(availableWidth)
@@ -148,7 +148,7 @@ nv.models.historicalBarChart = function(bar_model) {
                     return d.color || color(d, i);
                 }).filter(function(d,i) { return !data[i].disabled }));
 
-            var barsWrap = g.select('.nv-barsWrap')
+            var barsWrap = barsWrapAppend
                 .datum(data.filter(function(d) { return !d.disabled }));
             barsWrap.transition().call(bars);
 
@@ -157,11 +157,12 @@ nv.models.historicalBarChart = function(bar_model) {
                 xAxis
                     .scale(x)
                     ._ticks( nv.utils.calcTicksX(availableWidth/100, data) )
-                    .tickSize(-availableHeight, 0);
+                xAxis
+                    .tickSizeInner(-availableHeight);
 
-                g.select('.nv-x.nv-axis')
+                xAxisAppend
                     .attr('transform', 'translate(0,' + y.range()[0] + ')');
-                g.select('.nv-x.nv-axis')
+                xAxisAppend
                     .transition()
                     .call(xAxis);
             }
@@ -170,9 +171,10 @@ nv.models.historicalBarChart = function(bar_model) {
                 yAxis
                     .scale(y)
                     ._ticks( nv.utils.calcTicksY(availableHeight/36, data) )
-                    .tickSize( -availableWidth, 0);
+                yAxis
+                    .tickSizeInner( -availableWidth);
 
-                g.select('.nv-y.nv-axis')
+                yAxisAppend
                     .transition()
                     .call(yAxis);
             }
@@ -221,7 +223,7 @@ nv.models.historicalBarChart = function(bar_model) {
             });
 
             interactiveLayer.dispatch.on("elementMouseout",function(e) {
-                dispatch.tooltipHide();
+                dispatch.call('tooltipHide', this);
                 bars.clearHighlights();
             });
 
@@ -237,7 +239,7 @@ nv.models.historicalBarChart = function(bar_model) {
                 }
 
                 state.disabled = data.map(function(d) { return !!d.disabled });
-                dispatch.stateChange(state);
+                dispatch.call('stateChange', this, state);
 
                 selection.transition().call(chart);
             });
@@ -250,7 +252,7 @@ nv.models.historicalBarChart = function(bar_model) {
                 d.disabled = false;
 
                 state.disabled = data.map(function(d) { return !!d.disabled });
-                dispatch.stateChange(state);
+                dispatch.call('stateChange', this, state);
                 chart.update();
             });
 
@@ -340,7 +342,7 @@ nv.models.historicalBarChart = function(bar_model) {
         }},
         rightAlignYAxis: {get: function(){return rightAlignYAxis;}, set: function(_){
             rightAlignYAxis = _;
-            yAxis.orient( (_) ? 'right' : 'left');
+            //@todo yAxis.orient( (_) ? 'right' : 'left');
         }},
         useInteractiveGuideline: {get: function(){return useInteractiveGuideline;}, set: function(_){
             useInteractiveGuideline = _;

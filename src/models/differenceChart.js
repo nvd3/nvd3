@@ -30,6 +30,9 @@ nv.models.differenceChart = function () {
     return d.y;
   };
   var duration = 300;
+  var t = d3.transition()
+          .duration(duration)
+          .ease(d3.easeLinear);
   var keyForActualLessThanPredicted = null;
   var keyForActualGreaterThanPredicted = null;
   var height = null;
@@ -37,10 +40,10 @@ nv.models.differenceChart = function () {
   var margin = { top: 30, right: 50, bottom: 20, left: 70 };
   var focusMargin = { top: 0, right: 0, bottom: 0, left: 0 };
   var showPredictedLine = true;
-  var interpolate = 'linear';
+  var interpolate = d3.curveLinear;
   var strokeWidth = 1;
-  var xScale = d3.time.scale();
-  var tickFormat = d3.time.format.multi([['%I:%M', function (d) {
+  var xScale = d3.scaleTime();
+  var tickFormat = d3.timeFormat([['%I:%M', function (d) {
     return d.getMinutes();
   }], ['%I %p', function (d) {
     return d.getHours();
@@ -74,7 +77,7 @@ nv.models.differenceChart = function () {
 
       chart.container = this;
 
-      multiChart.margin(margin).color(d3.scale.category10().range()).y(yForMultiChart).width(width).height(availableHeight).interpolate(interpolate).useInteractiveGuideline(true);
+      multiChart.margin(margin).color(d3.scaleOrdinal(d3.schemeCategory10).range()).y(yForMultiChart).width(width).height(availableHeight).interpolate(interpolate).useInteractiveGuideline(true);
 
       multiChart.interactiveLayer.tooltip.valueFormatter(function (value, i, datum) {
         if (datum.key === keyForActualGreaterThanPredicted || datum.key === keyForActualLessThanPredicted) {
@@ -118,14 +121,13 @@ nv.models.differenceChart = function () {
       focus.xScale(xScale.copy());
       focus.xAxis.tickFormat(tickFormat);
       focus.xAxis.rotateLabels(0);
-
-      container.append('g').attr('class', 'nv-focusWrap').style('display', 'initial').attr('transform', 'translate(' + margin.left + ', ' + (availableHeight + focus.margin().top) + ')').datum(processedData.filter(function (dataset) {
+      var gAppend=container.append('g').attr('class', 'nv-focusWrap').style('display', 'initial').attr('transform', 'translate(' + margin.left + ', ' + (availableHeight + focus.margin().top) + ')').datum(processedData.filter(function (dataset) {
         return dataset.type === 'line';
       })).call(focus);
 
-      container.datum(processedData).call(multiChart);
+      gAppend.datum(processedData).call(multiChart);
 
-      focus.dispatch.on('onBrush', function (extent) {
+      focus.dispatch.on('brush', function (extent) {
         var filteredData = processedData.map(function (datum) {
           var leftIndex = -1;
           var rightIndex = -1;
@@ -156,7 +158,7 @@ nv.models.differenceChart = function () {
           });
         });
 
-        container.datum(filteredData);
+        gAppend.datum(filteredData);
 
         multiChart.xAxis.domain(extent);
 
@@ -164,12 +166,12 @@ nv.models.differenceChart = function () {
       });
 
       chart.update = function () {
-        container.selectAll('*').remove();
+        gAppend.selectAll('*').remove();
 
         if (duration === 0) {
-          container.call(chart);
+          gAppend.call(chart);
         } else {
-          container.transition().duration(duration).call(chart);
+          gAppend.transition().duration(duration).call(chart);
         }
       };
 

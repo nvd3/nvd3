@@ -20,7 +20,7 @@ nv.models.line = function() {
         , clipEdge = false // if true, masks lines within x and y scale
         , x //can be accessed via chart.xScale()
         , y //can be accessed via chart.yScale()
-        , interpolate = "linear" // controls the line interpolation
+        , interpolate = d3.curveLinear // controls the line interpolation
         , curve = d3.curveBasis
         , duration = 250
         , dispatch = d3.dispatch('elementClick', 'elementMouseover', 'elementMouseout', 'renderEnd')
@@ -74,10 +74,9 @@ nv.models.line = function() {
             scatter
                 .width(availableWidth)
                 .height(availableHeight);
-
             scatterWrap.call(scatter);
 
-            defsEnter.merge(defsEnter).append('clipPath')
+            var defsRect=defsEnter.append('clipPath')
                 .attr('id', 'nv-edge-clip-' + scatter.id())
                 .append('rect')
                 .attr('width', availableWidth)
@@ -89,12 +88,12 @@ nv.models.line = function() {
 
             var groups = nvGroups.selectAll('.nv-group')
                 .data(function(d) { return d }, function(d) { return d.key });
+            groups.exit().remove();
+
             var groupsEntries = groups.enter().append('g')
                 .style('stroke-opacity', 1e-6)
                 .style('stroke-width', function(d) { return d.strokeWidth || strokeWidth })
                 .style('fill-opacity', 1e-6);
-
-            groups.exit().remove();
 
             groupsEntries
                 .attr('class', function(d,i) {
@@ -109,11 +108,11 @@ nv.models.line = function() {
 
             var areaPaths = groups.selectAll('path.nv-area')
                 .data(function(d) { return isArea(d) ? [d] : [] }); // this is done differently than lines because I need to check if series is an area
-            areaPaths.enter().append('path')
+            var areaPathsEnter=areaPaths.enter().append('path')
                 .attr('class', 'nv-area')
                 .attr('d', function(d) {
                     return d3.area()
-                        .interpolate(interpolate)
+                        .curve(interpolate)
                         .defined(defined)
                         .x(function(d,i) { return nv.utils.NaNtoZero(x0(getX(d,i))) })
                         .y0(function(d,i) { return nv.utils.NaNtoZero(y0(getY(d,i))) })
@@ -124,10 +123,10 @@ nv.models.line = function() {
             groups.exit().selectAll('path.nv-area')
                 .remove();
 
-            areaPaths.watchTransition(renderWatch, 'line: areaPaths')
+            areaPathsEnter.watchTransition(renderWatch, 'line: areaPaths')
                 .attr('d', function(d) {
                     return d3.area()
-                        .interpolate(interpolate)
+                        .curve(interpolate)
                         .defined(defined)
                         .x(function(d,i) { return nv.utils.NaNtoZero(x(getX(d,i))) })
                         .y0(function(d,i) { return nv.utils.NaNtoZero(y(getY(d,i))) })
@@ -135,11 +134,12 @@ nv.models.line = function() {
                         //.y1(function(d,i) { return y0(0) }) //assuming 0 is within y domain.. may need to tweak this
                         .apply(this, [d.values])
                 });
+                areaPathsEnter.merge(areaPaths);
 
             var linePaths = groupsEntries.selectAll('path.nv-line')
                 .data(function(d) { return [d.values] });
 
-            linePaths.enter().append('path')
+            var linePathsEnter=linePaths.enter().append('path')
                 .attr('class', 'nv-line')
                 .attr('d',
                     d3.line()
@@ -149,7 +149,7 @@ nv.models.line = function() {
                     .y(function(d,i) { return nv.utils.NaNtoZero(y0(getY(d,i))) })
             );
 
-            linePaths.watchTransition(renderWatch, 'line: linePaths')
+            linePathsEnter.watchTransition(renderWatch, 'line: linePaths')
                 .attr('d',
                     d3.line()
                     .curve(curve)
@@ -157,6 +157,7 @@ nv.models.line = function() {
                     .x(function(d,i) { return nv.utils.NaNtoZero(x(getX(d,i))) })
                     .y(function(d,i) { return nv.utils.NaNtoZero(y(getY(d,i))) })
             );
+            //linePathsEnter.merge(groupsEntries);
 
             //store old scales for use in transitions on update
             x0 = x.copy();
@@ -201,7 +202,7 @@ nv.models.line = function() {
             scatter.duration(duration);
         }},
         isArea: {get: function(){return isArea;}, set: function(_){
-            isArea = d3.functor(_);
+            isArea = typeof _ === "function" ? _ : function(){return _;};
         }},
         x: {get: function(){return getX;}, set: function(_){
             getX = _;

@@ -17,8 +17,8 @@ nv.models.heatMap = function() {
         , height = 500
         , id = Math.floor(Math.random() * 10000) //Create semi-unique ID in case user doesn't select one
         , container
-        , xScale = d3.scale.ordinal()
-        , yScale = d3.scale.ordinal()
+        , xScale = d3.scaleBand()
+        , yScale = d3.scaleBand()
         , colorScale = false
         , getX = function(d) { return d.x }
         , getY = function(d) { return d.y }
@@ -415,10 +415,10 @@ nv.models.heatMap = function() {
   
             // Setup Scales
             xScale.domain(xDomain || sortObjByVals(uniqueX))
-                  .rangeBands(xRange || [0, availableWidth-cellBorderWidth/2]);
+                  .range(xRange || [0, availableWidth-cellBorderWidth/2]);
             yScale.domain(yDomain || sortObjByVals(uniqueY))
-                  .rangeBands(yRange || [0, availableHeight-cellBorderWidth/2]);
-            colorScale = cellsAreNumeric() ? d3.scale.quantize() : d3.scale.ordinal();
+                  .range(yRange || [0, availableHeight-cellBorderWidth/2]);
+            colorScale = cellsAreNumeric() ? d3.scaleQuantize() : d3.scaleOrdinal();
             colorScale.domain(colorDomain || getColorDomain())
                   .range(colorRange || RdYlBu);
 
@@ -438,7 +438,7 @@ nv.models.heatMap = function() {
                 .attr('class','cellGrid')
                 .style('opacity',1e-6)
 
-            var gridLinesV = wrap.select('.cellGrid').selectAll('.gridLines.verticalGrid')
+            var gridLinesV = wrapEnter.select('.cellGrid').selectAll('.gridLines.verticalGrid')
                 .data(Object.values(uniqueX).concat([Object.values(uniqueX).length]))
                 
             gridLinesV.enter()
@@ -448,7 +448,7 @@ nv.models.heatMap = function() {
             gridLinesV.exit()
                 .remove()
 
-            var gridLinesH = wrap.select('.cellGrid').selectAll('.gridLines.horizontalGrid')
+            var gridLinesH = wrapEnter.select('.cellGrid').selectAll('.gridLines.horizontalGrid')
                 .data(Object.values(uniqueY).concat([Object.values(uniqueY).length]))
                 
             gridLinesH.enter()
@@ -458,7 +458,7 @@ nv.models.heatMap = function() {
             gridLinesH.exit()
                 .remove()
 
-            var cellWrap = wrap.select('.cellWrap')
+            var cellWrap = wrapEnter.select('.cellWrap')
                 .selectAll(".nv-cell")
                 .data(function(d) { return d; }, function(e) { return getIdx(e); })
 
@@ -467,7 +467,7 @@ nv.models.heatMap = function() {
                 .attr('class','xMetaWrap')
                 .attr("transform", function() { return "translate(0," + (-xMetaHeight()-cellBorderWidth-metaOffset) + ")" })
 
-            var xMetas = wrap.select('.xMetaWrap').selectAll('.x-meta')
+            var xMetas = wrapEnter.select('.xMetaWrap').selectAll('.x-meta')
                 .data(uniqueXMeta)
 
             var xMetaEnter = xMetas
@@ -484,7 +484,7 @@ nv.models.heatMap = function() {
                 .attr('class','yMetaWrap')
                 .attr("transform", function(d,i) { return "translate(" + (-yMetaWidth()-cellBorderWidth-metaOffset) + ",0)" })
 
-            var yMetas = wrap.select('.yMetaWrap').selectAll('.y-meta')
+            var yMetas = wrapEnter.select('.yMetaWrap').selectAll('.y-meta')
                 .data(uniqueYMeta)
 
             var yMetaEnter = yMetas
@@ -550,7 +550,7 @@ nv.models.heatMap = function() {
                 .style('opacity', function() { return showCellValues ? 1 : 0 })
 
             // transition grid
-            wrap.selectAll('.verticalGrid')
+            wrapEnter.selectAll('.verticalGrid')
                 .watchTransition(renderWatch, 'heatMap: gridLines') 
                 .attr('y1',0)
                 .attr('y2',availableHeight-cellBorderWidth)
@@ -558,23 +558,23 @@ nv.models.heatMap = function() {
                 .attr('x2',function(d) { return d*cellWidth-cellBorderWidth/2; })
 
             var numHLines = Object.keys(uniqueY).length;
-            wrap.selectAll('.horizontalGrid')
+            wrapEnter.selectAll('.horizontalGrid')
                 .watchTransition(renderWatch, 'heatMap: gridLines') 
                 .attr('x1',function(d) { return (d == 0 || d == numHLines) ? -cellBorderWidth : 0 })
                 .attr('x2',function(d) { return (d == 0 || d == numHLines) ? availableWidth : availableWidth-cellBorderWidth})
                 .attr('y1',function(d) { return d*cellHeight-cellBorderWidth/2; })
                 .attr('y2',function(d) { return d*cellHeight-cellBorderWidth/2; })
 
-            wrap.select('.cellGrid')
+            wrapEnter.select('.cellGrid')
                 .watchTransition(renderWatch, 'heatMap: gridLines')
                 .style({
                     'stroke-width': cellBorderWidth,
                     'opacity': function() { return showGrid ? 1 : 1e-6 },
                 })
 
-            var xMetaRect = wrap.selectAll('.x-meta')
-            var yMetaRect = wrap.selectAll('.y-meta')
-            var allMetaRect = wrap.selectAll('.meta')
+            var xMetaRect = wrapEnter.selectAll('.x-meta')
+            var yMetaRect = wrapEnter.selectAll('.y-meta')
+            var allMetaRect = wrapEnter.selectAll('.meta')
 
             // transition meta rect size
             xMetas
@@ -591,11 +591,11 @@ nv.models.heatMap = function() {
 
 
             // transition position of meta wrap g & opacity
-            wrap.select('.xMetaWrap')
+            wrapEnter.select('.xMetaWrap')
                 .watchTransition(renderWatch, 'heatMap: xMetaWrap') 
                 .attr("transform", function(d,i) { return "translate(0," + (-xMetaHeight()-cellBorderWidth-metaOffset) + ")" })
                 .style("opacity", function() { return xMeta !== false ? 1 : 0 })
-            wrap.select('.yMetaWrap')
+            wrapEnter.select('.yMetaWrap')
                 .watchTransition(renderWatch, 'heatMap: yMetaWrap') 
                 .attr("transform", function(d,i) { return "translate(" + (-yMetaWidth()-cellBorderWidth-metaOffset) + ",0)" })
                 .style("opacity", function() { return yMeta !== false ? 1 : 0 })
@@ -653,7 +653,7 @@ nv.models.heatMap = function() {
                         }
                     });
                     
-                    dispatch.elementMouseover({
+                    dispatch.call('elementMouseover', this, {
                         value: getKeyByValue(uniqueX, ix) + ' & ' + getKeyByValue(uniqueY, iy), 
                         series: {
                                 value: cellValueLabel(d), 
@@ -680,12 +680,12 @@ nv.models.heatMap = function() {
                         // remove all hover classes
                         removeAllHoverClasses();
 
-                        dispatch.elementMouseout({e: d3.event});
+                        dispatch.call('elementMouseout', this, {e: d3.event});
                     }
                 })
                 .on('mousemove', function(d,i) {
 
-                    dispatch.elementMousemove({e: d3.event});
+                    dispatch.call('elementMousemove', this, {e: d3.event});
                 })
 
             allMetaRect
@@ -721,7 +721,7 @@ nv.models.heatMap = function() {
                     d3.select(this).classed('cell-hover', true);
                     d3.select(this).classed('no-hover', false);
 
-                    dispatch.elementMouseover({
+                    dispatch.call('elementMouseover', this, {
                         value: isColMeta ? 'Column meta' : 'Row meta',
                         series: { value: d, color: d3.select(this).style('fill'), }
                     });
@@ -747,11 +747,11 @@ nv.models.heatMap = function() {
                         // remove all hover classes
                         removeAllHoverClasses();
 
-                        dispatch.elementMouseout({e: d3.event});
+                        dispatch.call('elementMouseout', this, {e: d3.event});
                     }
                 })
                 .on('mousemove', function(d,i) {
-                    dispatch.elementMousemove({e: d3.event});
+                    dispatch.call('elementMousemove', this, {e: d3.event});
                 })
 
         });

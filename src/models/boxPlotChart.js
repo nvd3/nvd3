@@ -6,8 +6,8 @@ nv.models.boxPlotChart = function() {
     //------------------------------------------------------------
 
     var boxplot = nv.models.boxPlot(),
-        xAxis = nv.models.axis(),
-        yAxis = nv.models.axis();
+        xAxis = nv.models.axis(d3.axisBottom(d3.scaleBand()), 'bottom'),
+        yAxis = nv.models.axis(d3.axisLeft(d3.scaleLinear()), 'left');
 
     var margin = {top: 15, right: 10, bottom: 50, left: 60},
         width = null,
@@ -21,16 +21,20 @@ nv.models.boxPlotChart = function() {
         x, y,
         noData = 'No Data Available.',
         dispatch = d3.dispatch('beforeUpdate', 'renderEnd'),
-        duration = 250;
+        duration = 250,
+        t = d3.transition()
+              .duration(duration)
+              .ease(d3.easeLinear);
 
+    xAxis.showMaxMin(false).scale()
     xAxis
-        .orient('bottom')
-        .showMaxMin(false)
         .tickFormat(function(d) { return d })
     ;
     yAxis
-        .orient((rightAlignYAxis) ? 'right' : 'left')
-        .tickFormat(d3.format(',.1f'))
+        //@todo .orient((rightAlignYAxis) ? 'right' : 'left')
+                .scale()
+    yAxis
+                .tickFormat(d3.format(',.1f'))
     ;
 
     tooltip.duration(0);
@@ -54,7 +58,7 @@ nv.models.boxPlotChart = function() {
             var availableHeight = (height || parseInt(container.style('height')) || 400) - margin.top - margin.bottom;
 
             chart.update = function() {
-                dispatch.beforeUpdate();
+                dispatch.call('beforeUpdate', this);
                 container.transition().duration(duration).call(chart);
             };
             chart.container = this;
@@ -64,7 +68,7 @@ nv.models.boxPlotChart = function() {
             if (!data || !data.length) {
                 var noDataText = container.selectAll('.nv-noData').data([noData]);
 
-                noDataText.enter().append('text')
+                var textAppend=noDataText.enter().append('text')
                     .attr('class', 'nvd3 nv-noData')
                     .attr('dy', '-.7em')
                     .style('text-anchor', 'middle');
@@ -89,47 +93,49 @@ nv.models.boxPlotChart = function() {
             var defsEnter = gEnter.append('defs');
             var g = wrap.select('g');
 
-            gEnter.append('g').attr('class', 'nv-x nv-axis');
-            gEnter.append('g').attr('class', 'nv-y nv-axis')
+            var xAxisAppend=gEnter.append('g').attr('class', 'nv-x nv-axis');
+            var yAxisAppend=gEnter.append('g').attr('class', 'nv-y nv-axis');
+            var lineAppend=yAxisAppend
                 .append('g').attr('class', 'nv-zeroLine')
                 .append('line');
 
-            gEnter.append('g').attr('class', 'nv-barsWrap');
-            g.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+            var barsWrapAppend=gEnter.append('g').attr('class', 'nv-barsWrap');
+            gEnter.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
 
             if (rightAlignYAxis) {
-                g.select('.nv-y.nv-axis')
+                yAxisAppend
                     .attr('transform', 'translate(' + availableWidth + ',0)');
             }
 
             // Main Chart Component(s)
             boxplot.width(availableWidth).height(availableHeight);
 
-            var barsWrap = g.select('.nv-barsWrap')
+            var barsWrap = barsWrapAppend
                 .datum(data.filter(function(d) { return !d.disabled }))
 
             barsWrap.transition().call(boxplot);
 
-            defsEnter.append('clipPath')
+            var defsRect=defsEnter.append('clipPath')
                 .attr('id', 'nv-x-label-clip-' + boxplot.id())
                 .append('rect');
 
-            g.select('#nv-x-label-clip-' + boxplot.id() + ' rect')
-                .attr('width', x.rangeBand() * (staggerLabels ? 2 : 1))
+            defsRect
+                .attr('width', x.bandwidth() * (staggerLabels ? 2 : 1))
                 .attr('height', 16)
-                .attr('x', -x.rangeBand() / (staggerLabels ? 1 : 2 ));
+                .attr('x', -x.bandwidth() / (staggerLabels ? 1 : 2 ));
 
             // Setup Axes
             if (showXAxis) {
                 xAxis
                     .scale(x)
                     .ticks( nv.utils.calcTicksX(availableWidth/100, data) )
-                    .tickSize(-availableHeight, 0);
+                xAxis
+                    .tickSizeInner(-availableHeight);
 
-                g.select('.nv-x.nv-axis').attr('transform', 'translate(0,' + y.range()[0] + ')');
-                g.select('.nv-x.nv-axis').call(xAxis);
+                xAxisAppend.attr('transform', 'translate(0,' + y.range()[0] + ')');
+                xAxisAppend.call(xAxis);
 
-                var xTicks = g.select('.nv-x.nv-axis').selectAll('g');
+                var xTicks = xAxisAppend.selectAll('g');
                 if (staggerLabels) {
                     xTicks
                         .selectAll('text')
@@ -141,13 +147,14 @@ nv.models.boxPlotChart = function() {
                 yAxis
                     .scale(y)
                     .ticks( Math.floor(availableHeight/36) ) // can't use nv.utils.calcTicksY with Object data
-                    .tickSize( -availableWidth, 0);
+                yAxis
+                    .tickSizeInner( -availableWidth);
 
-                g.select('.nv-y.nv-axis').call(yAxis);
+                yAxisAppend.call(yAxis);
             }
 
             // Zero line
-            g.select('.nv-zeroLine line')
+            lineAppend
                 .attr('x1',0)
                 .attr('x2',availableWidth)
                 .attr('y1', y(0))
@@ -211,6 +218,9 @@ nv.models.boxPlotChart = function() {
         duration: {get: function(){return duration;}, set: function(_){
             duration = _;
             renderWatch.reset(duration);
+            t = d3.transition()
+                  .duration(duration)
+                  .ease(d3.easeLinear);
             boxplot.duration(duration);
             xAxis.duration(duration);
             yAxis.duration(duration);

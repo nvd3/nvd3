@@ -31,8 +31,8 @@ nv.models.heatMapChart = function() {
         , legendRowMeta = nv.models.legend()
         , legendColumnMeta = nv.models.legend()
         , tooltip = nv.models.tooltip()
-        , xAxis = nv.models.axis()
-        , yAxis = nv.models.axis()
+        , xAxis = nv.models.axis(d3.axisBottom(d3.scaleLinear()), 'bottom')
+        , yAxis = nv.models.axis(d3.axisLeft(d3.scaleLinear()), 'left')
         ;
 
 
@@ -54,16 +54,14 @@ nv.models.heatMapChart = function() {
         , noData = null
         , dispatch = d3.dispatch('beforeUpdate','renderEnd')
         , duration = 250
-        ;
+        , t = d3.transition()
+              .duration(duration)
+              .ease(d3.easeLinear);
 
-    xAxis
-        .orient(alignXAxis)
-        .showMaxMin(false)
+    xAxis.showMaxMin(false)
         .tickFormat(function(d) { return d })
     ;
-    yAxis
-        .orient(alignYAxis)
-        .showMaxMin(false)
+    yAxis.showMaxMin(false)
         .tickFormat(function(d) { return d })
     ;
 
@@ -132,7 +130,7 @@ nv.models.heatMapChart = function() {
                 availableHeight = nv.utils.availableHeight(height, container, margin);
 
             chart.update = function() {
-                dispatch.beforeUpdate();
+                dispatch.call('beforeUpdate', this);
                 container.transition().duration(duration).call(chart);
             };
             chart.container = this;
@@ -151,16 +149,17 @@ nv.models.heatMapChart = function() {
 
             // Setup containers and skeleton of chart
             var wrap = container.selectAll('g.nv-wrap').data([data]);
-            var gEnter = wrap.enter().append('g').attr('class', 'nvd3 nv-wrap').append('g');
+            var wrapEnter=wrap.enter().append('g');
+            wrapEnter.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+
+            var gEnter = wrapEnter.attr('class', 'nvd3 nv-wrap').append('g');
             var g = wrap.select('g');
 
 
-            gEnter.append('g').attr('class', 'nv-heatMap');
-            gEnter.append('g').attr('class', 'nv-legendWrap');
-            gEnter.append('g').attr('class', 'nv-x nv-axis');
-            gEnter.append('g').attr('class', 'nv-y nv-axis')
-
-            g.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+            var heatMapAppend=gEnter.append('g').attr('class', 'nv-heatMap');
+            var legendWrapAppend=gEnter.append('g').attr('class', 'nv-legendWrap');
+            var xAxisAppend=gEnter.append('g').attr('class', 'nv-x nv-axis');
+            var yAxisAppend=gEnter.append('g').attr('class', 'nv-y nv-axis')
 
 
             heatMap
@@ -168,7 +167,7 @@ nv.models.heatMapChart = function() {
                 .height(availableHeight);
 
 
-            var heatMapWrap = g.select('.nv-heatMap')
+            var heatMapWrap = heatMapAppend
                 .datum(data.filter(function(d) { return !d.disabled }));
 
 
@@ -185,9 +184,10 @@ nv.models.heatMapChart = function() {
             xAxis
                 .scale(x)
                 ._ticks( nv.utils.calcTicksX(availableWidth/100, data) )
-                .tickSize(-availableHeight, 0);
+        xAxis
+                .tickSizeInner(-availableHeight);
 
-            var axisX = g.select('.nv-x.nv-axis')
+            var axisX = xAxisAppend
 
             axisX.call(xAxis)
                 .watchTransition(renderWatch, 'heatMap: axisX')
@@ -233,9 +233,10 @@ nv.models.heatMapChart = function() {
             yAxis
                 .scale(y)
                 ._ticks( nv.utils.calcTicksY(availableHeight/36, data) )
-                .tickSize( -availableWidth, 0);
+            yAxis
+                .tickSizeInner( -availableWidth);
 
-            var axisY = g.select('.nv-y.nv-axis')
+            var axisY = yAxisAppend
 
             axisY.call(yAxis)
                 .watchTransition(renderWatch, 'heatMap: axisY')
@@ -265,11 +266,11 @@ nv.models.heatMapChart = function() {
 
 
             // Legend
-            var legendWrap = g.select('.nv-legendWrap')
+            var legendWrap = legendWrapAppend
 
             legend
                 .width(availableWidth)
-                .color(heatMap.colorScale().range())
+                .color(heatMap.colorScale().range());
 
             var legendVal = quantizeLegendValues().map(function(d) {
                 if (Array.isArray(d)) { // if cell values are numeric
@@ -294,7 +295,7 @@ nv.models.heatMapChart = function() {
         // axis don't have a flag for disabling the zero line, so we do it manually
         d3.selectAll('.nv-axis').selectAll('line')
             .style('stroke-opacity', 0)
-        d3.select('.nv-y').select('path.domain').remove()
+        yAxisAppend.select('path.domain').remove()
 
         renderWatch.renderEnd('heatMap chart immediate');
 
@@ -360,11 +361,11 @@ nv.models.heatMapChart = function() {
         }},
         alignYAxis: {get: function(){return alignYAxis;}, set: function(_){
             alignYAxis = _;
-            yAxis.orient(_);
+            //@todo yAxis.orient(_);
         }},
         alignXAxis: {get: function(){return alignXAxis;}, set: function(_){
             alignXAxis = _;
-            xAxis.orient(_);
+            //@todo xAxis.orient(_);
         }},
     });
 

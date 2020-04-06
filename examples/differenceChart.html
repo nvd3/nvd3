@@ -3,10 +3,10 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width" />
-    <link href="../build/nv.d3.css" rel="stylesheet" type="text/css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.2/d3.min.js" charset="utf-8"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.19.2/moment.js"></script>
-    <script src="../build/nv.d3.js?dsf"></script>
+    <link href="js/nv.d3.css" rel="stylesheet" type="text/css">
+    <script src="js/d3.js" charset="utf-8"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.js"></script>
+    <script src="js/nv.d3.js"></script>
 
     <style>
         text {
@@ -92,8 +92,8 @@
   }
 
   function main() {
-    var colors = d3.scale.category20();
-    var lang = d3.locale({
+    var colors = d3.scaleOrdinal(d3.schemePaired);
+    var locale = d3.timeFormatLocale({
       "dateTime": '%H:%M %A %e %B, %Y',
       "date": '%Y-%m-%d',
       "time": "%H:%M:%S",
@@ -103,8 +103,26 @@
       "months": ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
       "shortMonths": ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
     });
+    var formatMillisecond = locale.format(".%L"),
+        formatSecond = locale.format(":%S"),
+        formatMinute = locale.format("%I:%M"),
+        formatHour = locale.format("%I %p"),
+        formatDay = locale.format("%a %d"),
+        formatWeek = locale.format("%b %d"),
+        formatMonth = locale.format("%B"),
+        formatYear = locale.format("%Y");
 
-    var tickFormatMaxMin = lang.timeFormat.multi([["%b %d", function (d) {
+    function multiFormat(date) {
+      return (d3.timeSecond(date) < date ? formatMillisecond
+          : d3.timeMinute(date) < date ? formatSecond
+          : d3.timeHour(date) < date ? formatMinute
+          : d3.timeDay(date) < date ? formatHour
+          : d3.timeMonth(date) < date ? (d3.timeWeek(date) < date ? formatDay : formatWeek)
+          : d3.timeYear(date) < date ? formatMonth
+          : formatYear)(date);
+    }
+    
+    /*var tickFormatMaxMin = lang.timeFormat.multi([["%b %d", function (d) {
       return true;
     }]]);
     var tickFormat = lang.timeFormat.multi([[":%L", function (d) {
@@ -123,7 +141,7 @@
       return d.getMonth();
     }], ["%Y", function () {
       return true;
-    }]]);
+    }]]);*/
 
     loadData().then(function (data) {
       nv.addGraph(function () {
@@ -132,7 +150,7 @@
           return new Date(d.recorded_at);
         }).y(function (d) {
           return d.value;
-        }).keyForActualLessThanPredicted(keyForActualLessThanPredicted).keyForActualGreaterThanPredicted(keyForActualGreaterThanPredicted).height(500).showPredictedLine(true).interpolate('step-before').tickFormat(tickFormat).strokeWidth(0.5);
+        }).keyForActualLessThanPredicted(keyForActualLessThanPredicted).keyForActualGreaterThanPredicted(keyForActualGreaterThanPredicted).height(500).showPredictedLine(true).interpolate(d3.curveStepAfter).tickFormat(multiFormat).strokeWidth(0.5);
 
         chart.multiChart.interactiveLayer.tooltip.contentGenerator(function (d) {
           var header = d.value;
@@ -155,8 +173,8 @@
           return "<table>" + headerhtml + '' + bodyhtml + "</table>";
         });
 
-        chart.xAxis.tickFormatMaxMin(tickFormatMaxMin);
-        chart.focus.xAxis.tickFormatMaxMin(tickFormatMaxMin);
+        //chart.xAxis.tickFormatMaxMin(tickFormatMaxMin);
+        //chart.focus.xAxis.tickFormatMaxMin(tickFormatMaxMin);
 
         chart.focus.height(40);
         chart.focusMargin({ top: 10 });
